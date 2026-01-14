@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HashPack Wallet Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 16px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .account-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #007bff;
+        }
+        .code-block {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin: 10px 0;
+            border: 1px solid #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 HashPack Wallet Test</h1>
+        <p>This page tests HashPack wallet connection without affecting the main app.</p>
+        
+        <div id="status" class="status info">
+            Ready to connect HashPack wallet...
+        </div>
+        
+        <div>
+            <h2>🔗 Wallet Connection</h2>
+            <button id="connectBtn" class="button">Connect HashPack Wallet</button>
+            <button id="disconnectBtn" class="button" disabled>Disconnect</button>
+            <button id="getAccountBtn" class="button" disabled>Get Account Info</button>
+            <button id="getBalanceBtn" class="button" disabled>Get Balance</button>
+        </div>
+
+        <div>
+            <h2>🪙 Hedera Token Service (HTS) Tests</h2>
+            <button id="createTokenBtn" class="button" disabled>Create Test Token</button>
+            <button id="mintTokenBtn" class="button" disabled>Mint Tokens</button>
+            <button id="transferTokenBtn" class="button" disabled>Transfer Tokens</button>
+            <button id="getTokenInfoBtn" class="button" disabled>Get Token Info</button>
+            <button id="getTokenBalanceBtn" class="button" disabled>Get Token Balance</button>
+        </div>
+
+        <div>
+            <h2>📁 Hedera File Service (HFS) Tests</h2>
+            <button id="uploadFileBtn" class="button" disabled>Upload Test File</button>
+            <button id="downloadFileBtn" class="button" disabled>Download File</button>
+            <button id="getFileInfoBtn" class="button" disabled>Get File Info</button>
+            <button id="deleteFileBtn" class="button" disabled>Delete File</button>
+        </div>
+
+        <div>
+            <h2>📝 Hedera Consensus Service (HCS) Tests</h2>
+            <button id="createTopicBtn" class="button" disabled>Create Topic</button>
+            <button id="submitMessageBtn" class="button" disabled>Submit Message</button>
+            <button id="getTopicInfoBtn" class="button" disabled>Get Topic Info</button>
+            <button id="getMessagesBtn" class="button" disabled>Get Messages</button>
+        </div>
+
+        <div>
+            <h2>🔧 Debug & Utilities</h2>
+            <button id="detectBtn" class="button" onclick="manualDetect()">Manual Detection</button>
+            <button id="retryBtn" class="button" onclick="retryInitialization()">Retry Initialization</button>
+            <button id="refreshBtn" class="button" onclick="location.reload()">Refresh Page</button>
+        </div>
+        
+        <div id="accountInfo" class="account-info" style="display: none;">
+            <h3>Account Information</h3>
+            <div id="accountDetails"></div>
+        </div>
+        
+        <div id="balanceInfo" class="account-info" style="display: none;">
+            <h3>Balance Information</h3>
+            <div id="balanceDetails"></div>
+        </div>
+
+        <div id="htsInfo" class="account-info" style="display: none;">
+            <h3>HTS Token Information</h3>
+            <div id="htsDetails"></div>
+        </div>
+
+        <div id="hfsInfo" class="account-info" style="display: none;">
+            <h3>HFS File Information</h3>
+            <div id="hfsDetails"></div>
+        </div>
+
+        <div id="hcsInfo" class="account-info" style="display: none;">
+            <h3>HCS Topic Information</h3>
+            <div id="hcsDetails"></div>
+        </div>
+        
+        <div id="logs" class="code-block" style="display: none;">
+            <h3>Debug Logs</h3>
+            <div id="logContent"></div>
+        </div>
+    </div>
+
+    <!-- Load HashConnect library with correct URLs -->
+    <script>
+        // Fallback loading functions (defined first)
+        function loadHashConnectFallback1() {
+            console.log('Primary HashConnect CDN failed, trying fallback 1...');
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/hashconnect@0.2.9/dist/hashconnect.js';
+            script.onload = () => {
+                console.log('HashConnect loaded from fallback 1 CDN');
+                checkLibrariesAndInit();
+            };
+            script.onerror = loadHashConnectFallback2;
+            document.head.appendChild(script);
+        }
+        
+        function loadHashConnectFallback2() {
+            console.log('Fallback 1 failed, trying fallback 2...');
+            const script = document.createElement('script');
+            script.src = 'https://cdn.skypack.dev/hashconnect@0.2.9';
+            script.onload = () => {
+                console.log('HashConnect loaded from Skypack CDN');
+                checkLibrariesAndInit();
+            };
+            script.onerror = () => {
+                console.error('All HashConnect CDNs failed');
+                addLog('❌ Failed to load HashConnect from all CDNs');
+                addLog('Please check your internet connection or try a different browser');
+            };
+            document.head.appendChild(script);
+        }
+        
+        function loadHederaSDKFallback() {
+            console.log('Primary Hedera SDK CDN failed, trying fallback...');
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/@hashgraph/sdk@2.24.0/dist/main.js';
+            script.onload = () => {
+                console.log('Hedera SDK loaded from fallback CDN');
+                checkLibrariesAndInit();
+            };
+            script.onerror = () => {
+                console.error('All Hedera SDK CDNs failed');
+                addLog('❌ Failed to load Hedera SDK from all CDNs');
+            };
+            document.head.appendChild(script);
+        }
+        
+        // Check if libraries loaded and initialize
+        function checkLibrariesAndInit() {
+            if (typeof window.HashConnect !== 'undefined' && typeof window.HederaSdk !== 'undefined') {
+                console.log('Both libraries loaded successfully');
+                setTimeout(() => {
+                    if (typeof initializeHashConnect === 'function') {
+                        initializeHashConnect();
+                    }
+                }, 100);
+            } else {
+                console.log('Waiting for libraries to load...');
+                setTimeout(checkLibrariesAndInit, 200);
+            }
+        }
+        
+        // Start checking after page load
+        window.addEventListener('load', () => {
+            setTimeout(checkLibrariesAndInit, 500);
+        });
+    </script>
+    
+    <!-- Load libraries with correct URLs -->
+    <script src="https://unpkg.com/hashconnect@0.2.9/dist/hashconnect.js" onerror="loadHashConnectFallback1()"></script>
+    <script src="https://unpkg.com/@hashgraph/sdk@2.24.0/dist/main.js" onerror="loadHederaSDKFallback()"></script>
+
+    <script>
+        let hashConnect = null;
+        let isConnected = false;
+        let accountId = null;
+        let installedExtensions = [];
+
+        // Initialize HashConnect
+        async function initializeHashConnect() {
+            try {
+                addLog('Initializing HashConnect...');
+                
+                // Check if HashConnect is loaded
+                if (typeof window.HashConnect === 'undefined') {
+                    addLog('HashConnect not found, checking window object...');
+                    addLog('Available window properties: ' + Object.keys(window).filter(k => k.toLowerCase().includes('hash')).join(', '));
+                    throw new Error('HashConnect library not loaded');
+                }
+                
+                addLog('HashConnect library loaded successfully');
+                addLog('HashConnect version: ' + (window.HashConnect.version || 'unknown'));
+                
+                // Create HashConnect instance (v0.2.9 API)
+                hashConnect = new window.HashConnect.HashConnect(true);
+                
+                addLog('HashConnect instance created');
+                
+                // Initialize HashConnect (v0.2.9 API)
+                const appMetadata = {
+                    name: "TrustBridge Test",
+                    description: "Test application for HashPack integration",
+                    icon: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&h=400&fit=crop&crop=center"
+                };
+                
+                await hashConnect.init(appMetadata, "testnet", false);
+                
+                addLog('HashConnect initialized successfully');
+                
+                // Check for installed extensions
+                installedExtensions = hashConnect.getInstalledExtensions();
+                addLog('Installed extensions: ' + installedExtensions.length);
+                
+                if (installedExtensions.length > 0) {
+                    updateStatus('HashPack wallet detected! Ready to connect.', 'success');
+                    document.getElementById('connectBtn').disabled = false;
+                    addLog('HashPack extension found: ' + installedExtensions[0].name);
+                } else {
+                    updateStatus('HashPack wallet not detected. Please install the extension.', 'error');
+                    addLog('No HashPack extension found');
+                }
+                
+                // Set up event listeners
+                setupEventListeners();
+                
+            } catch (error) {
+                addLog('HashConnect initialization failed: ' + error.message);
+                updateStatus('Failed to initialize HashConnect: ' + error.message, 'error');
+            }
+        }
+
+        // Set up HashConnect event listeners
+        function setupEventListeners() {
+            if (!hashConnect) return;
+            
+            // Listen for pairing events
+            hashConnect.pairingEvent.on((pairingData) => {
+                addLog('Pairing event received: ' + JSON.stringify(pairingData));
+                if (pairingData.accountIds && pairingData.accountIds.length > 0) {
+                    accountId = pairingData.accountIds[0];
+                    isConnected = true;
+                    updateStatus(`Connected! Account: ${accountId}`, 'success');
+                    
+                    document.getElementById('connectBtn').disabled = true;
+                    document.getElementById('disconnectBtn').disabled = false;
+                    document.getElementById('getAccountBtn').disabled = false;
+                    document.getElementById('getBalanceBtn').disabled = false;
+                }
+            });
+            
+            // Listen for connection status changes
+            hashConnect.connectionStatusChangeEvent.on((connectionStatus) => {
+                addLog('Connection status changed: ' + connectionStatus);
+                if (connectionStatus === window.HashConnect.ConnectionStatus.Disconnected) {
+                    isConnected = false;
+                    accountId = null;
+                    updateStatus('Disconnected from HashPack', 'info');
+                    
+                    document.getElementById('connectBtn').disabled = false;
+                    document.getElementById('disconnectBtn').disabled = true;
+                    document.getElementById('getAccountBtn').disabled = true;
+                    document.getElementById('getBalanceBtn').disabled = true;
+                }
+            });
+        }
+
+        // Update status message
+        function updateStatus(message, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+        }
+
+        // Add log entry
+        function addLog(message) {
+            const logsEl = document.getElementById('logs');
+            const logContentEl = document.getElementById('logContent');
+            logsEl.style.display = 'block';
+            logContentEl.textContent += new Date().toISOString() + ': ' + message + '\n';
+        }
+
+        // Manual detection function
+        function manualDetect() {
+            addLog('=== MANUAL DETECTION ===');
+            addLog('Checking HashConnect and HashPack...');
+            
+            // Check HashConnect library
+            if (typeof window.HashConnect !== 'undefined') {
+                addLog('✅ HashConnect library: LOADED');
+                addLog('   Version: ' + (window.HashConnect.version || 'unknown'));
+            } else {
+                addLog('❌ HashConnect library: NOT FOUND');
+            }
+            
+            // Check if HashConnect instance exists
+            if (hashConnect) {
+                addLog('✅ HashConnect instance: CREATED');
+                addLog('   Connection status: ' + hashConnect.connectionStatus);
+                addLog('   Installed extensions: ' + installedExtensions.length);
+                
+                if (installedExtensions.length > 0) {
+                    installedExtensions.forEach((ext, index) => {
+                        addLog(`   Extension ${index + 1}: ${ext.name} (${ext.id})`);
+                    });
+                }
+            } else {
+                addLog('❌ HashConnect instance: NOT CREATED');
+            }
+            
+            // Check for HashPack extension directly
+            if (window.ethereum) {
+                addLog('✅ window.ethereum: EXISTS');
+                addLog('   Properties: ' + Object.keys(window.ethereum).slice(0, 10).join(', '));
+            } else {
+                addLog('❌ window.ethereum: NOT FOUND');
+            }
+            
+            // Check for other wallet objects
+            const walletKeys = Object.keys(window).filter(k => 
+                k.toLowerCase().includes('wallet') || 
+                k.toLowerCase().includes('hash') ||
+                k.toLowerCase().includes('hedera')
+            );
+            addLog(`Wallet-related keys: ${walletKeys.join(', ')}`);
+            
+            addLog('=== END MANUAL DETECTION ===');
+        }
+
+        // Retry initialization function
+        function retryInitialization() {
+            addLog('=== RETRYING INITIALIZATION ===');
+            addLog('Checking if HashConnect is available...');
+            
+            if (typeof window.HashConnect !== 'undefined') {
+                addLog('HashConnect found, retrying initialization...');
+                initializeHashConnect();
+            } else {
+                addLog('HashConnect still not found, trying to reload library...');
+                loadHashConnectFallback1();
+            }
+        }
+
+        // Connect to HashPack using HashConnect
+        async function connectWallet() {
+            try {
+                updateStatus('Connecting to HashPack...', 'info');
+                addLog('Attempting to connect to HashPack wallet via HashConnect');
+                
+                if (!hashConnect) {
+                    throw new Error('HashConnect not initialized');
+                }
+
+                if (installedExtensions.length === 0) {
+                    throw new Error('No HashPack extension found. Please install HashPack from the Chrome Web Store.');
+                }
+
+                // Open pairing modal (v0.2.9 API)
+                const pairingString = hashConnect.getPairingString();
+                addLog('Pairing string generated: ' + pairingString.substring(0, 50) + '...');
+                
+                // Open HashPack for pairing (v0.2.9 API)
+                hashConnect.openPairingModal();
+                
+                updateStatus('Please approve the connection in HashPack...', 'info');
+                addLog('Waiting for user approval in HashPack...');
+                
+            } catch (error) {
+                updateStatus(`Connection failed: ${error.message}`, 'error');
+                addLog(`Connection error: ${error.message}`);
+            }
+        }
+
+        // Disconnect from HashPack
+        async function disconnectWallet() {
+            try {
+                updateStatus('Disconnecting...', 'info');
+                addLog('Disconnecting from HashPack wallet');
+                
+                if (hashConnect) {
+                    await hashConnect.disconnect();
+                }
+                
+                // Clear local state
+                isConnected = false;
+                accountId = null;
+                
+                updateStatus('Disconnected from HashPack', 'info');
+                addLog('Disconnected successfully');
+                
+                document.getElementById('connectBtn').disabled = false;
+                document.getElementById('disconnectBtn').disabled = true;
+                document.getElementById('getAccountBtn').disabled = true;
+                document.getElementById('getBalanceBtn').disabled = true;
+                
+                // Hide info panels
+                document.getElementById('accountInfo').style.display = 'none';
+                document.getElementById('balanceInfo').style.display = 'none';
+            } catch (error) {
+                updateStatus(`Disconnect error: ${error.message}`, 'error');
+                addLog(`Disconnect error: ${error.message}`);
+            }
+        }
+
+        // Get account information
+        async function getAccountInfo() {
+            try {
+                updateStatus('Getting account info...', 'info');
+                addLog('Requesting account information');
+                
+                const response = await hashpack.request({
+                    method: 'getAccountInfo',
+                    params: {
+                        accountId: accountId
+                    }
+                });
+
+                if (response.success) {
+                    const accountDetails = document.getElementById('accountDetails');
+                    accountDetails.innerHTML = `
+                        <p><strong>Account ID:</strong> ${response.accountId}</p>
+                        <p><strong>Balance:</strong> ${response.balance} ℏ</p>
+                        <p><strong>Key:</strong> ${response.key ? response.key.toString() : 'N/A'}</p>
+                        <p><strong>Memo:</strong> ${response.memo || 'N/A'}</p>
+                    `;
+                    
+                    document.getElementById('accountInfo').style.display = 'block';
+                    updateStatus('Account info retrieved successfully!', 'success');
+                    addLog(`Account info: ${JSON.stringify(response, null, 2)}`);
+                } else {
+                    throw new Error(response.error || 'Failed to get account info');
+                }
+            } catch (error) {
+                updateStatus(`Account info error: ${error.message}`, 'error');
+                addLog(`Account info error: ${error.message}`);
+            }
+        }
+
+        // Get balance
+        async function getBalance() {
+            try {
+                updateStatus('Getting balance...', 'info');
+                addLog('Requesting account balance');
+                
+                const response = await hashpack.request({
+                    method: 'getAccountBalance',
+                    params: {
+                        accountId: accountId
+                    }
+                });
+
+                if (response.success) {
+                    const balanceDetails = document.getElementById('balanceDetails');
+                    balanceDetails.innerHTML = `
+                        <p><strong>HBAR Balance:</strong> ${response.hbars} ℏ</p>
+                        <p><strong>Tokens:</strong> ${response.tokens ? response.tokens.length : 0}</p>
+                        <p><strong>Response:</strong></p>
+                        <pre>${JSON.stringify(response, null, 2)}</pre>
+                    `;
+                    
+                    document.getElementById('balanceInfo').style.display = 'block';
+                    updateStatus('Balance retrieved successfully!', 'success');
+                    addLog(`Balance info: ${JSON.stringify(response, null, 2)}`);
+                } else {
+                    throw new Error(response.error || 'Failed to get balance');
+                }
+            } catch (error) {
+                updateStatus(`Balance error: ${error.message}`, 'error');
+                addLog(`Balance error: ${error.message}`);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('connectBtn').addEventListener('click', connectWallet);
+        document.getElementById('disconnectBtn').addEventListener('click', disconnectWallet);
+        document.getElementById('getAccountBtn').addEventListener('click', getAccountInfo);
+        document.getElementById('getBalanceBtn').addEventListener('click', getBalance);
+
+        // Initialize
+        window.addEventListener('load', () => {
+            addLog('Page loaded, waiting for libraries to load...');
+            // Wait a bit for libraries to load
+            setTimeout(() => {
+                addLog('Initializing HashConnect...');
+                initializeHashConnect();
+            }, 1000);
+        });
+
+        // Listen for HashPack events
+        window.addEventListener('hashpack', (event) => {
+            addLog(`HashPack event: ${JSON.stringify(event.detail)}`);
+        });
+    </script>
+</body>
+</html>
+           
+2025-09-27T19:13:47.721Z: Page loaded, waiting for libraries to load...
+2025-09-27T19:13:48.722Z: Initializing HashConnect...
+2025-09-27T19:13:48.723Z: Initializing HashConnect...
+2025-09-27T19:13:48.723Z: HashConnect not found, checking window object...
+2025-09-27T19:13:48.723Z: Available window properties: onhashchange, loadHashConnectFallback1, loadHashConnectFallback2, initializeHashConnect
+2025-09-27T19:13:48.723Z: HashConnect initialization failed: HashConnect library not loaded

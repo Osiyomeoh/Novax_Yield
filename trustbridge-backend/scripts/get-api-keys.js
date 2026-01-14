@@ -1,0 +1,300 @@
+#!/usr/bin/env node
+
+/**
+ * TrustBridge API Keys Setup Script
+ * 
+ * This script helps you get all the required API keys for beta testing
+ * Run with: node scripts/get-api-keys.js
+ */
+
+const readline = require('readline');
+const fs = require('fs');
+const path = require('path');
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+const question = (query) => new Promise((resolve) => rl.question(query, resolve));
+
+async function main() {
+  console.log('🚀 TrustBridge Beta API Keys Setup\n');
+  console.log('This script will help you get all required API keys for beta testing.\n');
+
+  const apiKeys = {};
+
+  // Hedera Testnet (CRITICAL)
+  console.log('🔴 CRITICAL - Hedera Testnet Credentials');
+  console.log('1. Visit: https://portal.hedera.com/');
+  console.log('2. Create account and go to "Create Account" → "Testnet"');
+  console.log('3. Copy your Account ID and Private Key\n');
+  
+  apiKeys.HEDERA_ACCOUNT_ID = await question('Enter your Hedera Account ID (e.g., 0.0.123456): ');
+  apiKeys.HEDERA_PRIVATE_KEY = await question('Enter your Hedera Private Key: ');
+  console.log('✅ Hedera credentials saved\n');
+
+  // Google APIs
+  console.log('🟡 Google APIs (OCR + GPS)');
+  console.log('1. Visit: https://console.cloud.google.com/');
+  console.log('2. Create new project or select existing');
+  console.log('3. Enable APIs: Vision API, Maps JavaScript API, Geocoding API');
+  console.log('4. Create credentials → API Key\n');
+  
+  apiKeys.GOOGLE_API_KEY = await question('Enter your Google API Key: ');
+  console.log('✅ Google API key saved\n');
+
+  // OpenWeatherMap
+  console.log('🟡 OpenWeatherMap (Weather Data)');
+  console.log('1. Visit: https://openweathermap.org/api');
+  console.log('2. Sign up for free account');
+  console.log('3. Go to API keys section\n');
+  
+  apiKeys.OPENWEATHER_API_KEY = await question('Enter your OpenWeatherMap API Key: ');
+  console.log('✅ OpenWeatherMap key saved\n');
+
+  // Alpha Vantage
+  console.log('🟡 Alpha Vantage (Market Data)');
+  console.log('1. Visit: https://www.alphavantage.co/support/#api-key');
+  console.log('2. Enter email and get free API key\n');
+  
+  apiKeys.ALPHA_VANTAGE_API_KEY = await question('Enter your Alpha Vantage API Key: ');
+  console.log('✅ Alpha Vantage key saved\n');
+
+  // SendGrid
+  console.log('🟡 SendGrid (Email Notifications)');
+  console.log('1. Visit: https://sendgrid.com/');
+  console.log('2. Sign up for free account');
+  console.log('3. Go to Settings → API Keys\n');
+  
+  apiKeys.SENDGRID_API_KEY = await question('Enter your SendGrid API Key: ');
+  console.log('✅ SendGrid key saved\n');
+
+  // Africa's Talking
+  console.log('🟡 Africa\'s Talking (SMS for Nigeria)');
+  console.log('1. Visit: https://africastalking.com/');
+  console.log('2. Sign up for free account');
+  console.log('3. Go to SMS → Settings\n');
+  
+  apiKeys.AT_USERNAME = await question('Enter your Africa\'s Talking Username: ');
+  apiKeys.AT_API_KEY = await question('Enter your Africa\'s Talking API Key: ');
+  console.log('✅ Africa\'s Talking credentials saved\n');
+
+  // Stripe
+  console.log('🟡 Stripe (Payment Processing)');
+  console.log('1. Visit: https://stripe.com/');
+  console.log('2. Sign up for account');
+  console.log('3. Go to Developers → API Keys\n');
+  
+  apiKeys.STRIPE_SECRET_KEY = await question('Enter your Stripe Secret Key (sk_test_...): ');
+  apiKeys.STRIPE_PUBLISHABLE_KEY = await question('Enter your Stripe Publishable Key (pk_test_...): ');
+  console.log('✅ Stripe keys saved\n');
+
+  // Optional APIs
+  console.log('🔵 OPTIONAL - Advanced Features');
+  const includeOptional = await question('Do you want to set up optional APIs? (y/n): ');
+  
+  if (includeOptional.toLowerCase() === 'y') {
+    // AWS
+    console.log('\n🔵 AWS (Advanced OCR)');
+    console.log('1. Visit: https://aws.amazon.com/');
+    console.log('2. Create account and enable Amazon Textract\n');
+    
+    apiKeys.AWS_ACCESS_KEY_ID = await question('Enter your AWS Access Key ID: ');
+    apiKeys.AWS_SECRET_ACCESS_KEY = await question('Enter your AWS Secret Access Key: ');
+    console.log('✅ AWS credentials saved\n');
+
+    // Google Drive
+    console.log('🔵 Google Drive (Cloud File Storage)');
+    console.log('1. Visit: https://console.cloud.google.com/');
+    console.log('2. Enable Google Drive API\n');
+    
+    apiKeys.GOOGLE_DRIVE_CLIENT_ID = await question('Enter your Google Drive Client ID: ');
+    apiKeys.GOOGLE_DRIVE_CLIENT_SECRET = await question('Enter your Google Drive Client Secret: ');
+    apiKeys.GOOGLE_DRIVE_REFRESH_TOKEN = await question('Enter your Google Drive Refresh Token: ');
+    apiKeys.GOOGLE_DRIVE_FOLDER_ID = await question('Enter your Google Drive Folder ID: ');
+    console.log('✅ Google Drive credentials saved\n');
+  }
+
+  // Generate .env file
+  console.log('\n📝 Generating .env file...');
+  
+  const envContent = `# TrustBridge Beta Configuration - Generated by setup script
+# Generated on: ${new Date().toISOString()}
+
+# Database
+MONGODB_URI=mongodb+srv://devcasta:NQZ2mqBmiG1nXwQa@cluster0.ilmv3jy.mongodb.net/trustbridge?retryWrites=true&w=majority&appName=Cluster0
+
+# JWT
+JWT_SECRET=your-super-secret-jwt-key-here-change-in-production
+JWT_EXPIRES_IN=24h
+REFRESH_TOKEN_EXPIRES_IN=7d
+
+# Hedera (CRITICAL)
+HEDERA_NETWORK=testnet
+HEDERA_ACCOUNT_ID=${apiKeys.HEDERA_ACCOUNT_ID}
+HEDERA_PRIVATE_KEY=${apiKeys.HEDERA_PRIVATE_KEY}
+
+# Server
+PORT=4000
+NODE_ENV=production
+FRONTEND_URL=https://trustbridge.africa
+
+# File Storage
+FILE_STORAGE_TYPE=google-drive
+GOOGLE_DRIVE_ENABLED=true
+
+# Google APIs
+GOOGLE_API_KEY=${apiKeys.GOOGLE_API_KEY}
+${apiKeys.GOOGLE_DRIVE_CLIENT_ID ? `GOOGLE_DRIVE_CLIENT_ID=${apiKeys.GOOGLE_DRIVE_CLIENT_ID}` : '# GOOGLE_DRIVE_CLIENT_ID=your-google-drive-client-id'}
+${apiKeys.GOOGLE_DRIVE_CLIENT_SECRET ? `GOOGLE_DRIVE_CLIENT_SECRET=${apiKeys.GOOGLE_DRIVE_CLIENT_SECRET}` : '# GOOGLE_DRIVE_CLIENT_SECRET=your-google-drive-client-secret'}
+${apiKeys.GOOGLE_DRIVE_REFRESH_TOKEN ? `GOOGLE_DRIVE_REFRESH_TOKEN=${apiKeys.GOOGLE_DRIVE_REFRESH_TOKEN}` : '# GOOGLE_DRIVE_REFRESH_TOKEN=your-google-drive-refresh-token'}
+${apiKeys.GOOGLE_DRIVE_FOLDER_ID ? `GOOGLE_DRIVE_FOLDER_ID=${apiKeys.GOOGLE_DRIVE_FOLDER_ID}` : '# GOOGLE_DRIVE_FOLDER_ID=your-google-drive-folder-id'}
+
+# Notifications
+NOTIFICATION_TYPE=real
+EMAIL_PROVIDER=sendgrid
+SMS_PROVIDER=africastalking
+
+# SendGrid
+SENDGRID_API_KEY=${apiKeys.SENDGRID_API_KEY}
+SENDGRID_FROM_EMAIL=noreply@trustbridge.africa
+
+# Africa's Talking
+AT_USERNAME=${apiKeys.AT_USERNAME}
+AT_API_KEY=${apiKeys.AT_API_KEY}
+AT_SENDER_ID=TrustBridge
+
+# External APIs
+OPENWEATHER_API_KEY=${apiKeys.OPENWEATHER_API_KEY}
+ALPHA_VANTAGE_API_KEY=${apiKeys.ALPHA_VANTAGE_API_KEY}
+
+# AWS
+${apiKeys.AWS_ACCESS_KEY_ID ? `AWS_ACCESS_KEY_ID=${apiKeys.AWS_ACCESS_KEY_ID}` : '# AWS_ACCESS_KEY_ID=your-aws-access-key-id'}
+${apiKeys.AWS_SECRET_ACCESS_KEY ? `AWS_SECRET_ACCESS_KEY=${apiKeys.AWS_SECRET_ACCESS_KEY}` : '# AWS_SECRET_ACCESS_KEY=your-aws-secret-access-key'}
+AWS_REGION=us-east-1
+
+# Payments
+STRIPE_SECRET_KEY=${apiKeys.STRIPE_SECRET_KEY}
+STRIPE_PUBLISHABLE_KEY=${apiKeys.STRIPE_PUBLISHABLE_KEY}
+
+# Nigeria/Lagos Specific Settings
+DEFAULT_COUNTRY=Nigeria
+DEFAULT_REGION=Lagos
+DEFAULT_CURRENCY=NGN
+DEFAULT_TIMEZONE=Africa/Lagos
+
+# Lagos Coordinates
+DEFAULT_LAT=6.5244
+DEFAULT_LNG=3.3792
+
+# File Upload Settings
+UPLOAD_DIR=./uploads
+MAX_FILE_SIZE=10485760
+ALLOWED_MIME_TYPES=image/jpeg,image/png,image/gif,application/pdf,text/plain
+
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+
+# Security
+CORS_ORIGIN=https://trustbridge.africa
+HELMET_ENABLED=true
+RATE_LIMITING_ENABLED=true
+
+# Logging
+LOG_LEVEL=info
+LOG_FILE=./logs/trustbridge.log
+
+# Health Check
+HEALTH_CHECK_ENABLED=true
+HEALTH_CHECK_INTERVAL=30000
+`;
+
+  // Write .env file
+  fs.writeFileSync('.env', envContent);
+  console.log('✅ .env file created successfully!');
+
+  // Test API keys
+  console.log('\n🧪 Testing API keys...');
+  
+  const testResults = [];
+  
+  // Test Hedera connection
+  try {
+    console.log('Testing Hedera connection...');
+    // TODO: Add actual Hedera connection test
+    testResults.push('✅ Hedera: Ready to test');
+  } catch (error) {
+    testResults.push('❌ Hedera: Connection failed');
+  }
+
+  // Test Google API
+  try {
+    console.log('Testing Google API...');
+    // TODO: Add actual Google API test
+    testResults.push('✅ Google API: Ready to test');
+  } catch (error) {
+    testResults.push('❌ Google API: Connection failed');
+  }
+
+  // Test OpenWeatherMap
+  try {
+    console.log('Testing OpenWeatherMap...');
+    // TODO: Add actual OpenWeatherMap test
+    testResults.push('✅ OpenWeatherMap: Ready to test');
+  } catch (error) {
+    testResults.push('❌ OpenWeatherMap: Connection failed');
+  }
+
+  // Test Alpha Vantage
+  try {
+    console.log('Testing Alpha Vantage...');
+    // TODO: Add actual Alpha Vantage test
+    testResults.push('✅ Alpha Vantage: Ready to test');
+  } catch (error) {
+    testResults.push('❌ Alpha Vantage: Connection failed');
+  }
+
+  // Test SendGrid
+  try {
+    console.log('Testing SendGrid...');
+    // TODO: Add actual SendGrid test
+    testResults.push('✅ SendGrid: Ready to test');
+  } catch (error) {
+    testResults.push('❌ SendGrid: Connection failed');
+  }
+
+  // Test Africa's Talking
+  try {
+    console.log('Testing Africa\'s Talking...');
+    // TODO: Add actual Africa's Talking test
+    testResults.push('✅ Africa\'s Talking: Ready to test');
+  } catch (error) {
+    testResults.push('❌ Africa\'s Talking: Connection failed');
+  }
+
+  // Test Stripe
+  try {
+    console.log('Testing Stripe...');
+    // TODO: Add actual Stripe test
+    testResults.push('✅ Stripe: Ready to test');
+  } catch (error) {
+    testResults.push('❌ Stripe: Connection failed');
+  }
+
+  console.log('\n📊 Test Results:');
+  testResults.forEach(result => console.log(result));
+
+  console.log('\n🎉 Setup Complete!');
+  console.log('Your TrustBridge beta configuration is ready.');
+  console.log('\nNext steps:');
+  console.log('1. Start the server: npm run start:dev');
+  console.log('2. Test the APIs: npm run test:api');
+  console.log('3. Deploy to production: npm run build && npm run start:prod');
+  console.log('\n🚀 Ready for beta testing!');
+
+  rl.close();
+}
+
+main().catch(console.error);

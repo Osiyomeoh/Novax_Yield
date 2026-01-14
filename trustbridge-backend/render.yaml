@@ -1,0 +1,44 @@
+services:
+  - type: web
+    name: trustbridge-backend
+    env: node
+    plan: starter
+    buildCommand: npm install && npx @nestjs/cli build
+    startCommand: npm run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        fromDatabase:
+          name: trustbridge-mongodb
+          property: connectionString
+      - key: HEDERA_NETWORK
+        value: testnet
+      - key: HEDERA_ACCOUNT_ID
+        sync: false
+      - key: HEDERA_PRIVATE_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: IPFS_API_KEY
+        sync: false
+      - key: IPFS_SECRET_KEY
+        sync: false
+      - key: PINATA_API_KEY
+        sync: false
+      - key: PINATA_SECRET_KEY
+        sync: false
+      - key: CHAINLINK_API_KEY
+        sync: false
+      - key: ADMIN_EMAIL
+        value: admin@tbafrica.xyz
+      - key: ADMIN_PASSWORD
+        sync: false
+
+databases:
+  - name: trustbridge-mongodb
+    plan: starter
+    databaseName: trustbridge
+    user: trustbridge_user

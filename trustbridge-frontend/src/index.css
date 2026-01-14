@@ -1,0 +1,959 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tailwind Layer Overrides - These have same specificity as Tailwind utilities */
+@layer utilities {
+  /* Override ALL dark hover states - Force light backgrounds */
+  [class*="hover:bg-gray-700"]:hover,
+  [class*="hover:bg-gray-800"]:hover,
+  [class*="hover:bg-gray-900"]:hover,
+  [class*="hover:bg-black"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]),
+  [class*="hover:bg-midnight"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]),
+  [class*="hover:bg-dark"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]) {
+    background-color: #F5F5F5 !important;
+    color: #000000 !important;
+  }
+  
+  /* Force all buttons to have light hover unless explicitly black */
+  button:hover:not(.bg-black):not([class*="bg-black"]):not([class*="rk-connectButton"]):not([class*="variant-default"]):not([class*="variant-primary"]):not([class*="variant-destructive"]) {
+    background-color: #F5F5F5 !important;
+    color: #000000 !important;
+  }
+}
+
+/* Base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Smooth scrolling for anchor links */
+html {
+  scroll-padding-top: 80px; /* Account for fixed header */
+}
+
+/* Responsive utilities */
+@media (max-width: 640px) {
+  html {
+    scroll-padding-top: 60px; /* Smaller header on mobile */
+  }
+}
+
+/* Rainbow Kit ConnectButton styles moved to end of file for maximum priority */
+
+/* Rainbow Kit Button Overrides - Light mode only - Centrifuge style */
+[data-rk] button[data-testid]:not([class*="rk-connectButton"]),
+[data-rk] button[class*="rk-"]:not([class*="rk-connectButton"]),
+.rk-button:not([class*="rk-connectButton"]) {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+  border-color: #000000 !important;
+}
+
+[data-rk] button[data-testid]:not([class*="rk-connectButton"]):hover,
+[data-rk] button[class*="rk-"]:not([class*="rk-connectButton"]):hover,
+.rk-button:not([class*="rk-connectButton"]):hover {
+  background-color: #171717 !important;
+  border-color: #171717 !important;
+}
+
+/* Rainbow Kit Modal and Tabs - Light theme overrides */
+[data-rk] [class*="rk-modal"],
+[data-rk] [class*="rk-modal"] [class*="rk-modalContent"] {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+}
+
+/* Rainbow Kit Tabs - Light background with dark text */
+[data-rk] [class*="rk-tab"],
+[data-rk] [class*="rk-tabs"],
+[data-rk] [class*="rk-tabsList"],
+[data-rk] [class*="rk-tabsTrigger"],
+[data-rk] button[class*="rk-tabsTrigger"] {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  border-color: #E5E5E5 !important;
+}
+
+[data-rk] [class*="rk-tabsTrigger"][data-state="active"],
+[data-rk] button[class*="rk-tabsTrigger"][data-state="active"],
+[data-rk] [class*="rk-tabsTrigger"][aria-selected="true"],
+[data-rk] button[class*="rk-tabsTrigger"][aria-selected="true"] {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+  border-bottom-color: #000000 !important;
+}
+
+[data-rk] [class*="rk-tabsTrigger"]:hover,
+[data-rk] button[class*="rk-tabsTrigger"]:hover {
+  background-color: #F5F5F5 !important;
+  color: #000000 !important;
+}
+
+/* General Tab Styling - Fix hover and selected states throughout app */
+/* Override dark hover backgrounds on tabs */
+button[class*="tab"]:hover,
+button[class*="Tab"]:hover,
+[class*="tab"]:hover,
+[class*="Tab"]:hover {
+  background-color: #F5F5F5 !important;
+  color: #000000 !important;
+}
+
+/* Ensure selected/active tabs are visible with black background and white text */
+button[class*="tab"][aria-selected="true"],
+button[class*="Tab"][aria-selected="true"],
+[class*="tab"][aria-selected="true"],
+[class*="Tab"][aria-selected="true"],
+button[class*="tab"].active,
+button[class*="Tab"].active,
+[class*="tab"].active,
+[class*="Tab"].active,
+/* Selected tabs with bg-black or bg-gray-900 should have white text */
+button.bg-black,
+button[class*="bg-black"]:not(:hover):not([class*="hover"]),
+button.bg-gray-900,
+button[class*="bg-gray-900"]:not(:hover):not([class*="hover"]),
+/* Catch tabs that are selected by checking if they have bg-black class */
+html body button.bg-black:not(:hover),
+html body button[class*="bg-black"]:not(:hover):not([class*="hover"]) {
+  background-color: #000000 !important;
+  background: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+/* Force white text on selected tabs - catch all variations including children */
+html body button.bg-black *,
+html body button[class*="bg-black"]:not(:hover):not([class*="hover"]) *,
+html body button.bg-gray-900 *,
+html body button[class*="bg-gray-900"]:not(:hover):not([class*="hover"]) *,
+html body button.bg-black span,
+html body button[class*="bg-black"]:not(:hover) span,
+html body button.bg-black div,
+html body button[class*="bg-black"]:not(:hover) div,
+html body button.bg-black p,
+html body button[class*="bg-black"]:not(:hover) p {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
+/* Button Hover States - Prevent dark backgrounds on hover - MAXIMUM PRIORITY */
+/* Override ALL dark hover states on buttons - must be at end of file for highest priority */
+
+/* For buttons with white/transparent/light backgrounds - keep them light on hover */
+/* BUT exclude buttons with bg-black class to preserve selected tab state */
+button[class*="outline"]:hover:not(.bg-black):not([class*="bg-black"]),
+button[class*="neon"]:hover:not(.bg-black):not([class*="bg-black"]),
+button[class*="ghost"]:hover:not(.bg-black):not([class*="bg-black"]),
+button.bg-white:hover:not(.bg-black):not([class*="bg-black"]),
+button.bg-transparent:hover:not(.bg-black):not([class*="bg-black"]),
+button[class*="bg-white"]:hover:not(.bg-black):not([class*="bg-black"]),
+button[class*="bg-transparent"]:hover:not(.bg-black):not([class*="bg-black"]),
+button[class*="bg-gray-100"]:hover:not(.bg-black):not([class*="bg-black"]),
+button[class*="bg-gray-50"]:hover:not(.bg-black):not([class*="bg-black"]) {
+  background-color: #F5F5F5 !important;
+  background: #F5F5F5 !important;
+  color: #000000 !important;
+}
+
+/* Override ALL dark hover states - catch gray-700, gray-800, gray-900, midnight, dark-gray, etc. */
+button:hover {
+  /* Check if current background is dark and override */
+}
+
+/* Specific overrides for common dark hover classes */
+button[class*="hover:bg-gray-700"]:hover,
+button[class*="hover:bg-gray-800"]:hover,
+button[class*="hover:bg-gray-900"]:hover,
+button[class*="hover:bg-midnight"]:hover,
+button[class*="hover:bg-dark"]:hover,
+button[class*="hover:bg-dark-gray"]:hover,
+button[class*="hover:bg-black"]:hover,
+button[class*="hover:bg-black/80"]:hover,
+button[class*="hover:bg-black/90"]:hover {
+  background-color: #F5F5F5 !important;
+  background: #F5F5F5 !important;
+  color: #000000 !important;
+}
+
+/* Override dark hover backgrounds regardless of class */
+button:hover[style*="background-color: rgb(31, 41, 55)"],
+button:hover[style*="background-color: rgb(17, 24, 39)"],
+button:hover[style*="background-color: rgb(55, 65, 81)"],
+button:hover[style*="background-color: rgb(75, 85, 99)"] {
+  background-color: #F5F5F5 !important;
+  background: #F5F5F5 !important;
+  color: #000000 !important;
+}
+
+/* For black buttons specifically - make them lighter gray on hover */
+button.bg-black:hover,
+button[class*="bg-black"]:hover:not([class*="outline"]):not([class*="neon"]):not([class*="ghost"]) {
+  background-color: #4A4A4A !important;
+  background: #4A4A4A !important;
+}
+
+/* Rainbow Kit Modal Text - Ensure dark text on light background */
+[data-rk] [class*="rk-modal"] *,
+[data-rk] [class*="rk-modalContent"] *,
+[data-rk] [class*="rk-modal"] p,
+[data-rk] [class*="rk-modal"] span,
+[data-rk] [class*="rk-modal"] h1,
+[data-rk] [class*="rk-modal"] h2,
+[data-rk] [class*="rk-modal"] h3 {
+  color: #000000 !important;
+}
+
+/* Rainbow Kit Wallet List Items - Light background */
+[data-rk] [class*="rk-walletList"],
+[data-rk] [class*="rk-walletListItem"],
+[data-rk] button[class*="rk-walletListItem"] {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  border-color: #E5E5E5 !important;
+}
+
+[data-rk] button[class*="rk-walletListItem"]:hover {
+  background-color: #F5F5F5 !important;
+  color: #000000 !important;
+}
+
+/* Override Rainbow Kit accent colors - Light mode only */
+[data-rk] [class*="accent"],
+[data-rk] [class*="primary"] {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+/* Button Overrides - Light mode only - Centrifuge style */
+button[class*="bg-primary-blue"],
+button[class*="bg-blue"],
+button[class*="text-primary-blue"],
+button[class*="text-blue"],
+button[class*="border-primary-blue"],
+button[class*="border-blue"],
+button.bg-primary-blue,
+button.bg-blue-600,
+button.bg-blue-500,
+button.bg-blue-400 {
+  background-color: #000000 !important;
+  background: #000000 !important;
+  color: #FFFFFF !important;
+  border-color: #000000 !important;
+}
+
+/* Override any gradient backgrounds on buttons */
+button[class*="from-primary-blue"],
+button[class*="to-primary-blue"],
+button[class*="from-blue"],
+button[class*="to-blue"],
+button[class*="bg-gradient"] {
+  background: #000000 !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+}
+
+/* Force override for primary variant buttons - Light mode only */
+button[class*="variant-primary"],
+button[class*="variant=primary"] {
+  background: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+/* CSS Variables for theming - Centrifuge-inspired (Light mode only) */
+:root {
+  /* Light mode variables - Centrifuge style */
+  --bg-primary: #FAFAFA; /* Off-white background like Centrifuge */
+  --bg-secondary: #FFFFFF; /* Pure white for cards/boxes */
+  --bg-tertiary: #F5F5F5;
+  --text-primary: #000000;
+  --text-secondary: #171717;
+  --text-tertiary: #525252;
+  --text-inverse: #FFFFFF;
+  --border-primary: #E5E5E5;
+  --border-secondary: #D4D4D4;
+  --border-accent: #000000;
+}
+
+/* Light mode only - Centrifuge style */
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Light mode styles - Centrifuge style - Pure white for cards */
+.bg-background-secondary,
+[class*="bg-background-secondary"] {
+  background-color: #FFFFFF !important; /* Pure white for cards */
+  border: 1px solid #E5E5E5;
+}
+
+/* Force all Card components to have white backgrounds - Centrifuge style */
+div[class*="rounded"][class*="border"]:not([class*="bg-black"]):not([class*="bg-gray-900"]),
+div[class*="Card"],
+.card {
+  background-color: #FFFFFF !important;
+}
+
+/* Override any dark backgrounds in marketplace cards */
+div[class*="overflow-hidden"][class*="border"] {
+  background-color: #FFFFFF !important;
+}
+
+/* Remove ALL black backgrounds from containers - Centrifuge style */
+nav.bg-black,
+section.bg-black,
+div.bg-black:not(button):not([class*="w-"]):not([class*="h-"]):not([class*="rounded-full"]),
+[class*="bg-black/"]:not(button):not([class*="w-"]):not([class*="h-"]):not([class*="rounded-full"]) {
+  background-color: #FFFFFF !important;
+}
+
+/* Remove dark gray backgrounds from containers */
+.bg-dark-gray:not(button):not([class*="w-"]):not([class*="h-"]):not([class*="rounded-full"]),
+.bg-gray-900:not(button):not([class*="w-"]):not([class*="h-"]):not([class*="rounded-full"]) {
+  background-color: #FFFFFF !important;
+}
+
+.bg-background-tertiary {
+  background-color: #FAFAFA !important;
+  border: 1px solid #D4D4D4;
+}
+
+/* Force Toast notifications to have white backgrounds - Maximum specificity */
+[data-radix-toast-viewport] > [data-state],
+[data-radix-toast-viewport] > div,
+[data-radix-toast-viewport] > [data-state][class*="group"],
+[role="status"][data-state],
+[role="status"],
+div[data-state],
+div[role="status"] {
+  background-color: #FFFFFF !important;
+  background: #FFFFFF !important;
+  color: #000000 !important;
+  border-color: #E5E5E5 !important;
+}
+
+/* Override dark toast backgrounds with even more specificity */
+[data-radix-toast-viewport] > [data-state][class*="bg-dark"],
+[data-radix-toast-viewport] > [data-state][class*="bg-gray-900"],
+[data-radix-toast-viewport] > [data-state][class*="bg-gray-800"],
+[data-radix-toast-viewport] > [data-state][class*="bg-dark-gray"],
+[data-radix-toast-viewport] > [data-state][class*="bg-medium-gray"],
+[role="status"][class*="bg-dark"],
+[role="status"][class*="bg-gray-900"],
+[role="status"][class*="bg-gray-800"],
+[role="status"][class*="bg-dark-gray"],
+div[data-state][class*="bg-dark"],
+div[data-state][class*="bg-gray-900"] {
+  background-color: #FFFFFF !important;
+  background: #FFFFFF !important;
+  color: #000000 !important;
+}
+
+/* Toast text colors - override all child elements */
+[data-radix-toast-viewport] > [data-state] *,
+[data-radix-toast-viewport] > [data-state] span,
+[data-radix-toast-viewport] > [data-state] p,
+[data-radix-toast-viewport] > [data-state] div,
+[role="status"] *,
+[role="status"] span,
+[role="status"] p,
+[role="status"] div {
+  color: #000000 !important;
+}
+
+/* Destructive toast text */
+[data-radix-toast-viewport] > [data-state][class*="destructive"] *,
+[data-radix-toast-viewport] > [data-state][class*="destructive"] span,
+[data-radix-toast-viewport] > [data-state][class*="destructive"] p,
+[role="status"][class*="destructive"] *,
+[role="status"][class*="destructive"] span,
+[role="status"][class*="destructive"] p {
+  color: #DC2626 !important;
+}
+
+.text-text-primary {
+  color: #000000;
+}
+
+.text-text-secondary {
+  color: #171717;
+}
+
+.text-text-tertiary {
+  color: #525252;
+}
+
+.border-border-primary {
+  border-color: #E5E5E5;
+}
+
+.border-border-accent {
+  border-color: #000000;
+}
+
+/* Shadows - Light mode only - Centrifuge style (minimal shadows) */
+.shadow-sm {
+  box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.03);
+}
+
+.shadow-md {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.shadow-lg {
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
+}
+
+.light .shadow-primary-blue\/10 {
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.light .shadow-primary-blue\/20 {
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+}
+
+.light .shadow-neon {
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Light mode card hover effects */
+.light .hover\:shadow-lg:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.light .hover\:shadow-primary-blue\/10:hover {
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.light .hover\:shadow-neon:hover {
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Custom scrollbar - Light mode only - Centrifuge style */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FAFAFA;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D4D4D4;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #A3A3A3;
+}
+
+/* Typography - Centrifuge style */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+p, span, div {
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(180deg); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes glitch {
+  0%, 100% { text-shadow: 2px 2px #000000; }
+  25% { text-shadow: -2px -2px #333333; }
+  50% { text-shadow: 2px -2px #000000; }
+}
+
+@keyframes morph {
+  0%, 100% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+  50% { border-radius: 70% 30% 30% 70% / 70% 70% 30% 30%; }
+}
+
+@keyframes grid-move {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(20px, 20px); }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+/* Custom utilities */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar { 
+  display: none;  /* Safari and Chrome */
+}
+
+.diagonal-cut {
+  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 100%, 20px 100%);
+}
+
+.diagonal-cut-large {
+  clip-path: polygon(0 0, calc(100% - 30px) 0, 100% 100%, 30px 100%);
+}
+
+.triangle {
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+.morphing-shape {
+  border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+  animation: morph 8s ease-in-out infinite;
+}
+
+.neon-glow {
+  box-shadow: 0 0 10px #000000, 0 0 20px #000000, 0 0 30px #000000, inset 0 0 10px #000000;
+}
+
+.text-stroke {
+  -webkit-text-stroke: 2px #000000;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #333333 0%, #000000 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.outlined-text {
+  -webkit-text-stroke: 2px #000000;
+  -webkit-text-fill-color: transparent;
+}
+
+.floating {
+  animation: float 6s ease-in-out infinite;
+}
+
+.rotating {
+  animation: rotate 20s linear infinite;
+}
+
+.pulsing {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.2), transparent);
+  animation: shimmer 2s infinite;
+}
+
+.breathing {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+.texture-pattern {
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(0, 0, 0, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(0, 0, 0, 0.03) 0%, transparent 50%);
+}
+
+.light-texture-pattern {
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(0, 0, 0, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(0, 0, 0, 0.02) 0%, transparent 50%);
+}
+
+/* Light mode specific styles */
+/* Light mode only utility classes - Centrifuge style */
+.bg-black {
+  @apply bg-light-bg;
+}
+
+.text-off-white {
+  @apply text-light-text;
+}
+
+.bg-dark-gray {
+  @apply bg-light-card;
+}
+
+.border-primary-blue\/20 {
+  @apply border-light-border;
+}
+
+.text-off-white\/70 {
+  @apply text-light-text-secondary;
+}
+
+.bg-dark-gray\/30 {
+  @apply bg-light-surface;
+}
+
+.bg-dark-gray\/50 {
+  @apply bg-light-surface;
+}
+
+.hover\:bg-dark-gray\/50:hover {
+  @apply hover:bg-light-surface;
+}
+
+.border-medium-gray\/30 {
+  @apply border-light-border;
+}
+
+.text-medium-gray {
+  @apply text-light-text-secondary;
+}
+
+.bg-gradient-to-b {
+  @apply from-light-card to-light-surface;
+}
+
+.backdrop-blur-sm {
+  @apply bg-light-card/80;
+}
+
+.texture-pattern {
+  @apply light-texture-pattern;
+}
+
+/* Input styling - Light mode only - Centrifuge style */
+input[type="text"], 
+input[type="number"], 
+input[type="email"], 
+input[type="password"], 
+textarea, 
+select {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  border: 1px solid #E5E5E5 !important;
+  border-radius: 4px !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Input focus states - Light mode only - Centrifuge style */
+input:focus, textarea:focus, select:focus {
+  outline: none !important;
+  border-color: #000000 !important;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .cursor, .cursor-follower { display: none; }
+  .floating-card { transform: none; }
+  .bento-grid { grid-template-columns: 1fr; }
+  .display-heading { font-size: 48px; }
+  .nav-sphere { width: 3rem; height: 3rem; top: 1.25rem; right: 1.25rem; }
+}
+
+@media (max-width: 1023px) {
+  .lg\:ml-64 {
+    margin-left: 0 !important;
+  }
+  
+  .lg\:pt-0 {
+    padding-top: 0 !important;
+  }
+}
+
+/* ============================================
+   RAINBOW KIT CONNECT BUTTON - HIGHEST PRIORITY
+   Must be at the end to override all other styles
+   ============================================ */
+/* ConnectButton - White background with black text - MAXIMUM SPECIFICITY */
+button[class*="rk-connectButton"],
+[data-rk] button[class*="rk-connectButton"],
+div[class*="rk-connectButton"] button,
+[data-rk] div[class*="rk-connectButton"] button,
+button[data-testid][class*="rk-connectButton"],
+[data-rk] button[data-testid][class*="rk-connectButton"],
+header button[class*="rk-connectButton"],
+[data-rk] header button[class*="rk-connectButton"],
+body button[class*="rk-connectButton"],
+[data-rk] body button[class*="rk-connectButton"] {
+  background-color: #FFFFFF !important;
+  background: #FFFFFF !important;
+  background-image: none !important;
+  color: #000000 !important;
+  border: 1px solid #000000 !important;
+  border-color: #000000 !important;
+}
+
+/* ConnectButton text and icon colors - MAXIMUM SPECIFICITY */
+button[class*="rk-connectButton"] span,
+button[class*="rk-connectButton"] div,
+button[class*="rk-connectButton"] p,
+[data-rk] button[class*="rk-connectButton"] span,
+[data-rk] button[class*="rk-connectButton"] div,
+[data-rk] button[class*="rk-connectButton"] p,
+button[class*="rk-connectButton"] svg,
+[data-rk] button[class*="rk-connectButton"] svg,
+button[class*="rk-connectButton"] svg path,
+[data-rk] button[class*="rk-connectButton"] svg path {
+  color: #000000 !important;
+  fill: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* ConnectButton hover state - MAXIMUM SPECIFICITY */
+button[class*="rk-connectButton"]:hover,
+[data-rk] button[class*="rk-connectButton"]:hover,
+div[class*="rk-connectButton"] button:hover,
+[data-rk] div[class*="rk-connectButton"] button:hover,
+button[data-testid][class*="rk-connectButton"]:hover,
+[data-rk] button[data-testid][class*="rk-connectButton"]:hover,
+header button[class*="rk-connectButton"]:hover,
+[data-rk] header button[class*="rk-connectButton"]:hover {
+  background-color: #000000 !important;
+  background: #000000 !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+  border-color: #000000 !important;
+}
+
+/* ConnectButton hover text and icon colors - MAXIMUM SPECIFICITY */
+button[class*="rk-connectButton"]:hover span,
+button[class*="rk-connectButton"]:hover div,
+button[class*="rk-connectButton"]:hover p,
+[data-rk] button[class*="rk-connectButton"]:hover span,
+[data-rk] button[class*="rk-connectButton"]:hover div,
+[data-rk] button[class*="rk-connectButton"]:hover p,
+button[class*="rk-connectButton"]:hover svg,
+[data-rk] button[class*="rk-connectButton"]:hover svg,
+button[class*="rk-connectButton"]:hover svg path,
+[data-rk] button[class*="rk-connectButton"]:hover svg path {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
+/* ============================================
+   BUTTON HOVER STATES - PREVENT DARK BACKGROUNDS
+   Must be at the very end for maximum priority
+   ============================================ */
+
+/* Override ALL dark hover states on buttons - except black buttons and ConnectButton */
+button:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]) {
+  /* Check if background is dark and override to light */
+}
+
+/* Specific overrides for common dark hover classes - except black buttons */
+button[class*="hover:bg-gray-700"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]),
+button[class*="hover:bg-gray-800"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]),
+button[class*="hover:bg-gray-900"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]),
+button[class*="hover:bg-midnight"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]),
+button[class*="hover:bg-dark"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]),
+button[class*="hover:bg-dark-gray"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]) {
+  background-color: #F5F5F5 !important;
+  background: #F5F5F5 !important;
+  color: #000000 !important;
+}
+
+/* Override dark hover backgrounds from inline styles */
+button:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"])[style*="background-color: rgb(31, 41, 55)"],
+button:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"])[style*="background-color: rgb(17, 24, 39)"],
+button:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"])[style*="background-color: rgb(55, 65, 81)"],
+button:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"])[style*="background-color: rgb(75, 85, 99)"] {
+  background-color: #F5F5F5 !important;
+  background: #F5F5F5 !important;
+  color: #000000 !important;
+}
+
+/* For buttons with light backgrounds - ensure they stay light on hover */
+button.bg-white:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]),
+button[class*="bg-white"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]),
+button.bg-transparent:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]),
+button[class*="bg-transparent"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]),
+button[class*="outline"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]),
+button[class*="neon"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]),
+button[class*="ghost"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]) {
+  background-color: #F5F5F5 !important;
+  background: #F5F5F5 !important;
+  color: #000000 !important;
+}
+
+/* Force outline variant buttons to have light hover - MAXIMUM PRIORITY */
+/* BUT exclude buttons with bg-black class to preserve selected tab state */
+html body button[class*="variant-outline"]:hover:not(.bg-black):not([class*="bg-black"]),
+html body button[data-variant="outline"]:hover:not(.bg-black):not([class*="bg-black"]),
+html body button[class*="outline"]:hover:not(.bg-black):not([class*="bg-black"]) {
+  background-color: #F5F5F5 !important;
+  background: #F5F5F5 !important;
+  color: #000000 !important;
+}
+
+/* Override any dark hover on dashboard buttons - MAXIMUM SPECIFICITY */
+html body div[class*="Dashboard"] button:hover:not(.bg-black):not([class*="bg-black"]):not([class*="rk-connectButton"]),
+html body [class*="dashboard"] button:hover:not(.bg-black):not([class*="bg-black"]):not([class*="rk-connectButton"]),
+html body button[class*="outline"]:hover:not(.bg-black):not([class*="bg-black"]):not([class*="rk-connectButton"]),
+html body button[data-variant="outline"]:hover:not(.bg-black):not([class*="bg-black"]):not([class*="rk-connectButton"]) {
+  background-color: #F5F5F5 !important;
+  background: #F5F5F5 !important;
+  background-image: none !important;
+  color: #000000 !important;
+}
+
+/* Override ALL button hovers on dashboard page - catch everything with outline variant */
+/* BUT exclude buttons with bg-black class to preserve selected tab state */
+html body button[class*="outline"]:hover:not(.bg-black):not([class*="bg-black"]),
+html body button[data-variant="outline"]:hover:not(.bg-black):not([class*="bg-black"]),
+html body button.variant-outline:hover:not(.bg-black):not([class*="bg-black"]),
+html body button[class*="variant-outline"]:hover:not(.bg-black):not([class*="bg-black"]) {
+  background-color: #F5F5F5 !important;
+  background: #F5F5F5 !important;
+  background-image: none !important;
+  color: #000000 !important;
+}
+
+/* Catch all buttons with white/transparent backgrounds on dashboard */
+/* BUT exclude buttons with bg-black class to preserve selected tab state */
+html body button.bg-white:hover:not(.bg-black):not([class*="bg-black"]),
+html body button[class*="bg-white"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]),
+html body button.bg-transparent:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]) {
+  background-color: #F5F5F5 !important;
+  background: #F5F5F5 !important;
+  color: #000000 !important;
+}
+
+/* FINAL OVERRIDE - Force all non-black buttons to have light hover */
+/* This catches any button that doesn't explicitly have bg-black */
+html body button:hover:not(.bg-black):not([class*="bg-black"]):not([class*="rk-connectButton"]):not([class*="variant-default"]):not([class*="variant-primary"]):not([class*="variant-destructive"]) {
+  /* Check computed background color and override if dark */
+}
+
+/* More specific: Override any hover:bg-* classes that are dark */
+html body button[class*="hover:bg-"]:hover:not([class*="hover:bg-white"]):not([class*="hover:bg-gray-100"]):not([class*="hover:bg-gray-50"]):not([class*="hover:bg-transparent"]):not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]) {
+  background-color: #F5F5F5 !important;
+  background: #F5F5F5 !important;
+  color: #000000 !important;
+}
+
+/* GLOBAL BUTTON HOVER OVERRIDE - Catch all dark hover states with maximum specificity */
+html body button[class*="hover:bg-gray-700"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]),
+html body button[class*="hover:bg-gray-800"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]),
+html body button[class*="hover:bg-gray-900"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]),
+html body button[class*="hover:bg-midnight"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]),
+html body button[class*="hover:bg-dark"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]),
+html body button[class*="hover:bg-dark-gray"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]),
+html body button[class*="hover:bg-black/80"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]),
+html body button[class*="hover:bg-black/90"]:hover:not([class*="rk-connectButton"]):not(.bg-black):not([class*="bg-black"]) {
+  background-color: #F5F5F5 !important;
+  background: #F5F5F5 !important;
+  color: #000000 !important;
+}
+
+/* ABSOLUTE FINAL OVERRIDE - Force black background on selected tabs */
+/* This must be at the very end to override everything else */
+/* Use maximum specificity to ensure this overrides all other rules */
+html body html body button.bg-black,
+html body html body button[class*="bg-black"]:not(:hover),
+html body html body button.bg-black:hover,
+html body html body button[class*="bg-black"]:hover,
+html body html body button.bg-black[class*="outline"],
+html body html body button.bg-black[class*="neon"],
+html body html body button.bg-black[class*="ghost"],
+html body html body button[class*="bg-black"][class*="outline"],
+html body html body button[class*="bg-black"][class*="neon"],
+html body html body button[class*="bg-black"][class*="ghost"],
+html body html body button[class*="bg-black"][class*="variant-outline"],
+html body html body button[class*="bg-black"][data-variant="outline"],
+html body html body button.bg-black[class*="bg-white"],
+html body html body button[class*="bg-black"][class*="bg-white"] {
+  background-color: #000000 !important;
+  background: #000000 !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+}
+
+html body html body button.bg-black *,
+html body html body button[class*="bg-black"]:not(:hover) *,
+html body html body button.bg-black:hover *,
+html body html body button[class*="bg-black"]:hover * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
+/* ULTIMATE OVERRIDE - Target buttons with bg-black class regardless of other classes */
+/* This ensures bg-black always wins over bg-white or any other background class */
+html body button[class*="bg-black"]:not([class*="rk-connectButton"]),
+html body button.bg-black:not([class*="rk-connectButton"]) {
+  background-color: #000000 !important;
+  background: #000000 !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+}
+
+html body button[class*="bg-black"]:not([class*="rk-connectButton"]) *,
+html body button.bg-black:not([class*="rk-connectButton"]) * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
+/* Tranche buttons - Always white background */
+button[data-tranche-button="true"],
+button[data-tranche-button="true"]:hover,
+button[data-tranche-button="true"]:focus,
+button[data-tranche-button="true"]:active {
+  background-color: #FFFFFF !important;
+  background: #FFFFFF !important;
+  color: #111827 !important;
+}
+
+button[data-tranche-button="true"] * {
+  color: inherit !important;
+}

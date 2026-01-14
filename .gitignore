@@ -1,0 +1,71 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.nyc_output/
+*.test.js
+*.spec.js
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
+
+# Contract artifacts (keep structure, ignore compiled files)
+trustbridge-backend/contracts/artifacts/
+trustbridge-backend/contracts/cache/
+trustbridge-backend/contracts/typechain-types/
+trustbridge-backend/contracts/deployments/*.json
+!trustbridge-backend/contracts/deployments/mantle-sepolia-latest.json
+
+# Uploads
+trustbridge-backend/uploads/
+trustbridge-backend/public/uploads/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# OS
+Thumbs.db
+.DS_Store
+

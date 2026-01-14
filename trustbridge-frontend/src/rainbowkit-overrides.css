@@ -1,0 +1,188 @@
+/* RainbowKit Overrides - Loads AFTER RainbowKit styles to ensure precedence */
+
+/* All buttons that open RainbowKit modal - White background with black text */
+/* This includes default ConnectButton and any custom buttons */
+button[class*="rk-connectButton"],
+button[onclick*="openConnectModal"],
+button[onClick*="openConnectModal"],
+[data-rk] button,
+button[data-rk],
+/* ConnectButton - White background with black text */
+button[class*="rk-connectButton"],
+[data-rk] button[class*="rk-connectButton"],
+div[class*="rk-connectButton"] button,
+[data-rk] div[class*="rk-connectButton"] button,
+button[data-testid][class*="rk-connectButton"],
+[data-rk] button[data-testid][class*="rk-connectButton"],
+header button[class*="rk-connectButton"],
+[data-rk] header button[class*="rk-connectButton"],
+body button[class*="rk-connectButton"],
+[data-rk] body button[class*="rk-connectButton"],
+html body button[class*="rk-connectButton"],
+html body [data-rk] button[class*="rk-connectButton"] {
+  background-color: #FFFFFF !important;
+  background: #FFFFFF !important;
+  background-image: none !important;
+  color: #000000 !important;
+  border: 1px solid #000000 !important;
+  border-color: #000000 !important;
+}
+
+/* ConnectButton text and icon colors */
+button[class*="rk-connectButton"] span,
+button[class*="rk-connectButton"] div,
+button[class*="rk-connectButton"] p,
+button[class*="rk-connectButton"] *,
+[data-rk] button[class*="rk-connectButton"] span,
+[data-rk] button[class*="rk-connectButton"] div,
+[data-rk] button[class*="rk-connectButton"] p,
+[data-rk] button[class*="rk-connectButton"] *,
+button[class*="rk-connectButton"] svg,
+[data-rk] button[class*="rk-connectButton"] svg,
+button[class*="rk-connectButton"] svg path,
+[data-rk] button[class*="rk-connectButton"] svg path,
+button[class*="rk-connectButton"] svg *,
+[data-rk] button[class*="rk-connectButton"] svg * {
+  color: #000000 !important;
+  fill: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* ConnectButton hover state */
+button[class*="rk-connectButton"]:hover,
+[data-rk] button[class*="rk-connectButton"]:hover,
+div[class*="rk-connectButton"] button:hover,
+[data-rk] div[class*="rk-connectButton"] button:hover,
+button[data-testid][class*="rk-connectButton"]:hover,
+[data-rk] button[data-testid][class*="rk-connectButton"]:hover,
+header button[class*="rk-connectButton"]:hover,
+[data-rk] header button[class*="rk-connectButton"]:hover {
+  background-color: #000000 !important;
+  background: #000000 !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+  border-color: #000000 !important;
+}
+
+/* ConnectButton hover text and icon colors */
+button[class*="rk-connectButton"]:hover span,
+button[class*="rk-connectButton"]:hover div,
+button[class*="rk-connectButton"]:hover p,
+button[class*="rk-connectButton"]:hover *,
+[data-rk] button[class*="rk-connectButton"]:hover span,
+[data-rk] button[class*="rk-connectButton"]:hover div,
+[data-rk] button[class*="rk-connectButton"]:hover p,
+[data-rk] button[class*="rk-connectButton"]:hover *,
+button[class*="rk-connectButton"]:hover svg,
+[data-rk] button[class*="rk-connectButton"]:hover svg,
+button[class*="rk-connectButton"]:hover svg path,
+[data-rk] button[class*="rk-connectButton"]:hover svg path,
+button[class*="rk-connectButton"]:hover svg *,
+[data-rk] button[class*="rk-connectButton"]:hover svg * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
+/* Ensure no dark backgrounds on ConnectButton - Override inline styles */
+button[class*="rk-connectButton"][style*="background"],
+[data-rk] button[class*="rk-connectButton"][style*="background"],
+button[class*="rk-connectButton"][style*="background-color"],
+[data-rk] button[class*="rk-connectButton"][style*="background-color"] {
+  background-color: #FFFFFF !important;
+  background: #FFFFFF !important;
+}
+
+button[class*="rk-connectButton"][style*="background"]:hover,
+[data-rk] button[class*="rk-connectButton"][style*="background"]:hover,
+button[class*="rk-connectButton"][style*="background-color"]:hover,
+[data-rk] button[class*="rk-connectButton"][style*="background-color"]:hover {
+  background-color: #000000 !important;
+  background: #000000 !important;
+}
+
+/* Override any gradient backgrounds */
+button[class*="rk-connectButton"][style*="gradient"],
+[data-rk] button[class*="rk-connectButton"][style*="gradient"] {
+  background: #FFFFFF !important;
+  background-image: none !important;
+}
+
+/* Force white background on all ConnectButton variants - Maximum specificity */
+button[class*="rk-connectButton"],
+button[class*="rk-connectButton"]:not(:hover),
+button[class*="rk-connectButton"]:not(:active),
+button[class*="rk-connectButton"]:not(:focus),
+[data-rk] button[class*="rk-connectButton"],
+[data-rk] button[class*="rk-connectButton"]:not(:hover),
+[data-rk] button[class*="rk-connectButton"]:not(:active),
+[data-rk] button[class*="rk-connectButton"]:not(:focus) {
+  background-color: #FFFFFF !important;
+  background: #FFFFFF !important;
+  background-image: none !important;
+}
+
+/* Target any button that opens RainbowKit modal - including default ConnectButton */
+[data-rk] button:not([class*="rk-tabsTrigger"]):not([class*="rk-walletListItem"]):not([class*="rk-modal"]),
+button[class*="rk-"]:not([class*="rk-tabsTrigger"]):not([class*="rk-walletListItem"]):not([class*="rk-modal"]):not([class*="rk-closeButton"]) {
+  background-color: #FFFFFF !important;
+  background: #FFFFFF !important;
+  background-image: none !important;
+  color: #000000 !important;
+  border: 1px solid #000000 !important;
+}
+
+[data-rk] button:not([class*="rk-tabsTrigger"]):not([class*="rk-walletListItem"]):not([class*="rk-modal"]):hover,
+button[class*="rk-"]:not([class*="rk-tabsTrigger"]):not([class*="rk-walletListItem"]):not([class*="rk-modal"]):not([class*="rk-closeButton"]):hover {
+  background-color: #000000 !important;
+  background: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+/* RainbowKit Tabs - Fix hover and selected states */
+[data-rk] button[class*="rk-tabsTrigger"],
+[data-rk] [class*="rk-tabsTrigger"] {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  border-color: #E5E5E5 !important;
+}
+
+[data-rk] button[class*="rk-tabsTrigger"]:hover,
+[data-rk] [class*="rk-tabsTrigger"]:hover {
+  background-color: #F5F5F5 !important;
+  color: #000000 !important;
+}
+
+[data-rk] button[class*="rk-tabsTrigger"][data-state="active"],
+[data-rk] [class*="rk-tabsTrigger"][data-state="active"],
+[data-rk] button[class*="rk-tabsTrigger"][aria-selected="true"],
+[data-rk] [class*="rk-tabsTrigger"][aria-selected="true"],
+[data-rk] button[class*="rk-tabsTrigger"][data-state="active"]:hover,
+[data-rk] [class*="rk-tabsTrigger"][data-state="active"]:hover,
+[data-rk] button[class*="rk-tabsTrigger"][aria-selected="true"]:hover,
+[data-rk] [class*="rk-tabsTrigger"][aria-selected="true"]:hover {
+  background-color: #000000 !important;
+  background: #000000 !important;
+  color: #FFFFFF !important;
+  border-color: #000000 !important;
+  border-bottom-color: #000000 !important;
+}
+
+/* Force white text on active/selected RainbowKit tabs - including all children */
+[data-rk] button[class*="rk-tabsTrigger"][data-state="active"] *,
+[data-rk] [class*="rk-tabsTrigger"][data-state="active"] *,
+[data-rk] button[class*="rk-tabsTrigger"][aria-selected="true"] *,
+[data-rk] [class*="rk-tabsTrigger"][aria-selected="true"] *,
+[data-rk] button[class*="rk-tabsTrigger"][data-state="active"] span,
+[data-rk] [class*="rk-tabsTrigger"][data-state="active"] span,
+[data-rk] button[class*="rk-tabsTrigger"][aria-selected="true"] span,
+[data-rk] [class*="rk-tabsTrigger"][aria-selected="true"] span,
+[data-rk] button[class*="rk-tabsTrigger"][data-state="active"] div,
+[data-rk] [class*="rk-tabsTrigger"][data-state="active"] div,
+[data-rk] button[class*="rk-tabsTrigger"][aria-selected="true"] div,
+[data-rk] [class*="rk-tabsTrigger"][aria-selected="true"] div {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+

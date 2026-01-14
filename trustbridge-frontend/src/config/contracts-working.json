@@ -1,0 +1,136 @@
+{
+  "network": "hedera_testnet",
+  "chainId": 296,
+  "rpcUrl": "https://testnet.hashio.io/api",
+  "status": "FULLY_OPERATIONAL",
+  "contracts": {
+    "trustToken": {
+      "address": "0xa6f8fC5b5A9B5670dF868247585bcD86eD124ba2",
+      "name": "TrustBridge",
+      "symbol": "TRUST",
+      "decimals": 18,
+      "totalSupply": "200000000.0",
+      "maxSupply": "1000000000.0",
+      "status": "ACTIVE",
+      "features": ["Minting", "Burning", "Transfers", "Approvals"]
+    },
+    "assetNFT": {
+      "address": "0x42be9627C970D40248690F010b3c2a7F8C68576C",
+      "name": "TrustBridge Asset",
+      "symbol": "TBA",
+      "status": "ACTIVE",
+      "features": ["Asset Tokenization", "Metadata Management", "Ownership Tracking"]
+    },
+    "verificationRegistry": {
+      "address": "0xC2e5D63Da10A3139857D18Cf43eB93CE0133Ca4B",
+      "status": "ACTIVE",
+      "features": ["Verification Records", "Attestor Management", "Status Tracking"]
+    },
+    "trustAssetFactory": {
+      "address": "0x044e4e033978af17102C69E1B79B6Ddc6078A0D9",
+      "status": "ACTIVE",
+      "features": ["Asset Creation", "NFT Minting", "Verification Fees", "Evidence Validation"],
+      "verificationFees": {
+        "basic": "100.0 TRUST",
+        "professional": "200.0 TRUST",
+        "expert": "300.0 TRUST",
+        "master": "500.0 TRUST"
+      }
+    },
+    "attestorVerificationSystem": {
+      "address": "0x25F6F7209692D9b553E4d082bA964A03AdBE630d",
+      "status": "ACTIVE",
+      "features": ["Multi-Tier Attestors", "Attestor Upgrades", "Verification Requests", "Tier Progression"],
+      "tiers": {
+        "basic": {
+          "level": 0,
+          "stake": "1000.0 TRUST",
+          "fee": "25.0 TRUST",
+          "experience": "1 year"
+        },
+        "professional": {
+          "level": 1,
+          "stake": "5000.0 TRUST",
+          "fee": "50.0 TRUST",
+          "experience": "3 years"
+        },
+        "expert": {
+          "level": 2,
+          "stake": "10000.0 TRUST",
+          "fee": "100.0 TRUST",
+          "experience": "5 years"
+        },
+        "master": {
+          "level": 3,
+          "stake": "25000.0 TRUST",
+          "fee": "250.0 TRUST",
+          "experience": "10 years"
+        }
+      }
+    },
+    "trustMarketplace": {
+      "address": "0x67539aC13CD768D29701628242BB21259dde5457",
+      "status": "ACTIVE",
+      "features": ["Asset Listing", "TRUST Token Trading", "Profit Margins", "Order Management"]
+    },
+    "poolManager": {
+      "address": "0x9a366CD458f7ADe4e20317f5915Ae7128CabaC5C",
+      "status": "ACTIVE",
+      "features": ["Investment Pools", "Pool Management", "Liquidity Provision"]
+    },
+    "poolToken": {
+      "address": "0x3262BBF6c5d3Af2cdA1B4E44A10eF16af3A6662e",
+      "name": "TrustBridge Pool Token",
+      "symbol": "TBP",
+      "maxSupply": "1000000000.0",
+      "status": "ACTIVE",
+      "features": ["Pool Tokenization", "Rewards Distribution", "Staking"]
+    },
+    "tradingEngine": {
+      "address": "0xBf2e1a52b59DD6b09A5b091bb97f347D7473585d",
+      "status": "ACTIVE",
+      "features": ["Order Book", "TRUST Token Trading", "Price Discovery"]
+    },
+    "feeDistribution": {
+      "address": "0xa00343B86a5531155F22d91899229124e6619843",
+      "status": "ACTIVE",
+      "features": ["Fee Distribution", "Treasury Management", "Revenue Sharing"]
+    },
+    "spvManager": {
+      "address": "0x10D7EfA83A38A8e37Bad40ac40aDDf7906c0cB43",
+      "status": "ACTIVE",
+      "features": ["SPV Management", "Special Purpose Vehicles", "Legal Entity Management"]
+    },
+    "timelock": {
+      "address": "0x0000000000000000000000000000000000000000",
+      "status": "PENDING",
+      "note": "Requires separate deployment"
+    },
+    "governance": {
+      "address": "0x0000000000000000000000000000000000000000",
+      "status": "PENDING",
+      "note": "Requires Timelock contract"
+    }
+  },
+  "features": {
+    "attestorUpgrade": "WORKING",
+    "assetVerificationUpgrade": "WORKING",
+    "multiTierVerification": "WORKING",
+    "trustTokenEconomy": "WORKING",
+    "marketplaceTrading": "WORKING",
+    "evidenceDocumentMatching": "WORKING",
+    "verificationRequests": "WORKING",
+    "attestorApproval": "WORKING"
+  },
+  "testResults": {
+    "totalAssetsCreated": 26,
+    "totalAttestorsRegistered": 1,
+    "totalVerificationRequests": 5,
+    "attestorUpgrades": 1,
+    "assetVerificationUpgrades": 3,
+    "marketplaceListings": 2,
+    "status": "100% FUNCTIONAL"
+  },
+  "deployer": "0xA6e8bf8E89Bd2c2BD37e308F275C4f52284a911F",
+  "feeRecipient": "0xA6e8bf8E89Bd2c2BD37e308F275C4f52284a911F"
+}

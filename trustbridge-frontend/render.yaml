@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: trustbridge-frontend
+    env: static
+    buildCommand: npm install && npm run build:prod
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://trustbridge-backend.onrender.com/api
+      - key: VITE_HEDERA_NETWORK
+        value: testnet
+      - key: VITE_HEDERA_MIRROR_NODE_URL
+        value: https://testnet.mirrornode.hedera.com
+      - key: VITE_TRUST_TOKEN_ID
+        value: 0.0.6935064
+      - key: VITE_TREASURY_ACCOUNT_ID
+        value: 0.0.6916959
+      - key: VITE_RWA_TOKEN_COLLECTION_ID
+        value: 0.0.7104310
+      - key: VITE_PINATA_GATEWAY_URL
+        value: https://gateway.pinata.cloud
+      - key: VITE_CHAINLINK_ETH_USD_FEED
+        value: 0x694AA1769357215DE4FAC081bf1f309aDC325306
+      - key: VITE_HEDERA_TESTNET_NETWORK
+        value: testnet
+      - key: VITE_HEDERA_MAINNET_NETWORK
+        value: mainnet
+      - key: VITE_APP_NAME
+        value: TrustBridge Africa
+      - key: VITE_APP_DESCRIPTION
+        value: Real-World & Digital Asset Tokenization Platform
+      - key: VITE_APP_URL
+        value: https://tbafrica.xyz
+      - key: VITE_APP_VERSION
+        value: 1.0.0

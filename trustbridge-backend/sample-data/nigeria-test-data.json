@@ -1,0 +1,193 @@
+{
+  "attestors": [
+    {
+      "organizationName": "Lagos State Ministry of Agriculture",
+      "organizationType": "GOVERNMENT_OFFICIAL",
+      "country": "Nigeria",
+      "region": "Lagos",
+      "contactEmail": "agriculture@lagosstate.gov.ng",
+      "contactPhone": "+234-1-234-5678",
+      "specialties": ["AGRICULTURAL", "REAL_ESTATE"],
+      "credentials": {
+        "licenseNumber": "LAG-AGR-2023-001",
+        "registrationNumber": "RC-123456",
+        "certificationBody": "Lagos State Government",
+        "website": "https://agriculture.lagosstate.gov.ng"
+      },
+      "stakeAmount": 10000
+    },
+    {
+      "organizationName": "Nigerian Institution of Surveyors",
+      "organizationType": "SURVEYOR",
+      "country": "Nigeria",
+      "region": "Lagos",
+      "contactEmail": "info@nis.org.ng",
+      "contactPhone": "+234-1-234-5679",
+      "specialties": ["REAL_ESTATE", "AGRICULTURAL"],
+      "credentials": {
+        "licenseNumber": "NIS-2023-456",
+        "registrationNumber": "RC-789012",
+        "certificationBody": "Nigerian Institution of Surveyors",
+        "website": "https://www.nis.org.ng"
+      },
+      "stakeAmount": 15000
+    },
+    {
+      "organizationName": "Ondo State Cocoa Farmers Cooperative",
+      "organizationType": "COOPERATIVE",
+      "country": "Nigeria",
+      "region": "Ondo",
+      "contactEmail": "info@ondococoa.coop.ng",
+      "contactPhone": "+234-803-123-4567",
+      "specialties": ["AGRICULTURAL"],
+      "credentials": {
+        "licenseNumber": "COOP-ONDO-2023-001",
+        "registrationNumber": "RC-345678",
+        "certificationBody": "Ondo State Cooperative Department",
+        "website": "https://www.ondococoa.coop.ng"
+      },
+      "stakeAmount": 8000
+    },
+    {
+      "organizationName": "Nigerian Institution of Estate Surveyors and Valuers",
+      "organizationType": "APPRAISER",
+      "country": "Nigeria",
+      "region": "Lagos",
+      "contactEmail": "info@niesv.org.ng",
+      "contactPhone": "+234-1-234-5680",
+      "specialties": ["REAL_ESTATE"],
+      "credentials": {
+        "licenseNumber": "NIESV-2023-789",
+        "registrationNumber": "RC-901234",
+        "certificationBody": "Nigerian Institution of Estate Surveyors and Valuers",
+        "website": "https://www.niesv.org.ng"
+      },
+      "stakeAmount": 12000
+    },
+    {
+      "organizationName": "Institute of Chartered Accountants of Nigeria",
+      "organizationType": "AUDITOR",
+      "country": "Nigeria",
+      "region": "Lagos",
+      "contactEmail": "info@ican.org.ng",
+      "contactPhone": "+234-1-234-5681",
+      "specialties": ["REAL_ESTATE", "AGRICULTURAL"],
+      "credentials": {
+        "licenseNumber": "ICAN-2023-012",
+        "registrationNumber": "RC-567890",
+        "certificationBody": "Institute of Chartered Accountants of Nigeria",
+        "website": "https://www.ican.org.ng"
+      },
+      "stakeAmount": 18000
+    },
+    {
+      "organizationName": "Kano State Agricultural Development Programme",
+      "organizationType": "EXTENSION_OFFICER",
+      "country": "Nigeria",
+      "region": "Kano",
+      "contactEmail": "info@kanoagric.gov.ng",
+      "contactPhone": "+234-803-234-5678",
+      "specialties": ["AGRICULTURAL"],
+      "credentials": {
+        "licenseNumber": "EXT-KANO-2023-001",
+        "registrationNumber": "RC-123789",
+        "certificationBody": "Kano State Government",
+        "website": "https://agriculture.kanostate.gov.ng"
+      },
+      "stakeAmount": 6000
+    }
+  ],
+  "assets": [
+    {
+      "assetId": "LAGOS-RE-001",
+      "name": "Victoria Island Commercial Complex",
+      "type": "REAL_ESTATE",
+      "description": "Premium commercial building in Victoria Island, Lagos",
+      "location": {
+        "country": "Nigeria",
+        "region": "Lagos",
+        "coordinates": {
+          "lat": 6.4281,
+          "lng": 3.4219
+        },
+        "address": "Victoria Island, Lagos State, Nigeria"
+      },
+      "totalValue": 250000,
+      "tokenSupply": 1000000,
+      "owner": "0x1234567890123456789012345678901234567890",
+      "status": "PENDING_VERIFICATION"
+    },
+    {
+      "assetId": "ONDO-AG-001",
+      "name": "Ondo State Cocoa Farm",
+      "type": "AGRICULTURAL",
+      "description": "Premium cocoa plantation in Ondo State",
+      "location": {
+        "country": "Nigeria",
+        "region": "Ondo",
+        "coordinates": {
+          "lat": 7.1667,
+          "lng": 5.1167
+        },
+        "address": "Ondo State, Nigeria"
+      },
+      "totalValue": 180000,
+      "tokenSupply": 500000,
+      "owner": "0x2345678901234567890123456789012345678901",
+      "status": "PENDING_VERIFICATION"
+    },
+    {
+      "assetId": "KANO-AG-001",
+      "name": "Kano State Rice Farm",
+      "type": "AGRICULTURAL",
+      "description": "Large-scale rice farm in Kano State",
+      "location": {
+        "country": "Nigeria",
+        "region": "Kano",
+        "coordinates": {
+          "lat": 12.0022,
+          "lng": 8.5920
+        },
+        "address": "Kano State, Nigeria"
+      },
+      "totalValue": 120000,
+      "tokenSupply": 300000,
+      "owner": "0x3456789012345678901234567890123456789012",
+      "status": "PENDING_VERIFICATION"
+    }
+  ],
+  "users": [
+    {
+      "walletAddress": "0x1234567890123456789012345678901234567890",
+      "name": "Adebayo Ogunlesi",
+      "email": "adebayo@example.com",
+      "role": "ASSET_OWNER",
+      "kycStatus": "VERIFIED",
+      "region": "Lagos"
+    },
+    {
+      "walletAddress": "0x2345678901234567890123456789012345678901",
+      "name": "Funmi Adebayo",
+      "email": "funmi@example.com",
+      "role": "ASSET_OWNER",
+      "kycStatus": "VERIFIED",
+      "region": "Ondo"
+    },
+    {
+      "walletAddress": "0x3456789012345678901234567890123456789012",
+      "name": "Ibrahim Mohammed",
+      "email": "ibrahim@example.com",
+      "role": "ASSET_OWNER",
+      "kycStatus": "VERIFIED",
+      "region": "Kano"
+    },
+    {
+      "walletAddress": "0x4567890123456789012345678901234567890123",
+      "name": "Chinedu Okonkwo",
+      "email": "chinedu@example.com",
+      "role": "INVESTOR",
+      "kycStatus": "VERIFIED",
+      "region": "Lagos"
+    }
+  ]
+}
