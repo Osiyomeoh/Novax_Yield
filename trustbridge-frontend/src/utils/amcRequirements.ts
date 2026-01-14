@@ -45,7 +45,7 @@ export const getAMCRequirementMessage = (categoryName: string): string => {
  * Get coming soon message for RWA categories
  */
 export const getComingSoonMessage = (): string => {
-  return 'RWA tokenization with AMC integration is currently in development and will be available in Q2 2025. Join our waitlist to be notified when it launches!';
+  return 'RWA tokenization with AMC integration is currently in development and will be available in Q2 2026. Join our waitlist to be notified when it launches!';
 };
 
 /**
@@ -125,7 +125,7 @@ export const getStatusMessage = (categoryId: number, isAMC: boolean = false): {
   
   return {
     canCreate: false,
-    message: 'This asset type requires AMC partnership. Feature coming Q2 2025.',
+    message: 'This asset type requires AMC partnership. Feature coming Q2 2026.',
     action: 'waitlist'
   };
 };
@@ -134,7 +134,7 @@ export const getStatusMessage = (categoryId: number, isAMC: boolean = false): {
  * AMC-related constants
  */
 export const AMC_CONSTANTS = {
-  LAUNCH_DATE: 'Q2 2025',
+  LAUNCH_DATE: 'Q2 2026',
   WAITLIST_EMAIL: 'waitlist@trustbridge.africa',
   LEARN_MORE_URL: '/amc/about',
   PARTNER_URL: '/amc/directory',

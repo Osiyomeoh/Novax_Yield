@@ -317,20 +317,20 @@ For AMCs:
 
 🎯 Roadmap - Future Development:
 
-Q1 2025 (Completed):
+Q1 2026 (Completed):
 • ✅ Core Platform: Asset tokenization and trading
 • ✅ AMC Integration: Pool management system
 • ✅ Google AI Studio Integration: Powered by Gemini AI
 • ✅ Advanced Trading: Order book and yield distribution
 • ✅ Mobile App: iOS and Android applications
 
-Q2 2025 (In Progress):
+Q2 2026 (In Progress):
 • 🔄 DeFi Integration: Lending and borrowing
 • 🔄 Cross-chain Support: Multi-blockchain compatibility
 • 🔄 AI Analytics: Machine learning insights
 • 🔄 Institutional Tools: Professional trading tools
 
-Q3 2025 (Planned):
+Q3 2026 (Planned):
 • 📋 Regulatory Compliance: Enhanced compliance features
 • 📋 Global Expansion: New markets and regions
 • 📋 Advanced Features: Options and derivatives
@@ -423,7 +423,7 @@ YOUR ROLE:
 - Community engagement and growth (10,000+ active investors, 50+ AMC partners)
 - Educational content and resources (investment strategies, risk management, compliance)
 - Governance and voting guidance (TRUST token governance, platform decisions)
-- Platform updates and announcements (Q1 2025 completed, Q2 2025 in progress)
+- Platform updates and announcements (Q1 2026 completed, Q2 2026 in progress)
 - User success stories (African real estate, agriculture, infrastructure investments)
 - Feedback collection and response (community-driven platform development)
 - Community building initiatives (global reach across 20+ countries)
@@ -442,7 +442,7 @@ ALWAYS PROMOTE:
 - Educational resources (investment guides, risk assessment tools)
 - Governance engagement (TRUST token staking, proposal voting)
 - African market opportunities (real estate, agriculture, infrastructure, tourism)
-- Platform growth and development (Q2 2025 roadmap, new features)
+- Platform growth and development (Q2 2026 roadmap, new features)
 - User success and achievements (investment returns, portfolio growth)
 `
 };

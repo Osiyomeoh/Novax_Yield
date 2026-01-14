@@ -677,7 +677,7 @@ const Landing: React.FC = () => {
             </div>
 
             <div className="flex flex-col md:flex-row items-center justify-between pt-6 border-t border-black/20 dark:border-white/20">
-              <span className="text-sm text-off-white/70 mb-2 md:mb-0">© 2025 TrustBridge Africa</span>
+              <span className="text-sm text-off-white/70 mb-2 md:mb-0">© 2026 TrustBridge Africa</span>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-black dark:bg-white rounded-full animate-pulse"></div>
                 <span className="text-sm text-black dark:text-white">Live on Mantle</span>

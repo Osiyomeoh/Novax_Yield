@@ -791,7 +791,7 @@ Ethers.js + Hardhat
 
 ## 📈 **Roadmap**
 
-### ✅ **Q1 2025 - Complete**
+### ✅ **Q1 2026 - Complete**
 - Core RWA tokenization platform
 - AMC pool management system
 - Mantle Network integration
@@ -805,7 +805,7 @@ Ethers.js + Hardhat
 - Asset owner management
 - Fraud prevention system
 
-### 📋 **Q2 2025**
+### 📋 **Q2 2026**
 - Mobile apps (iOS/Android)
 - DeFi lending/borrowing
 - Cross-chain bridges
@@ -916,5 +916,5 @@ You need test tokens to pay for transactions on Testnet:
 
 ---
 
-© 2025 TrustBridge Africa. All rights reserved.  
+© 2026 TrustBridge Africa. All rights reserved.  
 **Live**: [tbafrica.xyz](https://tbafrica.xyz) | **Docs**: [Documentation](https://tbafrica.xyz/documentation)

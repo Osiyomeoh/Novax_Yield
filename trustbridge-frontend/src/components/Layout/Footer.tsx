@@ -93,7 +93,7 @@ const Footer: React.FC = () => {
         {/* Bottom */}
         <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center space-x-1 text-gray-400 mb-4 md:mb-0">
-            <span>© 2025 TrustBridge. Made with</span>
+            <span>© 2026 TrustBridge. Made with</span>
             <Heart className="w-4 h-4 text-red-500" />
             <span>for the future of asset tokenization.</span>
           </div>
