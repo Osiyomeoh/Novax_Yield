@@ -86,3 +86,4 @@ Or manually update your `trustbridge-frontend/.env` file with the addresses abov
 - MINTER_ROLE granted on TrustToken to TRUSTFaucet ✅
 
 
+
