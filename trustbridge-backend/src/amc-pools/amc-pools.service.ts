@@ -99,7 +99,8 @@ export class AMCPoolsService {
           const assetTotalValue = Number(ethers.formatEther(asset.totalValue || 0n));
           
           // Calculate what percentage of asset is being tokenized
-          const tokenizedPercentage = (poolAsset.value / assetTotalValue) * 100;
+          // Round to 2 decimal places to avoid floating point precision issues
+          const tokenizedPercentage = Math.round(((poolAsset.value / assetTotalValue) * 100) * 100) / 100;
           
           // Get maxInvestablePercentage from blockchain (source of truth)
           // Fallback to database if on-chain value is not available (for backward compatibility)
@@ -125,7 +126,12 @@ export class AMCPoolsService {
             this.logger.warn(`Could not fetch maxInvestablePercentage: ${error.message}, defaulting to 100%`);
           }
           
-          if (tokenizedPercentage > maxInvestablePercentage) {
+          // Round maxInvestablePercentage for comparison
+          const roundedMaxPercentage = Math.round(maxInvestablePercentage * 100) / 100;
+          
+          // Allow tokenization up to and including the max percentage (use >= with small tolerance for floating point)
+          // Add 0.01% tolerance to account for floating point precision issues
+          if (tokenizedPercentage > roundedMaxPercentage + 0.01) {
             throw new BadRequestException(
               `Cannot tokenize ${tokenizedPercentage.toFixed(2)}% of asset ${poolAsset.assetId} (${poolAsset.name}). ` +
               `Owner specified maximum investable percentage: ${maxInvestablePercentage}%. ` +
@@ -141,15 +147,17 @@ export class AMCPoolsService {
               const ownerData = await assetOwnersService.getOwnerAssets(asset.originalOwner);
               const ownershipRecord = ownerData.assets?.find((a: any) => a.assetId === poolAsset.assetId);
               if (ownershipRecord) {
-                const currentTokenized = ownershipRecord.tokenizedPercentage || 0;
-                const newTotalTokenized = currentTokenized + tokenizedPercentage;
+                const currentTokenized = Math.round((ownershipRecord.tokenizedPercentage || 0) * 100) / 100;
+                const newTotalTokenized = Math.round((currentTokenized + tokenizedPercentage) * 100) / 100;
                 
-                if (newTotalTokenized > maxInvestablePercentage) {
+                // Allow tokenization up to and including the max percentage (use >= with small tolerance for floating point)
+                // Add 0.01% tolerance to account for floating point precision issues
+                if (newTotalTokenized > roundedMaxPercentage + 0.01) {
                   throw new BadRequestException(
                     `Cannot tokenize additional ${tokenizedPercentage.toFixed(2)}% of asset ${poolAsset.assetId}. ` +
                     `Current tokenized: ${currentTokenized.toFixed(2)}%, ` +
                     `New total would be: ${newTotalTokenized.toFixed(2)}%, ` +
-                    `Maximum allowed: ${maxInvestablePercentage}%`
+                    `Maximum allowed: ${roundedMaxPercentage}%`
                   );
                 }
               }
@@ -1369,8 +1377,9 @@ export class AMCPoolsService {
             if (existingPoolId && existingPoolId !== ethers.ZeroHash && existingPoolId !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
               // Try to get pool details to see if it's active
               try {
-                const existingPool = await poolManagerContract.getPool(existingPoolId);
-                const isPoolActive = existingPool[9]; // isActive is at index 9
+                // Use MantleService.getPool() which returns a parsed object
+                const existingPool = await this.mantleService.getPool(existingPoolId);
+                const isPoolActive = existingPool.isActive; // Use object property, not array index
                 
                 if (isPoolActive) {
                   this.logger.error(`❌ Asset ${poolAsset.assetId} is already in active pool ${existingPoolId} on-chain`);
@@ -1384,6 +1393,10 @@ export class AMCPoolsService {
                   // Allow this - inactive pools shouldn't block new pool creation
                 }
               } catch (poolError: any) {
+                // Re-throw BadRequestException as-is (don't wrap it)
+                if (poolError instanceof BadRequestException) {
+                  throw poolError;
+                }
                 // Pool might not exist or be inaccessible, but assetToPool still has it
                 // Check if error is "Pool not found" - this means pool doesn't exist on current contract
                 const isPoolNotFound = poolError.message?.includes('Pool not found') || 

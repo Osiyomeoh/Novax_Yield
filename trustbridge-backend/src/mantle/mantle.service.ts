@@ -909,13 +909,40 @@ export class MantleService {
         );
       }
 
-      const pool = await this.poolManager.getPool(poolId);
-      return pool;
+      const poolResult = await this.poolManager.getPool(poolId);
+      
+      // getPool returns a tuple: (bytes32 poolId, address creator, string name, ...)
+      // Check if pool exists (first element is poolId - if zero, pool doesn't exist)
+      const returnedPoolId = poolResult[0] || poolResult.poolId;
+      
+      if (!returnedPoolId || returnedPoolId === '0x0000000000000000000000000000000000000000000000000000000000000000' || returnedPoolId === ethers.ZeroHash) {
+        throw new Error('Pool not found');
+      }
+      
+      // Parse the tuple into a more usable object
+      return {
+        poolId: returnedPoolId,
+        creator: poolResult[1] || poolResult.creator,
+        name: poolResult[2] || poolResult.name,
+        description: poolResult[3] || poolResult.description,
+        totalValue: poolResult[4] || poolResult.totalValue,
+        totalShares: poolResult[5] || poolResult.totalShares,
+        managementFee: poolResult[6] || poolResult.managementFee,
+        performanceFee: poolResult[7] || poolResult.performanceFee,
+        isActive: poolResult[8] || poolResult.isActive,
+        hasTranches: poolResult[9] || poolResult.hasTranches,
+        createdAt: poolResult[10] || poolResult.createdAt,
+        assets: poolResult[11] || poolResult.assets || [],
+        tranches: poolResult[12] || poolResult.tranches || [],
+      };
     } catch (error: any) {
-      this.logger.error(`Failed to get pool: ${error.message}`);
+      this.logger.error(`Failed to get pool ${poolId}: ${error.message}`);
       // Re-throw with more context
       if (error.message?.includes('not a function')) {
         throw new Error(`PoolManager.getPool is not available. Contract address: ${this.config.contractAddresses.poolManager}. Error: ${error.message}`);
+      }
+      if (error.message?.includes('Pool not found')) {
+        throw error; // Re-throw as-is
       }
       throw error;
     }

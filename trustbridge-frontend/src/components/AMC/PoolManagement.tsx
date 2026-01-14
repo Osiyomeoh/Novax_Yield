@@ -8,6 +8,7 @@ import { useWallet } from '@/contexts/WalletContext';
 import { useAdmin } from '@/contexts/AdminContext';
 import { mantleContractService } from '@/services/mantleContractService';
 import { ethers } from 'ethers';
+import { getContractAddress } from '@/config/contracts';
 import { Loader2, Plus, Building2, Coins, TrendingUp, Shield, AlertTriangle } from 'lucide-react';
 
 interface RWANFT {
@@ -20,6 +21,8 @@ interface RWANFT {
   expectedAPY: number;
   assetType: string;
   status: string;
+  isInPool?: boolean; // Whether asset is already in a pool
+  poolId?: string; // Pool ID if asset is in a pool
 }
 
 interface PoolFormData {
@@ -126,8 +129,60 @@ export default function PoolManagement() {
       
       console.log(`✅ Found ${activeRwaAssets.length} assets with status 6 (ACTIVE_AMC_MANAGED) - ready for pooling`);
       
-      // Convert to RWANFT format
-      const rwaNFTs = activeRwaAssets.map((asset: any) => {
+      // CRITICAL: Filter out assets that are already in pools
+      // Check assetToPool mapping for each asset
+      const poolManagerAddress = getContractAddress('POOL_MANAGER');
+      const poolManagerContract = new ethers.Contract(
+        poolManagerAddress,
+        [
+          'function assetToPool(bytes32) external view returns (bytes32)',
+        ],
+        provider
+      );
+      
+      // Check which assets are already in pools (but keep all assets visible)
+      const assetsWithPoolStatus: any[] = [];
+      for (const asset of activeRwaAssets) {
+        try {
+          const assetId = asset.assetId || asset.id;
+          // Convert to bytes32 if needed
+          const assetIdBytes32 = assetId.startsWith('0x') && assetId.length === 66
+            ? assetId
+            : ethers.id(assetId);
+          
+          // Check if asset is already in a pool
+          const poolId = await poolManagerContract.assetToPool(assetIdBytes32);
+          
+          // If poolId is zero hash, asset is not in any pool
+          const isInPool = poolId && poolId !== '0x0000000000000000000000000000000000000000000000000000000000000000' && poolId !== ethers.ZeroHash;
+          
+          assetsWithPoolStatus.push({
+            ...asset,
+            isInPool: isInPool,
+            poolId: isInPool ? poolId : undefined
+          });
+          
+          if (isInPool) {
+            console.log(`⚠️ Asset ${assetId.slice(0, 10)}... is already in pool ${poolId.slice(0, 10)}...`);
+          } else {
+            console.log(`✅ Asset ${assetId.slice(0, 10)}... is available for pooling (not in any pool)`);
+          }
+        } catch (error: any) {
+          console.warn(`⚠️ Could not check if asset ${asset.assetId || asset.id} is in a pool: ${error.message}`);
+          // If we can't check, assume it's available (better to show it than hide it)
+          assetsWithPoolStatus.push({
+            ...asset,
+            isInPool: false,
+            poolId: undefined
+          });
+        }
+      }
+      
+      const assetsInPools = assetsWithPoolStatus.filter(a => a.isInPool).length;
+      console.log(`✅ Found ${assetsWithPoolStatus.length} assets: ${assetsWithPoolStatus.length - assetsInPools} available, ${assetsInPools} already in pools`);
+      
+      // Convert to RWANFT format (include ALL assets, not just available ones)
+      const rwaNFTs = assetsWithPoolStatus.map((asset: any) => {
         const totalValue = typeof asset.totalValue === 'bigint' ? Number(asset.totalValue) / 1e18 : Number(asset.totalValue || 0);
         const maxInvestablePercentage = asset.maxInvestablePercentage !== undefined 
           ? Number(asset.maxInvestablePercentage) 
@@ -147,7 +202,9 @@ export default function PoolManagement() {
           maxInvestableValue: maxInvestableValue, // Maximum value that can be tokenized
           expectedAPY: 10, // Default
           assetType: asset.assetTypeString || 'RWA',
-          status: 'ACTIVE'
+          status: 'ACTIVE',
+          isInPool: asset.isInPool || false, // Whether asset is already in a pool
+          poolId: asset.poolId // Pool ID if asset is in a pool
         };
       });
       
@@ -224,6 +281,18 @@ export default function PoolManagement() {
 
   const handleNFTSelection = (nftTokenId: string, checked: boolean) => {
     const nft = rwaNFTs.find(n => n.nftTokenId === nftTokenId);
+    
+    // Prevent selecting assets that are already in pools
+    if (nft?.isInPool) {
+      toast({
+        title: 'Asset Already in Pool',
+        description: `This asset is already in a pool and cannot be added to another pool.`,
+        variant: 'destructive',
+        duration: 5000
+      });
+      return;
+    }
+    
     if (checked) {
       // When selecting, initialize with maxInvestableValue (or totalValue if no limit)
       const maxInvestableValue = nft?.maxInvestableValue || nft?.totalValue || 0;
@@ -759,10 +828,10 @@ export default function PoolManagement() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
-              Available RWA NFTs
+              RWA NFTs
             </CardTitle>
             <CardDescription>
-              Select RWA NFTs to include in the pool
+              Select RWA NFTs to include in the pool. Assets already in pools are marked and disabled.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -777,12 +846,15 @@ export default function PoolManagement() {
                   const tokenizationAmount = formData.assetTokenizationAmounts[nft.nftTokenId] || 0;
                   const maxInvestableValue = nft.maxInvestableValue || nft.totalValue;
                   const maxInvestablePercentage = nft.maxInvestablePercentage || 100;
+                  const isInPool = nft.isInPool || false;
                   
                   return (
                     <div
                       key={nft.nftTokenId}
                       className={`p-3 border rounded-lg transition-colors ${
-                        isSelected
+                        isInPool
+                          ? 'border-gray-500 bg-gray-500/10 opacity-60'
+                          : isSelected
                           ? 'border-primary bg-primary/5'
                           : 'border-border hover:border-primary/50'
                       }`}
@@ -809,12 +881,19 @@ export default function PoolManagement() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Badge variant="outline">{nft.assetType}</Badge>
+                          {isInPool && (
+                            <Badge variant="destructive" className="text-xs">
+                              In Pool
+                            </Badge>
+                          )}
                           <input
                             type="checkbox"
                             checked={isSelected}
                             onChange={(e) => handleNFTSelection(nft.nftTokenId, e.target.checked)}
-                            className="rounded"
+                            disabled={isInPool}
+                            className="rounded disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={(e) => e.stopPropagation()}
+                            title={isInPool ? `This asset is already in pool ${nft.poolId?.slice(0, 10)}...` : 'Select asset for pool'}
                           />
                         </div>
                       </div>
