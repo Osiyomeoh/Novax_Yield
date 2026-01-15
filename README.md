@@ -1,23 +1,23 @@
 # TrustBridge Africa - Real-World Asset Tokenization Platform
 
-**🌍 Real-World Asset Tokenization on Mantle Network**
+**Real-World Asset Tokenization on Mantle Network**
 
-**Live Platform:** [tbafrica.xyz](https://tbafrica.xyz) | **Documentation:** [Documentation Page](https://tbafrica.xyz/documentation)
+**Live Platform:** [tbafrica.xyz](https://tbafrica.xyz) | **Documentation:** [Documentation Page](https://tbafrica.xyz/documentation) | **One-Pager Pitch:** [View on Google Drive](https://drive.google.com/file/d/1hNhHUClXNU4i8NvwcMFX35VmI_VbwpSH/view?usp=sharing)
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 **TrustBridge is built on Mantle Network** - an EVM Layer 2 blockchain optimized for real-world asset tokenization.
 
-### 🎯 Why Mantle Network?
+### Why Mantle Network?
 
 - **Low Gas Fees** - Perfect for fractional ownership and micro-investments
 - **High Throughput** - Handles thousands of asset tokenizations
 - **EVM Compatibility** - Seamless MetaMask integration
 - **Modular Architecture** - Ideal for scaling RWA tokenization globally
 
-### 📦 Installation
+### Installation
 
 ```bash
 # Clone repository
@@ -34,7 +34,7 @@ cd ../trustbridge-frontend && npm install
 cd ../trustbridge-backend/contracts && npm install
 ```
 
-### 🔧 Setup
+### Setup
 
 1. **Backend Setup**:
    ```bash
@@ -62,11 +62,11 @@ cd ../trustbridge-backend/contracts && npm install
 
 ---
 
-## 🌟 The Vision
+## The Vision
 
 TrustBridge enables **anyone with a basic mobile phone** to tokenize real-world assets (farms, real estate, commodities) and access global investment opportunities, **without requiring smartphones, internet, traditional banks or crypto knowledge**.
 
-### 🎯 Mission
+### Mission
 **Democratize $1T+ in African real-world assets** via:
 - **Web Platform**: Accessible investment interface
 - **Mantle Network**: Low-cost EVM Layer 2 blockchain
@@ -75,34 +75,34 @@ TrustBridge enables **anyone with a basic mobile phone** to tokenize real-world 
 
 ---
 
-## 🌍 **The Problem: Africa's Untapped Wealth**
+## The Problem: Africa's Untapped Wealth
 
 ### **The Challenge**
 Africa holds **$1 trillion+ in "dead capital"** - assets that cannot be used as collateral, invested, or accessed by global markets:
 
-1. **💔 No Banking Infrastructure**
+1. **No Banking Infrastructure**
    - 65% of Africans are unbanked (400M+ people)
    - No credit history → No access to capital
    - Cash economy limits investment
 
-2. **🏠 Illiquid Assets**
+2. **Illiquid Assets**
    - $350B in real estate owned but not tradeable
    - $150B in agricultural land without deed registration
    - Farmers can't prove ownership or asset value
 
-3. **🏛️ Traditional Banks Fail**
+3. **Traditional Banks Fail**
    - Banks require credit history → excludes 65% of Africans
    - High fees (5-15%) eat into small business margins
    - Slow processing (days/weeks) prevents agility
    - Geographic limitations (urban-focused branches)
    - Bureaucratic lending processes
 
-4. **🌐 Digital Divide**
+4. **Digital Divide**
    - 60% don't have internet access
    - 70% use basic phones (not smartphones)
    - No crypto knowledge or wallet infrastructure
 
-5. **💰 Limited Investment Access**
+5. **Limited Investment Access**
    - Local investors can't diversify globally
    - International investors can't access African assets
    - Fragmented markets prevent liquidity
@@ -111,7 +111,7 @@ Africa holds **$1 trillion+ in "dead capital"** - assets that cannot be used as 
 
 TrustBridge **tokenizes** African real-world assets on Mantle Network, making them **investable, tradeable, and accessible** to global investors:
 
-#### **✅ For Asset Owners (Farmers, Landowners, Property Owners)**
+#### **For Asset Owners (Farmers, Landowners, Property Owners)**
 - **Tokenize** real-world assets (farmland, real estate, equipment, infrastructure) on Mantle Network
 - **Access capital** by selling fractional ownership
 - **Earn ongoing yields** from asset-backed pool investments
@@ -119,7 +119,7 @@ TrustBridge **tokenizes** African real-world assets on Mantle Network, making th
 - **Transparent ownership** - All transactions recorded on-chain
 - **Revenue reporting** - Submit periodic revenue reports for dividend distribution
 
-#### **✅ For Investors (Local & Global)**
+#### **For Investors (Local & Global)**
 - **Diversify** portfolio with African agriculture, real estate, commodities, infrastructure
 - **Fractional ownership** of high-value real-world assets (invest as little as $1)
 - **Real yields** from actual asset performance, not speculation
@@ -128,18 +128,18 @@ TrustBridge **tokenizes** African real-world assets on Mantle Network, making th
 - **Real-time ROI** - Track your investment returns second-by-second
 - **AMC-managed pools** - Professional asset management and oversight
 
-#### **✅ Trust Economy Benefits**
+#### **Trust Economy Benefits**
 - **TRUST token** powers platform transactions
 - **Deflationary** tokenomics via burning
 - **Governance** through DAO voting
 - **Staking rewards** for token holders
 - **Universal value** across African markets
 
-**🌐 Live Platform:** [tbafrica.xyz](https://tbafrica.xyz)
+**Live Platform:** [tbafrica.xyz](https://tbafrica.xyz)
 
 ---
 
-## 🏗️ Complete Architecture
+## Complete Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -182,11 +182,11 @@ TrustBridge **tokenizes** African real-world assets on Mantle Network, making th
 │  ┌──────────────────────────────────────────────────────────────┐          │
 │  │  Smart Contracts (Solidity)                                   │          │
 │  │                                                               │          │
-│  │  ✅ CoreAssetFactory:    RWA asset creation & management    │          │
-│  │  ✅ PoolManager:          Investment pool creation & trading │          │
-│  │  ✅ AMCManager:          Asset Management Company oversight  │          │
-│  │  ✅ TrustToken:          Platform utility token (TRUST)     │          │
-│  │  ✅ PoolToken:           ERC-20 tokens for pool investments  │          │
+│  │  • CoreAssetFactory:    RWA asset creation & management    │          │
+│  │  • PoolManager:          Investment pool creation & trading │          │
+│  │  • AMCManager:          Asset Management Company oversight  │          │
+│  │  • TrustToken:          Platform utility token (TRUST)     │          │
+│  │  • PoolToken:           ERC-20 tokens for pool investments  │          │
 │  │                                                               │          │
 │  │  Features:                                                    │          │
 │  │  • Fractional ownership (18 decimals for micro-investments)  │          │
@@ -199,9 +199,9 @@ TrustBridge **tokenizes** African real-world assets on Mantle Network, making th
 │  ┌──────────────────────────────────────────────────────────────┐          │
 │  │  IPFS (Pinata) - Decentralized Storage                       │          │
 │  │                                                               │          │
-│  │  ✅ Asset Metadata:    RWA details & documentation           │          │
-│  │  ✅ Evidence Files:    Legal documents, photos               │          │
-│  │  ✅ Immutable Links:   Content-addressed storage             │          │
+│  │  • Asset Metadata:    RWA details & documentation           │          │
+│  │  • Evidence Files:    Legal documents, photos               │          │
+│  │  • Immutable Links:   Content-addressed storage             │          │
 │  └──────────────────────────────────────────────────────────────┘          │
 │                                                                              │
 │  ┌──────────────────────────────────────────────────────────────┐          │
@@ -216,9 +216,9 @@ TrustBridge **tokenizes** African real-world assets on Mantle Network, making th
 
 ---
 
-## ✅ **Implemented Features - Production Ready**
+## Implemented Features - Production Ready
 
-### 🏢 **Real-World Asset (RWA) Tokenization**
+### Real-World Asset (RWA) Tokenization
 
 TrustBridge focuses exclusively on **Real-World Assets** - physical assets that generate real revenue and yield.
 
@@ -282,7 +282,7 @@ TrustBridge focuses exclusively on **Real-World Assets** - physical assets that 
 - ROI automatically calculated and displayed
 - All transactions recorded on-chain
 
-### 💰 **Real Yield System**
+### Real Yield System
 
 #### **How Investors Make Money**
 1. **Asset Revenue Generation**: Real-world assets (farms, real estate) generate actual revenue
@@ -307,7 +307,7 @@ TrustBridge focuses exclusively on **Real-World Assets** - physical assets that 
 - Historical consistency checks
 - Pattern detection algorithms
 
-### 💱 **Trust Token Economy**
+### Trust Token Economy
 
 The **TRUST token** is the native utility token powering the entire TrustBridge ecosystem, creating a self-sustaining economy for African asset tokenization.
 
@@ -351,7 +351,7 @@ Every transaction burns 2% of TRUST tokens:
 
 **Result**: Supply decreases over time → **token appreciation** for holders
 
-### 🤖 **AI-Powered Analytics**
+### AI-Powered Analytics
 
 #### **Google Gemini Integration**
 - **Investment Analysis**: AI recommendations based on user profile
@@ -365,7 +365,7 @@ Every transaction burns 2% of TRUST tokens:
 - Rate limiting and usage tracking
 - Multi-modal AI (text, image, video)
 
-### 📊 **Analytics Dashboard**
+### Analytics Dashboard
 
 #### **Real-Time Data**
 - **TVL**: Sum of all asset values
@@ -382,53 +382,7 @@ Every transaction burns 2% of TRUST tokens:
 
 ---
 
-## 🔄 **Complete User Flows**
-
-### **👨‍🌾 Asset Owner: "Farmer Ibrahim"**
-
-**Scenario**: Ibrahim has a 5-hectare cashew farm in Lagos worth ₦10M ($12,500)
-
-**Flow**:
-```
-1. Dial *384# on Nokia phone (no internet)
-   ↓
-2. Register: Name=Ibrahim, State=Lagos, Town=Ikeja
-   ↓
-3. Set 4-digit PIN: 1234
-   ↓
-4. Connect MetaMask wallet (Mantle Sepolia Testnet)
-   ↓
-5. Select "Tokenize Asset" → Farmland
-   ↓
-6. Enter: 5 hectares, Lagos address, ₦10M value
-   ↓
-7. Pay ₦500 via Paga agent
-   ↓
-8. Backend creates asset on Mantle Network representing the farm
-   ↓
-9. Asset submitted to HCS topic for AMC approval
-   ↓
-10. AMC approves → Asset bundled into "West Africa Agriculture Pool"
-    ↓
-11. Pool tokens minted, investors start buying
-    ↓
-12. Ibrahim earns 10% APY as investments flow in
-    ↓
-13. Monthly dividends auto-distributed as HBAR
-    ↓
-14. Ibrahim checks portfolio via USSD: "My Assets: 1, Value: ₦10M, Earnings: ₦100K"
-```
-
-**Mantle Network Transactions**:
-- Account creation: `AccountCreateTransaction`
-- Asset creation: `CoreAssetFactory.createRWAAsset()`
-- Pool token: `TokenCreateTransaction` (supply=100000)
-- Investments: `TransferTransaction` (pool tokens)
-- Yields: `TransferTransaction` (HBAR to Ibrahim)
-
----
-
-## 🛠️ **Technology Stack**
+## Technology Stack
 
 ### **Frontend**
 ```typescript
@@ -465,9 +419,9 @@ Ethers.js + Hardhat
 
 ---
 
-## 💼 **Business Model & Market Value**
+## Business Model & Market Value
 
-### **💰 Revenue Streams**
+### Revenue Streams
 
 #### **1. Transaction Fees**
 - **RWA Trading**: 1-3% of transaction value
@@ -495,7 +449,7 @@ Ethers.js + Hardhat
 - **API Access**: Developer API subscriptions
 - **White-Label**: License platform to institutions
 
-### **📈 Total Addressable Market (TAM)**
+### Total Addressable Market (TAM)
 
 | Market Segment | Size | TrustBridge Capture |
 |----------------|------|---------------------|
@@ -505,7 +459,7 @@ Ethers.js + Hardhat
 | **Infrastructure** | $50B+ | 0.1% = $50M |
 | **TOTAL TAM** | **$650B+** | **$650M+** |
 
-### **🎯 Competitive Advantages**
+### Competitive Advantages
 
 | Feature | Traditional RWA | TrustBridge |
 |---------|----------------|-------------|
@@ -517,7 +471,7 @@ Ethers.js + Hardhat
 | **Yields** | Synthetic | Real asset-backed |
 | **Compliance** | Light | KYC/AML + AMC |
 
-### **🚀 Growth Trajectory**
+### Growth Trajectory
 
 **Year 1**: 10K users, 1,000 assets, $10M volume  
 **Year 2**: 50K users, 5,000 assets, $50M volume  
@@ -526,9 +480,9 @@ Ethers.js + Hardhat
 
 ---
 
-## 🔄 **Complete User Flows**
+## Complete User Flows
 
-### **👨‍🌾 Asset Owner: "Farmer Ibrahim"**
+### Asset Owner: "Farmer Ibrahim"
 
 **Scenario**: Ibrahim has a 5-hectare cashew farm in Lagos worth ₦10M ($12,500)
 
@@ -569,7 +523,7 @@ Ethers.js + Hardhat
 - Investment: `PoolManager.invest()` (TRUST tokens → pool tokens)
 - Dividends: `AMCManager.distributeDividends()` (TRUST tokens to investors)
 
-### **💼 Investor: "Sarah from Lagos"**
+### Investor: "Sarah from Lagos"
 
 **Scenario**: Sarah wants to invest $5,000 in African agriculture
 
@@ -609,7 +563,7 @@ Ethers.js + Hardhat
 - Dividends: `AMCManager.distributeDividends()` (TRUST to investors)
 - All transactions recorded on-chain for transparency
 
-### **🏦 AMC Admin: "Mr. Johnson"**
+### AMC Admin: "Mr. Johnson"
 
 **Scenario**: Licensed AMC manager managing asset pools
 
@@ -646,7 +600,7 @@ Ethers.js + Hardhat
 
 ---
 
-## 🔐 **Security & Compliance**
+## Security & Compliance
 
 ### **Blockchain Security**
 - **On-Chain Audit Trail**: All transactions immutable on Mantle Network
@@ -668,35 +622,36 @@ Ethers.js + Hardhat
 
 ---
 
-## 🎯 **Competitive Positioning**
+## Competitive Positioning
 
 ### **vs. Traditional RWA Platforms (Centrifuge, Maple Finance)**
-- ✅ **Low Gas Fees**: Mantle Network Layer 2 efficiency
-- ✅ **Micro-Investments**: Fractional ownership starting at $1
-- ✅ **Real Yields**: Actual ROI from asset performance
-- ✅ **African Focus**: Built for emerging markets
+- **Low Gas Fees**: Mantle Network Layer 2 efficiency
+- **Micro-Investments**: Fractional ownership starting at $1
+- **Real Yields**: Actual ROI from asset performance
+- **African Focus**: Built for emerging markets
 
 ### **vs. DeFi Platforms (Uniswap, Aave)**
-- ✅ **Real Assets**: Actual yields from RWAs
-- ✅ **Compliance**: KYC/AML + AMC certification
-- ✅ **Lower Risk**: Diversified pools, not pure crypto
-- ✅ **Institutional**: AMC management, not retail DeFi
+- **Real Assets**: Actual yields from RWAs
+- **Compliance**: KYC/AML + AMC certification
+- **Lower Risk**: Diversified pools, not pure crypto
+- **Institutional**: AMC management, not retail DeFi
 
 ---
 
-## 📊 **Platform Metrics**
+## Platform Metrics
 
-### **Current Status (Live)**
+### **Current Status (Testnet)**
 | Metric | Value |
 |--------|-------|
 | **Platform** | tbafrica.xyz |
-| **Blockchain** | Mantle Sepolia Testnet → Mainnet Ready |
-| **Assets** | Multiple RWAs tokenized |
-| **Users** | Growing user base |
-| **Pools** | Active AMC pools |
-| **Volume** | Active investments |
+| **Blockchain** | Mantle Sepolia Testnet (testnet only) |
+| **Assets** | Test RWAs tokenized (test data only) |
+| **Users** | Test users (testnet) |
+| **Pools** | Test AMC pools (test data only) |
+| **Volume** | Test investments (no real money) |
 | **Uptime** | 99.9% |
 | **Gas Fees** | Ultra-low on Mantle L2 |
+| **Status** | **Testnet with test data only - no real assets or real money** |
 
 ### **Technical Performance**
 | Metric | Value |
@@ -710,7 +665,7 @@ Ethers.js + Hardhat
 
 ---
 
-## 🌍 **Market Opportunity - Africa**
+## Market Opportunity - Africa
 
 ### **Demographics**
 - **Population**: 1.4 billion people
@@ -732,28 +687,31 @@ Ethers.js + Hardhat
 
 ---
 
-## 🚀 **Deployment Status**
+## Deployment Status
 
-### ✅ **Production Ready**
+### Testnet Deployment (Current)
 - **Backend API**: NestJS backend with MongoDB
 - **Frontend**: React + Vite application
 - **Database**: MongoDB Atlas
-- **Blockchain**: Mantle Sepolia Testnet (mainnet-ready)
+- **Blockchain**: Mantle Sepolia Testnet (testnet only - no real assets)
 - **IPFS**: Pinata infrastructure
 - **Analytics**: Real-time blockchain data
+- **Status**: Platform operates with **test data only** - no real assets, real money, or real investments
 
-### **Smart Contracts Deployed**
+### **Smart Contracts Deployed (Testnet)**
 | Contract | Address | Purpose |
 |----------|---------|---------|
-| **CoreAssetFactory** | Deployed on Mantle | RWA asset creation & management |
-| **PoolManager** | Deployed on Mantle | Investment pool creation & trading |
-| **AMCManager** | Deployed on Mantle | Asset Management Company oversight |
-| **TrustToken** | Deployed on Mantle | Platform utility token (TRUST) |
-| **PoolToken** | Created per pool | ERC-20 tokens for pool investments |
+| **CoreAssetFactory** | Deployed on Mantle Sepolia Testnet | RWA asset creation & management (test data only) |
+| **PoolManager** | Deployed on Mantle Sepolia Testnet | Investment pool creation & trading (test data only) |
+| **AMCManager** | Deployed on Mantle Sepolia Testnet | Asset Management Company oversight (test data only) |
+| **TrustToken** | Deployed on Mantle Sepolia Testnet | Platform utility token (TRUST) - test tokens only |
+| **PoolToken** | Created per pool (testnet) | ERC-20 tokens for pool investments (test data only) |
+
+**Note**: All contracts are deployed on Mantle Sepolia Testnet. No real assets or real money are involved.
 
 ---
 
-## 📚 **Documentation & Resources**
+## Documentation & Resources
 
 ### **User Documentation**
 - **Getting Started**: [tbafrica.xyz/documentation](https://tbafrica.xyz/documentation)
@@ -768,7 +726,7 @@ Ethers.js + Hardhat
 
 ---
 
-## 🤝 **Partnerships**
+## Partnerships
 
 ### **Blockchain**
 - **Mantle Network** - EVM Layer 2 blockchain
@@ -777,9 +735,9 @@ Ethers.js + Hardhat
 - **Chainlink** - Oracle price feeds
 
 ### **Financial Inclusion (Planned)**
-- 🔄 **Africa's Talking** - USSD gateway integration
-- 🔄 **Paga** - Production payment processing
-- 🔄 **MTN/Airtel/Orange** - USSD infrastructure
+- **Africa's Talking** - USSD gateway integration (Planned)
+- **Paga** - Production payment processing (Planned)
+- **MTN/Airtel/Orange** - USSD infrastructure (Planned)
 
 ### **Institutions**
 - **AMCs**: Licensed asset management companies
@@ -789,9 +747,9 @@ Ethers.js + Hardhat
 
 ---
 
-## 📈 **Roadmap**
+## Roadmap
 
-### ✅ **Q1 2026 - Complete**
+### Q1 2026 - Complete
 - Core RWA tokenization platform
 - AMC pool management system
 - Mantle Network integration
@@ -805,7 +763,7 @@ Ethers.js + Hardhat
 - Asset owner management
 - Fraud prevention system
 
-### 📋 **Q2 2026**
+### Q2 2026
 - Mobile apps (iOS/Android)
 - DeFi lending/borrowing
 - Cross-chain bridges
@@ -813,7 +771,7 @@ Ethers.js + Hardhat
 
 ---
 
-## 🎯 **Why TrustBridge Wins**
+## Why TrustBridge Wins
 
 ### **1. First-Mover in African RWA Tokenization**
 No platform offers real-world asset tokenization on Mantle Network with real yields
@@ -835,9 +793,9 @@ Handles millions of users on Mantle Network's scalable Layer 2 infrastructure
 
 ---
 
-## 💡 **Getting Started**
+## Getting Started
 
-### **📱 Wallet Setup - MetaMask Required**
+### Wallet Setup - MetaMask Required
 
 **MetaMask** is the wallet used by TrustBridge on Mantle Network. You'll need it to connect to the platform.
 
@@ -852,7 +810,7 @@ Handles millions of users on Mantle Network's scalable Layer 2 infrastructure
 3. Click **"Create a Wallet"**
 4. **Save your recovery phrase** (12 words) - write it down securely!
 5. Create password
-6. ✅ Wallet created!
+6. Wallet created!
 
 #### **Step 3: Add Mantle Sepolia Testnet**
 TrustBridge uses Mantle **Sepolia Testnet** for all transactions.
@@ -868,7 +826,7 @@ TrustBridge uses Mantle **Sepolia Testnet** for all transactions.
    - **Block Explorer**: `https://explorer.sepolia.mantle.xyz`
 
 5. Click **"Save"**
-6. ✅ Mantle Sepolia added!
+6. Mantle Sepolia added!
 
 #### **Step 4: Get Free Test Tokens**
 You need test tokens to pay for transactions on Testnet:
@@ -889,7 +847,7 @@ You need test tokens to pay for transactions on Testnet:
 2. Click **"Connect Wallet"**
 3. Select **MetaMask**
 4. Approve connection in MetaMask popup
-5. ✅ Connected!
+5. Connected!
 
 ---
 
@@ -910,7 +868,129 @@ You need test tokens to pay for transactions on Testnet:
 
 ---
 
-**TrustBridge Africa** - *Where Real-World Assets Meet Blockchain Innovation* 🚀
+## Team
+
+### **Core Team**
+
+*[Team bios to be added - please provide team member information]*
+
+#### **Founders & Leadership**
+- **Samuel Aleonomoh**
+  - **Role**: Founder & CEO
+  - **Bio**: Visionary leader building Africa's first real-world asset tokenization platform on blockchain
+  - **Contact**: [samuelaleonomoh5@gmail.com](mailto:samuelaleonomoh5@gmail.com)
+
+#### **Design Team**
+- **Blessing**
+  - **Role**: Designer
+  - **Bio**: Creative designer crafting intuitive user experiences for TrustBridge Africa
+  - **Contact**: [samuelaleonomoh5@gmail.com](mailto:samuelaleonomoh5@gmail.com)
+
+### **Contact Information**
+
+- **General Inquiries**: [samuelaleonomoh5@gmail.com](mailto:samuelaleonomoh5@gmail.com)
+- **Business Partnerships**: [samuelaleonomoh5@gmail.com](mailto:samuelaleonomoh5@gmail.com)
+- **Technical Support**: [samuelaleonomoh5@gmail.com](mailto:samuelaleonomoh5@gmail.com)
+- **Media & Press**: [samuelaleonomoh5@gmail.com](mailto:samuelaleonomoh5@gmail.com)
+- **Website**: [tbafrica.xyz](https://tbafrica.xyz)
+- **GitHub**: [github.com/Osiyomeoh/TrustBridgeAfrica](https://github.com/Osiyomeoh/TrustBridgeAfrica)
+
+---
+
+## Compliance Declaration
+
+### **IMPORTANT: Testnet Status**
+
+**CURRENT STATUS**: TrustBridge Africa is currently operating on **Mantle Sepolia Testnet** with **test data only**. **No real assets are being tokenized or traded on the platform at this time.** All assets, pools, investments, and transactions are for testing and demonstration purposes only.
+
+### **Regulated Assets Disclosure**
+
+**TrustBridge Africa** is designed to operate a real-world asset (RWA) tokenization platform that would facilitate the tokenization and fractional ownership of physical assets including:
+
+- **Real Estate** (commercial and residential properties)
+- **Agricultural Assets** (farmland, agribusiness, agricultural equipment)
+- **Infrastructure Assets** (roads, bridges, renewable energy projects)
+- **Commodities** (natural resources, mining assets)
+- **Equipment** (machinery, vehicles, industrial equipment)
+
+### **Regulatory Status**
+
+**IMPORTANT DISCLOSURE**: When TrustBridge Africa transitions to mainnet and begins tokenizing real assets, the platform will involve **regulated assets** and will be subject to securities regulations, financial services regulations, and other applicable laws in various jurisdictions. **Currently, the platform operates on testnet with test data only and does not involve any real assets or regulated activities.**
+
+#### **Key Regulatory Considerations**
+
+1. **Securities Regulations**
+   - Pool tokens and fractional ownership interests may constitute **securities** under applicable laws
+   - Platform operates with **Asset Management Company (AMC) oversight** to ensure compliance
+   - All pools are managed by **licensed Asset Management Companies** subject to regulatory supervision
+
+2. **Financial Services Regulations**
+   - Platform may be subject to **financial services licensing** requirements in various jurisdictions
+   - **KYC/AML compliance** implemented for all users
+   - **Anti-Money Laundering (AML)** and **Know Your Customer (KYC)** procedures enforced
+
+3. **Asset-Specific Regulations**
+   - **Real Estate**: Subject to property laws, land registration requirements, and real estate regulations
+   - **Agricultural Assets**: Subject to agricultural and land use regulations
+   - **Commodities**: Subject to commodity trading and resource extraction regulations
+
+4. **Cross-Border Considerations**
+   - Platform serves users across multiple African jurisdictions and globally
+   - Compliance with **local regulations** in each jurisdiction where assets are located
+   - Compliance with **investor jurisdiction regulations** where applicable
+
+### **Compliance Measures**
+
+TrustBridge Africa is designed to implement the following compliance measures when operating on mainnet with real assets:
+
+- **KYC/AML Procedures**: Will be required for all users before using the platform with real assets  
+- **AMC Oversight**: All tokenized assets will be reviewed and managed by licensed Asset Management Companies  
+- **Smart Contract Audits**: All smart contracts undergo security audits before deployment  
+- **Regulatory Monitoring**: Ongoing monitoring of regulatory developments in relevant jurisdictions  
+- **Legal Documentation**: Comprehensive legal documentation for asset tokenization and pool creation  
+- **Transparent Reporting**: All transactions recorded on-chain for auditability and transparency  
+
+**Note**: On testnet, these measures are simulated for testing purposes only.  
+
+### **Jurisdictional Compliance**
+
+**Note**: The following compliance requirements will apply when TrustBridge Africa transitions to mainnet and begins tokenizing real assets:
+
+- **Nigeria**: Will operate in compliance with SEC regulations and financial services laws
+- **Ghana**: Will adhere to Securities and Exchange Commission requirements
+- **Kenya**: Will comply with Capital Markets Authority regulations
+- **South Africa**: Will adhere to Financial Sector Conduct Authority requirements
+- **Other Jurisdictions**: Platform expansion subject to local regulatory approval
+
+**Current Status**: Platform is on testnet only - no regulatory compliance required for test data.
+
+### **Risk Disclosures**
+
+**TESTNET DISCLAIMER**: The platform currently operates on testnet with test data only. No real money, real assets, or real investments are involved.
+
+**When operating on mainnet with real assets, investors should be aware that**:
+
+- Tokenized assets may be subject to **regulatory changes** that could affect their value or transferability
+- **Regulatory actions** in any jurisdiction could impact platform operations
+- **Securities laws** may restrict the transfer or trading of pool tokens in certain jurisdictions
+- **Asset ownership** is subject to local property laws and regulations
+- **Tax implications** may vary by jurisdiction for both asset owners and investors
+
+### **Legal Disclaimer**
+
+**TESTNET STATUS**: TrustBridge Africa is currently operating on Mantle Sepolia Testnet with test data only. No real assets, real money, or real investments are involved. All transactions, assets, and pools are for testing and demonstration purposes only.
+
+**This platform is not intended to provide legal, financial, or investment advice. Users should consult with qualified legal and financial advisors before participating in asset tokenization or making investment decisions. TrustBridge Africa does not guarantee regulatory compliance in all jurisdictions and users are responsible for ensuring their participation complies with applicable laws in their jurisdiction.**
+
+**When the platform transitions to mainnet with real assets, all applicable regulatory requirements will be implemented and enforced.**
+
+### **Regulatory Updates**
+
+TrustBridge Africa is committed to maintaining compliance with evolving regulatory frameworks when operating on mainnet with real assets. For the latest regulatory information and compliance updates, please contact us at [samuelaleonomoh5@gmail.com](mailto:samuelaleonomoh5@gmail.com).
+
+---
+
+**TrustBridge Africa** - *Where Real-World Assets Meet Blockchain Innovation*
 
 *Built on Mantle Network • Powered by Trust • Designed for Africa • Real Yields from Real Assets*
 
