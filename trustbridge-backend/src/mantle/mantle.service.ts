@@ -178,8 +178,16 @@ export class MantleService {
         },
       };
 
-      // Initialize provider
-      this.provider = new ethers.JsonRpcProvider(this.config.rpcUrl);
+      // Initialize provider with timeout settings
+      this.provider = new ethers.JsonRpcProvider(this.config.rpcUrl, undefined, {
+        staticNetwork: true,
+        batchMaxCount: 1, // Disable batching to avoid hanging
+      });
+      
+      // Set request timeout (10 seconds)
+      if (this.provider && typeof (this.provider as any)._getConnection === 'function') {
+        // For ethers v6, we can't directly set timeout, but we'll handle it in calls
+      }
 
       // Initialize signer (if private key provided)
       if (this.config.privateKey) {
@@ -710,47 +718,98 @@ export class MantleService {
    * Uses Contract instance for automatic struct decoding (like frontend)
    */
   async getAsset(assetId: string): Promise<any> {
-    try {
-      // Convert assetId to bytes32 if needed
-      let assetIdBytes32: string;
-      if (assetId.startsWith('0x') && assetId.length === 66) {
-        assetIdBytes32 = assetId;
-      } else if (assetId.startsWith('0x') && assetId.length < 66) {
-        assetIdBytes32 = ethers.zeroPadValue(assetId, 32);
-      } else {
-        assetIdBytes32 = ethers.id(assetId);
-      }
-      
-      this.logger.log(`🔍 Fetching asset: ${assetId} -> bytes32: ${assetIdBytes32}`);
-      
-      // Use Contract instance for automatic struct decoding (same as frontend)
-      // This is more reliable than manual encoding/decoding
-      const factoryContract = new ethers.Contract(
-        this.config.contractAddresses.coreAssetFactory,
-        CoreAssetFactoryABI,
-        this.provider
-      );
-      
-      // Call getAsset() - ethers will automatically decode the struct
-      let assetResult: any;
+    // Multiple RPC endpoints for fallback
+    const rpcEndpoints = [
+      this.config.rpcUrl,
+      'https://rpc.sepolia.mantle.xyz',
+      'https://mantle-rpc.publicnode.com',
+      'https://mantle.drpc.org',
+      'https://rpc.mantle.xyz',
+    ].filter(Boolean);
+    
+    let lastError: any = null;
+    
+    // Try each RPC endpoint
+    for (const rpcUrl of rpcEndpoints) {
       try {
-        assetResult = await factoryContract.getAsset(assetIdBytes32);
-        this.logger.log(`✅ getAsset() succeeded for ${assetIdBytes32}`);
-      } catch (getAssetError: any) {
-        // Check if asset doesn't exist (zero ID) or if there's a decode error
-        if (getAssetError.message?.includes('could not decode') || 
-            getAssetError.message?.includes('BAD_DATA') ||
-            getAssetError.code === 'BAD_DATA') {
-          // This might mean the asset doesn't exist or ABI mismatch
-          // Try to check if asset exists by checking for zero ID
-          this.logger.error(`❌ Failed to decode asset result for ${assetIdBytes32}: ${getAssetError.message}`);
-          this.logger.error(`   This usually means the asset doesn't exist or there's an ABI mismatch`);
-          throw new Error(`Asset ${assetIdBytes32} not found or could not be decoded. The asset may not exist on-chain or the contract ABI may be outdated.`);
+        this.logger.log(`🔍 Trying RPC: ${rpcUrl}`);
+        
+        // Convert assetId to bytes32 if needed
+        let assetIdBytes32: string;
+        if (assetId.startsWith('0x') && assetId.length === 66) {
+          assetIdBytes32 = assetId;
+        } else if (assetId.startsWith('0x') && assetId.length < 66) {
+          assetIdBytes32 = ethers.zeroPadValue(assetId, 32);
+        } else {
+          assetIdBytes32 = ethers.id(assetId);
         }
-        // For other errors, re-throw with context
-        this.logger.error(`❌ getAsset() failed for ${assetIdBytes32}: ${getAssetError.message}`);
-        throw new Error(`Failed to fetch asset ${assetIdBytes32}: ${getAssetError.message}`);
+        
+        this.logger.log(`🔍 Fetching asset: ${assetId} -> bytes32: ${assetIdBytes32}`);
+        
+        // Create provider for this RPC endpoint
+        const provider = new ethers.JsonRpcProvider(rpcUrl, undefined, {
+          staticNetwork: true,
+          batchMaxCount: 1,
+        });
+        
+        // Test connection first
+        await Promise.race([
+          provider.getBlockNumber(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Connection timeout')), 5000))
+        ]);
+        
+        const factoryContract = new ethers.Contract(
+          this.config.contractAddresses.coreAssetFactory,
+          CoreAssetFactoryABI,
+          provider
+        );
+        
+        // Call getAsset() with timeout to prevent hanging
+        // Add timeout wrapper (10 seconds max per RPC)
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('getAsset() timeout after 10 seconds')), 10000)
+        );
+        
+        const getAssetPromise = factoryContract.getAsset(assetIdBytes32);
+        const assetResult = await Promise.race([getAssetPromise, timeoutPromise]);
+        this.logger.log(`✅ getAsset() succeeded for ${assetIdBytes32} using ${rpcUrl}`);
+        
+        // Success - process result and return
+        return await this.processAssetResult(assetResult, assetId, assetIdBytes32);
+      } catch (rpcError: any) {
+        lastError = rpcError;
+        this.logger.warn(`⚠️ RPC ${rpcUrl} failed: ${rpcError.message}`);
+        
+        // If decode error, asset doesn't exist - don't retry other RPCs
+        if (rpcError.message?.includes('could not decode') || 
+            rpcError.message?.includes('BAD_DATA') ||
+            rpcError.code === 'BAD_DATA') {
+          throw new Error(
+            `Asset ${assetId} not found or could not be decoded. ` +
+            `Possible causes: (1) Asset doesn't exist on-chain, (2) Contract ABI mismatch, (3) RPC provider issue. ` +
+            `Original error: ${rpcError.message}`
+          );
+        }
+        
+        // If this is the last RPC, throw the error
+        if (rpcUrl === rpcEndpoints[rpcEndpoints.length - 1]) {
+          throw new Error(`Failed to fetch asset ${assetId} from all RPC endpoints. Last error: ${rpcError.message}`);
+        }
+        
+        // Otherwise, try next RPC
+        continue;
       }
+    }
+    
+    // If we get here, all RPCs failed
+    throw new Error(`Failed to fetch asset ${assetId} from all RPC endpoints. Last error: ${lastError?.message || 'Unknown error'}`);
+  }
+  
+  /**
+   * Process asset result from blockchain
+   */
+  private async processAssetResult(assetResult: any, assetId: string, assetIdBytes32: string): Promise<any> {
+    try {
       
       // Log raw result for debugging
       this.logger.log(`📦 Raw asset result for ${assetId}:`, {

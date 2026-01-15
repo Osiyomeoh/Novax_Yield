@@ -4,7 +4,6 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AdminGuard } from '../auth/admin.guard';
 
 @Controller('amc-pools')
-@UseGuards(JwtAuthGuard)
 export class AMCPoolsController {
   constructor(private readonly amcPoolsService: AMCPoolsService) {}
 
@@ -12,7 +11,7 @@ export class AMCPoolsController {
    * Create a new AMC pool (AMC Admin only)
    */
   @Post()
-  @UseGuards(AdminGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async createPool(@Body() createPoolDto: CreateAMCPoolDto, @Request() req) {
     const adminWallet = req.user.walletAddress;
     return await this.amcPoolsService.createPool(createPoolDto, adminWallet);
@@ -22,47 +21,60 @@ export class AMCPoolsController {
    * Launch pool (create Hedera token and make active)
    */
   @Post(':poolId/launch')
-  @UseGuards(AdminGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async launchPool(@Param('poolId') poolId: string, @Request() req) {
     const adminWallet = req.user.walletAddress;
     return await this.amcPoolsService.launchPool(poolId, adminWallet);
   }
 
   /**
-   * Get all pools
+   * Get all pools (Public endpoint - no auth required for browsing)
    */
   @Get()
   async getAllPools(@Query('status') status?: string, @Query('type') type?: string) {
-    if (status && type) {
-      return await this.amcPoolsService.getAllPools().then(pools => 
-        pools.filter(pool => pool.status === status && pool.type === type)
-      );
-    } else if (status) {
-      return await this.amcPoolsService.getAllPools().then(pools => 
-        pools.filter(pool => pool.status === status)
-      );
-    } else if (type) {
-      return await this.amcPoolsService.getAllPools().then(pools => 
-        pools.filter(pool => pool.type === type)
-      );
+    try {
+      let pools = await this.amcPoolsService.getAllPools();
+      
+      // Apply filters if provided
+      if (status && type) {
+        pools = pools.filter(pool => pool.status === status && pool.type === type);
+      } else if (status) {
+        pools = pools.filter(pool => pool.status === status);
+      } else if (type) {
+        pools = pools.filter(pool => pool.type === type);
+      }
+      
+      return pools;
+    } catch (error: any) {
+      // Return empty array instead of throwing error for public endpoint
+      console.error('Error fetching pools:', error.message);
+      return [];
     }
-    return await this.amcPoolsService.getAllPools();
   }
 
   /**
-   * Get active pools (for investment)
+   * Get active pools (for investment) - Public endpoint
    */
   @Get('active')
   async getActivePools() {
-    return await this.amcPoolsService.getActivePools();
+    try {
+      return await this.amcPoolsService.getActivePools();
+    } catch (error: any) {
+      console.error('Error fetching active pools:', error.message);
+      return [];
+    }
   }
 
   /**
-   * Get pool by ID
+   * Get pool by ID (Public endpoint - no auth required for browsing)
    */
   @Get(':poolId')
   async getPoolById(@Param('poolId') poolId: string) {
-    return await this.amcPoolsService.getPoolById(poolId);
+    try {
+      return await this.amcPoolsService.getPoolById(poolId);
+    } catch (error: any) {
+      throw error; // Re-throw for proper error handling
+    }
   }
 
   /**
@@ -78,6 +90,7 @@ export class AMCPoolsController {
    * Invest in pool
    */
   @Post(':poolId/invest')
+  @UseGuards(JwtAuthGuard)
   async investInPool(@Param('poolId') poolId: string, @Body() investDto: InvestInPoolDto, @Request() req) {
     investDto.poolId = poolId;
     investDto.investorAddress = req.user.walletAddress;

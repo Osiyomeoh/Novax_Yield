@@ -95,7 +95,13 @@ export class AMCPoolsService {
       // 🛡️ VALIDATION: Check tokenization limits for each asset
       for (const poolAsset of createPoolDto.assets) {
         try {
-          const asset = await this.mantleService.getAsset(poolAsset.assetId);
+          // Add timeout wrapper (20 seconds max per asset)
+          const assetTimeout = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Asset fetch timeout after 20 seconds')), 20000)
+          );
+          
+          const getAssetPromise = this.mantleService.getAsset(poolAsset.assetId);
+          const asset = await Promise.race([getAssetPromise, assetTimeout]);
           const assetTotalValue = Number(ethers.formatEther(asset.totalValue || 0n));
           
           // Calculate what percentage of asset is being tokenized
@@ -1251,7 +1257,13 @@ export class AMCPoolsService {
         this.logger.log(`🔍 Validating asset ${poolAsset.assetId} on blockchain...`);
         this.logger.log(`   Asset ID format: ${poolAsset.assetId.length} chars, starts with 0x: ${poolAsset.assetId.startsWith('0x')}`);
         
-        const onChainAsset = await this.mantleService.getAsset(poolAsset.assetId);
+        // Add timeout wrapper for asset validation (20 seconds max)
+        const validationTimeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Asset validation timeout after 20 seconds')), 20000)
+        );
+        
+        const getAssetPromise = this.mantleService.getAsset(poolAsset.assetId);
+        const onChainAsset = await Promise.race([getAssetPromise, validationTimeout]);
         
         if (!onChainAsset) {
           throw new BadRequestException(`Asset ${poolAsset.assetId} not found on blockchain`);
