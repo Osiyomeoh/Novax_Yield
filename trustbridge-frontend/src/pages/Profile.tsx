@@ -626,7 +626,7 @@ const Profile: React.FC = () => {
                         <Button
                           variant="outline"
                           className="w-full"
-                          onClick={() => navigate(`/dashboard/pools/${pool.poolId}`)}
+                          onClick={() => navigate(`/dashboard/pool/${pool.poolId}`)}
                         >
                           View Pool
                           <ArrowRight className="w-4 h-4 ml-2" />

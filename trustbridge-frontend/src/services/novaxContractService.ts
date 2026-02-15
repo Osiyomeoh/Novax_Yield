@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
 import { novaxContractAddresses } from '../config/contracts';
+import { waitForTransaction } from '../utils/transactionUtils';
 
 // Import Novax contract ABIs
 import NovaxRwaFactoryABI from '../contracts/NovaxRwaFactory.json';
@@ -320,7 +321,7 @@ export class NovaxContractService {
     const tx = await factory.createRwa(category, valueUSD, maxLTV, metadataCIDBytes32);
     console.log('⏳ Transaction submitted:', tx.hash);
 
-    const receipt = await tx.wait();
+    const receipt = await waitForTransaction(tx, this.provider, 180);
     if (!receipt) {
       throw new Error('Transaction receipt not available');
     }
@@ -466,7 +467,7 @@ export class NovaxContractService {
       metadataCIDBytes32
     );
 
-    const receipt = await tx.wait();
+    const receipt = await waitForTransaction(tx, this.provider, 180);
     if (!receipt) {
       throw new Error('Transaction receipt not available');
     }
@@ -556,18 +557,23 @@ export class NovaxContractService {
       : ethers.id(receivableId);
 
     const tx = await factory.verifyReceivable(receivableIdBytes32, riskScore, apr);
-    const receipt = await tx.wait();
+    
+    // Use polling for Etherlink (slow network)
+    const receipt = await waitForTransaction(tx, this.provider, 180);
+    
+    if (!receipt) {
+      throw new Error('Transaction not confirmed. Please check the explorer.');
+    }
 
     return { txHash: receipt.hash };
   }
 
   /**
-   * Get all receivables by querying ReceivableCreated events
-   * @param fromBlock Starting block number (optional, defaults to last 10000 blocks)
-   * @param toBlock Ending block number (optional, defaults to 'latest')
+   * Get all receivables using contract getter (much faster than querying events!)
+   * Uses the allReceivables array from the contract
    * @returns Array of receivable IDs
    */
-  async getAllReceivables(fromBlock?: number, toBlock?: number | string): Promise<string[]> {
+  async getAllReceivables(): Promise<string[]> {
     if (!this.provider) {
       throw new Error('Provider not initialized');
     }
@@ -578,70 +584,26 @@ export class NovaxContractService {
     );
 
     try {
-      // Query ReceivableCreated events
-      const filter = factory.filters.ReceivableCreated();
+      console.log('🔍 Fetching all receivables using contract getter (allReceivables array)...');
       
-      // Get current block number to calculate a reasonable range
-      const currentBlock = await this.provider.getBlockNumber();
-      const MAX_BLOCK_RANGE = 10000; // Query max 10,000 blocks at a time
+      // Use the allReceivables public array getter - much faster than querying events!
+      // Read totalReceivables first to know how many to fetch
+      const totalReceivables = await factory.totalReceivables();
+      console.log(`📊 Total receivables: ${totalReceivables}`);
       
-      // Default to last 10,000 blocks if fromBlock not specified
-      // This prevents "block range too large" errors
-      let from: number;
-      if (fromBlock !== undefined) {
-        from = fromBlock;
-      } else {
-        // Start from 10,000 blocks ago, or block 0 if chain is shorter
-        from = Math.max(0, currentBlock - MAX_BLOCK_RANGE);
+      if (totalReceivables === 0n) {
+        console.log('✅ No receivables found');
+        return [];
       }
       
-      const to = toBlock || 'latest';
+      // Use getAllReceivableIds() - same as test scripts
+      const receivableIds = await factory.getAllReceivableIds();
+      console.log(`✅ Found ${receivableIds.length} receivables using getAllReceivableIds()`);
       
-      console.log('🔍 Querying ReceivableCreated events from block', from, 'to', to, `(current block: ${currentBlock})`);
-      
-      let events: any[];
-      
-      // If range is still too large, query in chunks
-      if (typeof to === 'number' && (to - from) > MAX_BLOCK_RANGE) {
-        console.log(`⚠️ Block range too large (${to - from} blocks), querying in chunks...`);
-        const allEvents: any[] = [];
-        let chunkStart = from;
-        
-        while (chunkStart < to) {
-          const chunkEnd = Math.min(chunkStart + MAX_BLOCK_RANGE, to);
-          console.log(`📦 Querying chunk: blocks ${chunkStart} to ${chunkEnd}`);
-          
-          try {
-            const chunkEvents = await factory.queryFilter(filter, chunkStart, chunkEnd);
-            allEvents.push(...chunkEvents);
-            console.log(`✅ Found ${chunkEvents.length} events in chunk`);
-          } catch (chunkError: any) {
-            console.warn(`⚠️ Error querying chunk ${chunkStart}-${chunkEnd}:`, chunkError.message);
-            // Continue with next chunk
-          }
-          
-          chunkStart = chunkEnd + 1;
-        }
-        
-        events = allEvents;
-        console.log('✅ Found', events.length, 'ReceivableCreated events total');
-      } else {
-        events = await factory.queryFilter(filter, from, to);
-        console.log('✅ Found', events.length, 'ReceivableCreated events');
-      }
-
-      // Extract receivable IDs from events
-      const receivableIds = events
-        .map(event => {
-          if (event.args && event.args.length > 0) {
-            // ReceivableCreated event: receivableId is first arg
-            return event.args[0];
-          }
-          return null;
-        })
-        .filter((id): id is string => id !== null && typeof id === 'string');
-
-      return receivableIds;
+      // Convert bytes32[] to string[]
+      return receivableIds.map((id: any) => 
+        typeof id === 'string' ? id : ethers.hexlify(id)
+      );
     } catch (error) {
       console.error('Error querying receivables:', error);
       throw new Error(`Failed to fetch receivables: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -677,31 +639,6 @@ export class NovaxContractService {
     }
   }
 
-  /**
-   * @deprecated Use getExporterReceivables() instead - it's much faster and doesn't hit block range limits
-   * Get all receivables by querying ReceivableCreated events
-   * @param fromBlock Starting block number (optional, defaults to last 10000 blocks)
-   * @param toBlock Ending block number (optional, defaults to 'latest')
-   * @returns Array of receivable IDs
-   */
-  async getAllReceivables(fromBlock?: number, toBlock?: number | string): Promise<string[]> {
-    if (!this.provider) {
-      throw new Error('Provider not initialized');
-    }
-
-    const factory = this.getContract(
-      novaxContractAddresses.RECEIVABLE_FACTORY,
-      NovaxReceivableFactoryABI
-    );
-
-    try {
-      const receivableIds = await factory.getExporterReceivables(exporterAddress);
-      return receivableIds.map(id => id.toString());
-    } catch (error) {
-      console.error('Error fetching exporter receivables:', error);
-      throw new Error(`Failed to fetch exporter receivables: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
 
   // ==================== POOL MANAGER METHODS ====================
 
@@ -770,7 +707,7 @@ export class NovaxContractService {
       tokenSymbol
     );
 
-    const receipt = await tx.wait();
+    const receipt = await waitForTransaction(tx, this.provider, 180);
     if (!receipt) {
       throw new Error('Transaction receipt not available');
     }
@@ -835,13 +772,13 @@ export class NovaxContractService {
     if (allowance < usdcAmount) {
       console.log('📝 Approving USDC spending...');
       const approveTx = await usdc.approve(novaxContractAddresses.POOL_MANAGER, usdcAmount);
-      await approveTx.wait();
+      await waitForTransaction(approveTx, this.provider, 180);
       console.log('✅ USDC approved');
     }
 
     // Invest in pool
     const tx = await poolManager.invest(poolIdBytes32, usdcAmount);
-    const receipt = await tx.wait();
+    const receipt = await waitForTransaction(tx, this.provider, 180);
 
     // Get shares from event or pool
     let shares = 0n;
@@ -988,7 +925,11 @@ export class NovaxContractService {
     });
 
     const tx = await poolManager.recordPayment(poolIdBytes32, paymentAmount);
-    const receipt = await tx.wait();
+    const receipt = await waitForTransaction(tx, this.provider, 180);
+    
+    if (!receipt) {
+      throw new Error('Transaction not confirmed. Please check the explorer.');
+    }
 
     return { txHash: receipt.hash };
   }
@@ -1017,18 +958,21 @@ export class NovaxContractService {
     console.log('💰 Distributing yield for pool:', poolIdBytes32);
 
     const tx = await poolManager.distributeYield(poolIdBytes32);
-    const receipt = await tx.wait();
+    const receipt = await waitForTransaction(tx, this.provider, 180);
+    
+    if (!receipt) {
+      throw new Error('Transaction not confirmed. Please check the explorer.');
+    }
 
     return { txHash: receipt.hash };
   }
 
   /**
-   * Get all pools by querying PoolCreated events
-   * @param fromBlock Starting block number (optional)
-   * @param toBlock Ending block number (optional)
+   * Get all pools using contract getter (much faster than querying events!)
+   * Uses the allPools array from the contract
    * @returns Array of pool IDs
    */
-  async getAllPools(fromBlock?: number, toBlock?: number | string): Promise<string[]> {
+  async getAllPools(): Promise<string[]> {
     if (!this.provider) {
       throw new Error('Provider not initialized');
     }
@@ -1039,30 +983,149 @@ export class NovaxContractService {
     );
 
     try {
-      // Query PoolCreated events
-      const filter = poolManager.filters.PoolCreated();
-      const from = fromBlock || 0;
-      const to = toBlock || 'latest';
+      console.log('🔍 Fetching all pools using getPoolsPaginated()...');
       
-      console.log('🔍 Querying PoolCreated events from block', from, 'to', to);
-      const events = await poolManager.queryFilter(filter, from, to);
-      console.log('✅ Found', events.length, 'PoolCreated events');
-
-      // Extract pool IDs from events
-      const poolIds = events
-        .map(event => {
-          if (event.args && event.args.length > 0) {
-            // PoolCreated event: poolId is first arg
-            return event.args[0];
-          }
-          return null;
-        })
-        .filter((id): id is string => id !== null && typeof id === 'string');
-
+      // Use getPoolsPaginated() - same as test scripts
+      const [allPools] = await poolManager.getPoolsPaginated(0, 100);
+      const poolIds = allPools.map((pool: any) => {
+        const id = pool.id || pool.poolId;
+        return typeof id === 'string' ? id : ethers.hexlify(id);
+      });
+      
+      console.log(`✅ Found ${poolIds.length} pools using getPoolsPaginated()`);
       return poolIds;
     } catch (error) {
-      console.error('Error querying pools:', error);
+      console.error('Error fetching pools:', error);
       throw new Error(`Failed to fetch pools: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Get pools by status using pagination and frontend filtering
+   * @param status Pool status to filter
+   * @returns Array of pools with the specified status
+   */
+  async getPoolsByStatus(status: number): Promise<any[]> {
+    if (!this.provider) {
+      throw new Error('Provider not initialized');
+    }
+
+    const poolManager = this.getContract(
+      novaxContractAddresses.POOL_MANAGER,
+      NovaxPoolManagerABI
+    );
+
+    try {
+      const allPools: any[] = [];
+      let offset = 0;
+      const pageSize = 100;
+      let total = 0;
+
+      // Fetch all pools using pagination
+      while (true) {
+        const [pools, totalCount] = await poolManager.getPoolsPaginated(offset, pageSize);
+        allPools.push(...pools);
+        total = Number(totalCount);
+
+        if (pools.length < pageSize || allPools.length >= total) {
+          break;
+        }
+        offset += pageSize;
+      }
+
+      // Filter by status on frontend
+      return allPools.filter((pool: any) => pool.status === status);
+    } catch (error) {
+      console.error('Error fetching pools by status:', error);
+      throw new Error(`Failed to fetch pools by status: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Get pools that need payment recording (for AMC)
+   * Uses getPoolsPaginated and filters on frontend
+   * @returns Array of pools needing payment
+   */
+  async getPoolsNeedingPayment(): Promise<any[]> {
+    if (!this.provider) {
+      throw new Error('Provider not initialized');
+    }
+
+    const poolManager = this.getContract(
+      novaxContractAddresses.POOL_MANAGER,
+      NovaxPoolManagerABI
+    );
+
+    try {
+      const allPools: any[] = [];
+      let offset = 0;
+      const pageSize = 100;
+      let total = 0;
+
+      // Fetch all pools using pagination
+      while (true) {
+        const [pools, totalCount] = await poolManager.getPoolsPaginated(offset, pageSize);
+        allPools.push(...pools);
+        total = Number(totalCount);
+
+        if (pools.length < pageSize || allPools.length >= total) {
+          break;
+        }
+        offset += pageSize;
+      }
+
+      // Filter: (status == FUNDED || status == MATURED) && paymentStatus != FULL
+      // FUNDED = 1, MATURED = 2, FULL = 2
+      return allPools.filter((pool: any) => 
+        (pool.status === 1 || pool.status === 2) && pool.paymentStatus !== 2
+      );
+    } catch (error) {
+      console.error('Error fetching pools needing payment:', error);
+      throw new Error(`Failed to fetch pools needing payment: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Get pools ready for yield distribution (for Admin)
+   * Uses getPoolsPaginated and filters on frontend
+   * @returns Array of pools ready for yield
+   */
+  async getPoolsReadyForYield(): Promise<any[]> {
+    if (!this.provider) {
+      throw new Error('Provider not initialized');
+    }
+
+    const poolManager = this.getContract(
+      novaxContractAddresses.POOL_MANAGER,
+      NovaxPoolManagerABI
+    );
+
+    try {
+      const allPools: any[] = [];
+      let offset = 0;
+      const pageSize = 100;
+      let total = 0;
+
+      // Fetch all pools using pagination
+      while (true) {
+        const [pools, totalCount] = await poolManager.getPoolsPaginated(offset, pageSize);
+        allPools.push(...pools);
+        total = Number(totalCount);
+
+        if (pools.length < pageSize || allPools.length >= total) {
+          break;
+        }
+        offset += pageSize;
+      }
+
+      // Filter: status == PAID && paymentStatus == FULL
+      // PAID = 3, FULL = 2
+      return allPools.filter((pool: any) => 
+        pool.status === 3 && pool.paymentStatus === 2
+      );
+    } catch (error) {
+      console.error('Error fetching pools ready for yield:', error);
+      throw new Error(`Failed to fetch pools ready for yield: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -1113,7 +1176,7 @@ export class NovaxContractService {
       deadline
     );
 
-    const receipt = await tx.wait();
+    const receipt = await waitForTransaction(tx, this.provider, 180);
     if (!receipt) {
       throw new Error('Transaction receipt not available');
     }
@@ -1359,11 +1422,20 @@ export class NovaxContractService {
    */
   async getNVXBalance(address: string): Promise<bigint> {
     if (!this.provider) {
-      throw new Error('Provider not initialized');
+      throw new Error('Provider not initialized. Please call initialize() first.');
     }
 
-    const nvxToken = this.getContract(novaxContractAddresses.NVX_TOKEN, NVXTokenABI);
-    return await nvxToken.balanceOf(address);
+    try {
+      const nvxToken = this.getContract(novaxContractAddresses.NVX_TOKEN, NVXTokenABI);
+      return await nvxToken.balanceOf(address);
+    } catch (error: any) {
+      // If contract not deployed or wrong address, return 0
+      if (error.code === 'BAD_DATA' || error.message?.includes('decode') || error.message?.includes('0x')) {
+        console.warn('NVX token contract may not be deployed or ABI mismatch');
+        return BigInt(0);
+      }
+      throw error;
+    }
   }
 
   /**

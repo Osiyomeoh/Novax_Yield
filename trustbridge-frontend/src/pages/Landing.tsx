@@ -228,15 +228,15 @@ const Landing: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7, duration: 0.6 }}
               >
-                <Link to="/dashboard">
+                <Link to="/dashboard/create-receivable">
                   <Button variant="primary" size="lg" className="group w-full sm:w-auto">
-                    Launch App
+                    I'm an Exporter
                     <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
-                <Link to="/dashboard/marketplace">
+                <Link to="/dashboard/investor-hub">
                   <Button variant="outline" size="lg" className="group w-full sm:w-auto">
-                    Browse Assets
+                    I'm an Investor
                     <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>

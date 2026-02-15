@@ -529,28 +529,28 @@ const PoolDetailPage: React.FC<PoolDetailPageProps> = ({ poolId, onBack }) => {
       
       // Fallback: Fetch directly from blockchain if API failed or not available
       if (!poolData) {
-        console.log('🔍 Fetching pool directly from blockchain...');
-        const poolManagerAddress = novaxContractAddresses.NOVAX_POOL_MANAGER;
-        const poolIdBytes32 = poolId.startsWith('0x') && poolId.length === 66
-          ? poolId
-          : ethers.id(poolId);
+        console.log('🔍 Fetching pool directly from blockchain using novaxContractService...');
         
-        // Use multiple RPC endpoints with fallback
-        const rpcEndpoints = [
-          import.meta.env.VITE_RPC_URL,
-          'https://node.shadownet.etherlink.com',
-          'https://node.mainnet.etherlink.com',
-        ].filter(Boolean);
+        // Use provider from wallet context, or create a read-only provider
+        let readOnlyProvider: ethers.Provider | null = provider || null;
         
-        let readOnlyProvider: ethers.Provider | null = null;
-        for (const rpcUrl of rpcEndpoints) {
-          try {
-            readOnlyProvider = new ethers.JsonRpcProvider(rpcUrl);
-            await readOnlyProvider.getBlockNumber();
-            console.log(`✅ Connected to RPC: ${rpcUrl}`);
-            break;
-          } catch (error) {
-            console.warn(`⚠️ Failed to connect to ${rpcUrl}`);
+        if (!readOnlyProvider) {
+          // Fallback: Use multiple RPC endpoints with fallback
+          const rpcEndpoints = [
+            import.meta.env.VITE_RPC_URL,
+            'https://node.shadownet.etherlink.com',
+            'https://node.mainnet.etherlink.com',
+          ].filter(Boolean);
+          
+          for (const rpcUrl of rpcEndpoints) {
+            try {
+              readOnlyProvider = new ethers.JsonRpcProvider(rpcUrl);
+              await readOnlyProvider.getBlockNumber();
+              console.log(`✅ Connected to RPC: ${rpcUrl}`);
+              break;
+            } catch (error) {
+              console.warn(`⚠️ Failed to connect to ${rpcUrl}`);
+            }
           }
         }
         
@@ -558,26 +558,39 @@ const PoolDetailPage: React.FC<PoolDetailPageProps> = ({ poolId, onBack }) => {
           throw new Error('Failed to connect to any RPC endpoint');
         }
         
-        const poolManagerContract = new ethers.Contract(
-          poolManagerAddress,
-          ["function getPool(bytes32) external view returns (bytes32,address,string,string,uint256,uint256,uint256,uint256,bool,bool,uint256,bytes32[],bytes32[])"],
-          readOnlyProvider
-        );
+        // Initialize novaxContractService with the provider
+        novaxContractService.initialize(null as any, readOnlyProvider);
         
-        const poolInfo = await poolManagerContract.getPool(poolIdBytes32);
+        // Use the service to get pool data
+        const poolInfo = await novaxContractService.getPool(poolId);
         
-        // Parse pool data from blockchain
+        // Parse pool data from blockchain (Pool struct from NovaxPoolManager)
+        // Structure: id, poolType, assetId, assetFactory, poolToken, usdcToken, totalInvested, totalShares, 
+        //            targetAmount, minInvestment, maxInvestment, status, apr, createdAt, closedAt, creator, 
+        //            maturityDate, totalPaid, paymentStatus, rewardPool
+        const statusMap: { [key: number]: string } = {
+          0: 'ACTIVE',
+          1: 'FUNDED',
+          2: 'MATURED',
+          3: 'PAID',
+          4: 'DEFAULTED',
+          5: 'CLOSED',
+          6: 'PAUSED'
+        };
+        
         poolData = {
           poolId: poolId,
-          name: poolInfo[2] || poolInfo.name || 'Pool',
-          description: poolInfo[3] || poolInfo.description || '',
-          status: poolInfo[8] ? 'ACTIVE' : 'INACTIVE',
-          totalValue: Number(ethers.formatEther(poolInfo[4] || poolInfo.totalValue || 0n)),
-          tokenSupply: Number(ethers.formatEther(poolInfo[5] || poolInfo.totalShares || 0n)),
-          tokenPrice: 1.0, // Default
-          expectedAPY: 10, // Default
-          minimumInvestment: 100,
-          totalInvestors: 0,
+          name: `Pool ${poolId.slice(0, 8)}`,
+          description: 'Novax Yield Investment Pool',
+          status: statusMap[Number(poolInfo.status || 0)] || 'UNKNOWN',
+          totalValue: Number(ethers.formatUnits(poolInfo.targetAmount || 0n, 6)), // USDC has 6 decimals
+          tokenSupply: Number(ethers.formatUnits(poolInfo.totalShares || 0n, 18)), // Pool tokens have 18 decimals
+          tokenPrice: poolInfo.totalShares && poolInfo.totalShares > 0n && poolInfo.totalInvested && poolInfo.totalInvested > 0n
+            ? Number(ethers.formatUnits(poolInfo.totalInvested, 6)) / Number(ethers.formatUnits(poolInfo.totalShares, 18))
+            : 1.0,
+          expectedAPY: poolInfo.apr ? Number(poolInfo.apr) / 100 : 0, // Convert basis points to percentage
+          minimumInvestment: Number(ethers.formatUnits(poolInfo.minInvestment || 0n, 6)),
+          totalInvestors: 0, // Will be fetched separately if needed
           assets: [],
           // Note: Novax pools don't have tranches
           // Note: Novax pools use poolId directly
@@ -623,9 +636,9 @@ const PoolDetailPage: React.FC<PoolDetailPageProps> = ({ poolId, onBack }) => {
             investorType: 'Professional Investors',
             poolStructure: 'Revolving',
             expenseRatio: 0.25,
-            investmentManager: data.metadata?.investmentManager || 'TrustBridge Asset Management',
-            fundAdministrator: data.metadata?.fundAdministrator || 'TrustBridge Services Ltd',
-            auditor: data.metadata?.auditor || 'TrustBridge Audit Partners',
+            investmentManager: data.metadata?.investmentManager || 'Novax Asset Management',
+            fundAdministrator: data.metadata?.fundAdministrator || 'Novax Services Ltd',
+            auditor: data.metadata?.auditor || 'Novax Audit Partners',
             // Note: Novax pools don't have tranches
           }
         });
@@ -658,7 +671,7 @@ const PoolDetailPage: React.FC<PoolDetailPageProps> = ({ poolId, onBack }) => {
     
     try {
       console.log('🔍 Fetching user holdings for:', address);
-      const poolManagerAddress = novaxContractAddresses.NOVAX_POOL_MANAGER;
+      const poolManagerAddress = novaxContractAddresses.POOL_MANAGER;
       const onChainPoolId = poolId; // Novax pools use poolId directly
       
       if (!onChainPoolId || !poolManagerAddress) {
@@ -774,7 +787,7 @@ const PoolDetailPage: React.FC<PoolDetailPageProps> = ({ poolId, onBack }) => {
       console.log('📊 Calculating ROI from on-chain data...');
       
       // Get pool launch date from on-chain or use current date as fallback
-      const poolManagerAddress = novaxContractAddresses.NOVAX_POOL_MANAGER;
+      const poolManagerAddress = novaxContractAddresses.POOL_MANAGER;
       const onChainPoolId = poolId; // Novax pools use poolId directly
       
       if (!onChainPoolId || !poolManagerAddress) {
@@ -788,18 +801,20 @@ const PoolDetailPage: React.FC<PoolDetailPageProps> = ({ poolId, onBack }) => {
       
       const readOnlyProvider = provider || new ethers.JsonRpcProvider(import.meta.env.VITE_RPC_URL || 'https://node.shadownet.etherlink.com');
       
-      // Get pool creation timestamp from Novax contract
+      // Get pool data from Novax contract (fetch once, reuse for all calculations)
+      let poolData: any;
       let poolCreatedAt: Date;
       try {
-        const poolData = await novaxContractService.getPool(poolIdBytes32);
+        poolData = await novaxContractService.getPool(poolIdBytes32);
         // Pool struct has createdAt field
         const createdAtTimestamp = poolData.createdAt || 0n;
         poolCreatedAt = createdAtTimestamp > 0n 
           ? new Date(Number(createdAtTimestamp) * 1000)
           : (pool.launchedAt ? new Date(pool.launchedAt) : new Date());
       } catch (error) {
-        console.warn('⚠️ Could not fetch pool creation time, using pool launch date');
+        console.warn('⚠️ Could not fetch pool data, using fallback values');
         poolCreatedAt = pool.launchedAt ? new Date(pool.launchedAt) : new Date();
+        poolData = null;
       }
       
       // Calculate days since investment (use pool creation date as proxy for investment date)
@@ -814,31 +829,129 @@ const PoolDetailPage: React.FC<PoolDetailPageProps> = ({ poolId, onBack }) => {
         return;
       }
       
-      // Calculate projected ROI based on APY
-      const apy = pool.expectedAPY || 0;
+      // Use pool data fetched earlier, or fetch if not available
+      if (!poolData) {
+        poolData = await novaxContractService.getPool(poolIdBytes32);
+      }
+      
+      const poolApr = BigInt(poolData?.apr || 0);
+      const poolMaturityDate = Number(poolData?.maturityDate || 0);
+      const poolStatus = Number(poolData?.status || 0);
+      
+      // Convert APR from basis points to percentage
+      const apy = poolApr > 0n ? Number(poolApr) / 100 : (pool.expectedAPY || 0);
       if (apy === 0) {
         console.warn('⚠️ Pool APY is 0, cannot calculate ROI');
         setProjectedROI(null);
         return;
       }
       
-      // Calculate projected dividends: (Investment × APY / 100) × (Days / 365)
-      const annualReturn = (investmentAmount * apy) / 100;
-      const projectedDividends = (annualReturn * daysSinceLaunch) / 365;
+      // Calculate projected dividends using contract formula: (apr * daysHeld * investment) / (365 * 10000)
+      // Use maturity date if available, otherwise use current date
+      const endDate = poolMaturityDate > 0 ? new Date(poolMaturityDate * 1000) : now;
+      const daysHeld = Math.max(0, Math.floor((endDate.getTime() - poolCreatedAt.getTime()) / (1000 * 60 * 60 * 24)));
+      
+      // Use BigInt arithmetic to match contract precision
+      const investmentBigInt = ethers.parseUnits(investmentAmount.toFixed(6), 6); // USDC has 6 decimals
+      const daysHeldBigInt = BigInt(daysHeld);
+      
+      // Calculate projected yield: (apr * daysHeld * investment) / (365 * 10000)
+      const projectedYieldBigInt = poolApr > 0n && daysHeldBigInt > 0n && investmentBigInt > 0n
+        ? (poolApr * daysHeldBigInt * investmentBigInt) / (365n * 10000n)
+        : 0n;
+      
+      const projectedDividends = Number(ethers.formatUnits(projectedYieldBigInt, 6));
+      
       const projectedROIPercent = investmentAmount > 0 
         ? (projectedDividends / investmentAmount) * 100 
         : 0;
       
       // Projected APY (annualized)
-      const projectedAPY = daysSinceLaunch > 0 && investmentAmount > 0
-        ? (projectedDividends / investmentAmount) * (365 / daysSinceLaunch) * 100
+      const projectedAPY = daysHeld > 0 && investmentAmount > 0
+        ? (projectedDividends / investmentAmount) * (365 / daysHeld) * 100
         : apy;
       
       // Cap projected APY at 1.5x expected to prevent unrealistic projections
       const cappedProjectedAPY = Math.min(projectedAPY, apy * 1.5);
       
-      // Check dividend distribution events on-chain
-      const actualDividends = 0;
+      // Calculate actual dividends received from on-chain data
+      let actualDividends = 0;
+      try {
+        // Use pool data fetched earlier, or fetch if not available
+        if (!poolData) {
+          poolData = await novaxContractService.getPool(poolIdBytes32);
+        }
+        
+        const poolStatus = Number(poolData?.status || 0);
+        
+        // If pool is CLOSED (5), yield has been distributed
+        // Calculate user's share of distributed yield
+        if (poolStatus === 5) { // CLOSED = 5
+          // Calculate total yield that was distributed using contract formula
+          const poolCreatedAtTimestamp = Number(poolData?.createdAt || 0);
+          const poolMaturityDateTimestamp = Number(poolData?.maturityDate || 0);
+          const poolTotalInvested = BigInt(poolData?.totalInvested || 0);
+          const poolAprForYield = BigInt(poolData?.apr || 0);
+          
+          if (poolMaturityDateTimestamp > 0 && poolCreatedAtTimestamp > 0 && poolTotalInvested > 0n && poolAprForYield > 0n) {
+            // Calculate total yield using contract formula: (apr * daysHeld * totalInvested) / (365 * 10000)
+            // Note: daysHeld is from creation to maturity (not to now)
+            const daysHeldForYield = BigInt(Math.floor((poolMaturityDateTimestamp - poolCreatedAtTimestamp) / (24 * 60 * 60)));
+            if (daysHeldForYield > 0n) {
+              const totalYieldBigInt = (poolAprForYield * daysHeldForYield * poolTotalInvested) / (365n * 10000n);
+              const totalYield = Number(ethers.formatUnits(totalYieldBigInt, 6)); // USDC has 6 decimals
+              
+              // Calculate user's share: (userInvestment / totalInvested) * totalYield
+              const totalInvestedNum = Number(ethers.formatUnits(poolTotalInvested, 6));
+              if (totalInvestedNum > 0 && investmentAmount > 0) {
+                const userShareRatio = investmentAmount / totalInvestedNum;
+                actualDividends = totalYield * userShareRatio;
+                console.log(`✅ Calculated actual dividends: ${actualDividends.toFixed(2)} USDC (${(userShareRatio * 100).toFixed(2)}% of ${totalYield.toFixed(2)} USDC total yield)`);
+              }
+            }
+          }
+        } else {
+          // Pool not closed yet - check if there are YieldDistributed events
+          // This handles partial distributions if they exist
+          try {
+            const poolManager = novaxContractService.getContract(
+              novaxContractAddresses.POOL_MANAGER,
+              NovaxPoolManagerABI
+            );
+            
+            // Query YieldDistributed events
+            const filter = poolManager.filters.YieldDistributed(poolIdBytes32);
+            const events = await poolManager.queryFilter(filter);
+            
+            if (events.length > 0) {
+              // Sum all yield distributions
+              let totalDistributedYield = 0n;
+              for (const event of events) {
+                if (event.args && event.args[1]) {
+                  totalDistributedYield += BigInt(event.args[1].toString());
+                }
+              }
+              
+              if (totalDistributedYield > 0n) {
+                const totalYield = Number(ethers.formatUnits(totalDistributedYield, 6));
+                const poolTotalInvested = BigInt(poolData.totalInvested || 0);
+                const totalInvestedNum = Number(ethers.formatUnits(poolTotalInvested, 6));
+                
+                if (totalInvestedNum > 0 && investmentAmount > 0) {
+                  const userShareRatio = investmentAmount / totalInvestedNum;
+                  actualDividends = totalYield * userShareRatio;
+                  console.log(`✅ Found yield distribution events: ${actualDividends.toFixed(2)} USDC`);
+                }
+              }
+            }
+          } catch (eventError) {
+            console.warn('⚠️ Could not query yield distribution events:', eventError);
+          }
+        }
+      } catch (yieldError) {
+        console.warn('⚠️ Could not calculate actual dividends:', yieldError);
+      }
+      
       const actualROI = investmentAmount > 0 
         ? (actualDividends / investmentAmount) * 100 
         : 0;
@@ -918,7 +1031,7 @@ const PoolDetailPage: React.FC<PoolDetailPageProps> = ({ poolId, onBack }) => {
       console.log('Pool ID:', pool.poolId);
       console.log('Redeem Amount:', amount, 'tokens');
 
-      const poolManagerAddress = novaxContractAddresses.NOVAX_POOL_MANAGER;
+      const poolManagerAddress = novaxContractAddresses.POOL_MANAGER;
       const onChainPoolId = poolId; // Novax pools use poolId directly
 
       if (!onChainPoolId || !poolManagerAddress) {
@@ -1015,7 +1128,7 @@ const PoolDetailPage: React.FC<PoolDetailPageProps> = ({ poolId, onBack }) => {
       });
 
       // Step 1: Approve USDC for PoolManager
-      const poolManagerAddress = novaxContractAddresses.NOVAX_POOL_MANAGER;
+      const poolManagerAddress = novaxContractAddresses.POOL_MANAGER;
       const usdcAmount = ethers.parseUnits(amount.toString(), 6); // USDC has 6 decimals
 
       console.log('Approving USDC...');
@@ -1034,16 +1147,29 @@ const PoolDetailPage: React.FC<PoolDetailPageProps> = ({ poolId, onBack }) => {
       console.log('Verifying pool exists on-chain...');
       try {
         const onChainPool = await novaxContractService.getPool(poolIdBytes32);
+        const poolStatus = Number(onChainPool.status || 0); // Convert BigInt to number
+        
         console.log('✅ Pool verified on-chain:', {
           poolId: onChainPool.id,
           poolType: onChainPool.poolType, // 0 = RWA, 1 = RECEIVABLE
-          status: onChainPool.status, // 0 = ACTIVE, 1 = CLOSED, 2 = PAUSED
-          totalInvested: ethers.formatUnits(onChainPool.totalInvested, 6),
-          targetAmount: ethers.formatUnits(onChainPool.targetAmount, 6),
+          status: poolStatus, // 0 = ACTIVE, 1 = FUNDED, 2 = MATURED, 3 = PAID, 4 = DEFAULTED, 5 = CLOSED, 6 = PAUSED
+          statusRaw: onChainPool.status,
+          totalInvested: ethers.formatUnits(onChainPool.totalInvested || 0n, 6),
+          targetAmount: ethers.formatUnits(onChainPool.targetAmount || 0n, 6),
         });
         
-        if (onChainPool.status !== 0) { // 0 = ACTIVE
-          throw new Error(`Pool exists but is not active. Status: ${onChainPool.status}`);
+        // Status 0 = ACTIVE (only active pools can receive investments)
+        if (poolStatus !== 0) {
+          const statusNames: { [key: number]: string } = {
+            0: 'ACTIVE',
+            1: 'FUNDED',
+            2: 'MATURED',
+            3: 'PAID',
+            4: 'DEFAULTED',
+            5: 'CLOSED',
+            6: 'PAUSED'
+          };
+          throw new Error(`Pool is not active. Current status: ${statusNames[poolStatus] || `UNKNOWN (${poolStatus})`}`);
         }
       } catch (verifyError: any) {
         console.error('❌ Pool verification failed:', verifyError);
@@ -1083,25 +1209,39 @@ const PoolDetailPage: React.FC<PoolDetailPageProps> = ({ poolId, onBack }) => {
       await fetchPoolDetails();
 
       // Step 4: Record investment in backend (optional - blockchain is source of truth)
+      // Note: This is optional since blockchain is the source of truth
+      // If backend is not available, investment still succeeds on-chain
       const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
       const apiUrl = import.meta.env.VITE_API_URL || '';
       
-      const response = await fetch(`${apiUrl}/amc-pools/${poolId}/invest`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          amount: amount,
-          // Note: Novax pools don't have tranches
-          transactionHash: investTxHash
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to record investment');
+      if (apiUrl && token) {
+        try {
+          const response = await fetch(`${apiUrl}/amc-pools/${poolId}/invest`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              amount: amount,
+              // Note: Novax pools don't have tranches
+              transactionHash: investTxHash
+            })
+          });
+          
+          if (response.ok) {
+            const backendData = await response.json();
+            console.log('✅ Investment recorded in backend:', backendData);
+          } else {
+            // Backend call failed, but investment succeeded on-chain
+            console.warn(`⚠️ Backend recording failed (${response.status}), but investment succeeded on-chain`);
+          }
+        } catch (backendError: any) {
+          // Backend call failed, but investment succeeded on-chain
+          console.warn('⚠️ Backend recording failed, but investment succeeded on-chain:', backendError.message);
+        }
+      } else {
+        console.log('ℹ️ Backend API not configured, skipping backend recording (blockchain is source of truth)');
       }
 
       toast({
@@ -1463,7 +1603,7 @@ const PoolDetailPage: React.FC<PoolDetailPageProps> = ({ poolId, onBack }) => {
                   </Button>
                 </div>
                 <div className="pt-2">
-                  <p className="text-sm font-medium text-gray-900">TrustBridge Pool Management</p>
+                  <p className="text-sm font-medium text-gray-900">Novax Yield Pool Management</p>
                 </div>
                 <div className="pt-4 border-t border-gray-200 mt-4">
                   <p className="text-sm text-gray-600 mb-3">Fund Description</p>

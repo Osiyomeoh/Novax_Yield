@@ -42,6 +42,8 @@ import PoolDetailPage from './components/Pools/PoolDetailPage';
 import TradingInterface from './components/Trading/TradingInterface';
 import GetTestTokens from './pages/GetTestTokens';
 import DiditCallback from './pages/DiditCallback';
+import InvestorHub from './pages/InvestorHub';
+import AdminHub from './pages/AdminHub';
 import Collections from './pages/Collections';
 import Activity from './pages/Activity';
 import CreateRWAAsset from './components/RWA/CreateRWAAsset';
@@ -192,6 +194,21 @@ const App: React.FC = () => {
                     </div>
                   } />
                   
+                  {/* Get Test Tokens - Standalone */}
+                  <Route path="/get-test-tokens" element={
+                    <div className="min-h-screen bg-gray-50 text-black">
+                      <UniversalHeader />
+                      <GetTestTokens />
+                    </div>
+                  } />
+                  
+                  {/* Exchange - Standalone */}
+                  <Route path="/exchange" element={
+                    <div className="min-h-screen bg-gray-50 text-black">
+                      <UniversalHeader />
+                      <Exchange />
+                    </div>
+                  } />
                   
                   {/* Help Pages - No Authentication Required */}
                   <Route path="/documentation" element={
@@ -267,6 +284,8 @@ const App: React.FC = () => {
                         <Route path="/trading" element={<TradingInterface />} />
                         <Route path="/exchange" element={<Exchange />} />
                         <Route path="/get-test-tokens" element={<GetTestTokens />} />
+                        <Route path="/investor-hub" element={<InvestorHub />} />
+                        <Route path="/admin-hub" element={<AdminHub />} />
                         <Route path="/spv" element={<SPVManagement />} />
                         <Route path="/governance" element={<DAOGovernance />} />
                         <Route path="/profile" element={<Profile />} />

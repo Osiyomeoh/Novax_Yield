@@ -47,6 +47,7 @@ contract NovaxReceivableFactory is AccessControl, Pausable, ReentrancyGuard {
     mapping(bytes32 => bool) public receivableExists;
 
     uint256 public totalReceivables;
+    bytes32[] public allReceivables; // Array of all receivable IDs (similar to allPools in PoolManager)
     address public verificationModule; // NovaxVerificationModule contract
 
     // Events
@@ -143,6 +144,7 @@ contract NovaxReceivableFactory is AccessControl, Pausable, ReentrancyGuard {
 
         receivableExists[receivableId] = true;
         exporterReceivables[msg.sender].push(receivableId);
+        allReceivables.push(receivableId); // Add to global array for easy retrieval
         totalReceivables++;
 
         emit ReceivableCreated(
@@ -274,6 +276,121 @@ contract NovaxReceivableFactory is AccessControl, Pausable, ReentrancyGuard {
                 receivables_[i] = receivables[_receivableIds[i]];
             }
         }
+    }
+
+    /**
+     * @notice Get all receivables with pagination (gas-efficient)
+     * @param _offset Starting index
+     * @param _limit Number of receivables to return
+     * @return receivableIds_ Array of receivable IDs
+     * @return receivables_ Array of receivable structs
+     * @return total Total number of receivables
+     */
+    function getReceivablesPaginated(uint256 _offset, uint256 _limit) 
+        external 
+        view 
+        returns (
+            bytes32[] memory receivableIds_,
+            Receivable[] memory receivables_,
+            uint256 total
+        ) 
+    {
+        total = allReceivables.length;
+        
+        if (_offset >= total) {
+            return (new bytes32[](0), new Receivable[](0), total);
+        }
+        
+        uint256 end = _offset + _limit;
+        if (end > total) {
+            end = total;
+        }
+        
+        uint256 length = end - _offset;
+        receivableIds_ = new bytes32[](length);
+        receivables_ = new Receivable[](length);
+        
+        for (uint256 i = 0; i < length; i++) {
+            bytes32 receivableId = allReceivables[_offset + i];
+            receivableIds_[i] = receivableId;
+            receivables_[i] = receivables[receivableId];
+        }
+    }
+
+    /**
+     * @notice Get all receivable IDs (for AMC/Admin dashboard)
+     * @return Array of all receivable IDs
+     */
+    function getAllReceivableIds() external view returns (bytes32[] memory) {
+        return allReceivables;
+    }
+
+    /**
+     * @notice Get pending receivables (for AMC verification)
+     * @return pendingReceivableIds Array of pending receivable IDs
+     * @return pendingReceivables_ Array of pending receivable structs
+     * @return count Number of pending receivables
+     */
+    function getPendingReceivables() external view returns (
+        bytes32[] memory pendingReceivableIds,
+        Receivable[] memory pendingReceivables_,
+        uint256 count
+    ) {
+        bytes32[] memory tempIds = new bytes32[](allReceivables.length);
+        Receivable[] memory tempReceivables = new Receivable[](allReceivables.length);
+        uint256 index = 0;
+        
+        for (uint256 i = 0; i < allReceivables.length; i++) {
+            bytes32 receivableId = allReceivables[i];
+            if (receivables[receivableId].status == uint8(ReceivableStatus.PENDING_VERIFICATION)) {
+                tempIds[index] = receivableId;
+                tempReceivables[index] = receivables[receivableId];
+                index++;
+            }
+        }
+        
+        pendingReceivableIds = new bytes32[](index);
+        pendingReceivables_ = new Receivable[](index);
+        for (uint256 i = 0; i < index; i++) {
+            pendingReceivableIds[i] = tempIds[i];
+            pendingReceivables_[i] = tempReceivables[i];
+        }
+        
+        count = index;
+    }
+
+    /**
+     * @notice Get verified receivables (for AMC to create pools)
+     * @return verifiedReceivableIds Array of verified receivable IDs
+     * @return verifiedReceivables_ Array of verified receivable structs
+     * @return count Number of verified receivables
+     */
+    function getVerifiedReceivables() external view returns (
+        bytes32[] memory verifiedReceivableIds,
+        Receivable[] memory verifiedReceivables_,
+        uint256 count
+    ) {
+        bytes32[] memory tempIds = new bytes32[](allReceivables.length);
+        Receivable[] memory tempReceivables = new Receivable[](allReceivables.length);
+        uint256 index = 0;
+        
+        for (uint256 i = 0; i < allReceivables.length; i++) {
+            bytes32 receivableId = allReceivables[i];
+            if (receivables[receivableId].status == uint8(ReceivableStatus.VERIFIED)) {
+                tempIds[index] = receivableId;
+                tempReceivables[index] = receivables[receivableId];
+                index++;
+            }
+        }
+        
+        verifiedReceivableIds = new bytes32[](index);
+        verifiedReceivables_ = new Receivable[](index);
+        for (uint256 i = 0; i < index; i++) {
+            verifiedReceivableIds[i] = tempIds[i];
+            verifiedReceivables_[i] = tempReceivables[i];
+        }
+        
+        count = index;
     }
 
     /**

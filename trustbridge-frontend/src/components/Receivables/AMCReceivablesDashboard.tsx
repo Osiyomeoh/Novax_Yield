@@ -58,6 +58,7 @@ const AMCReceivablesDashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'verified' | 'paid'>('pending');
   const [hasOnChainAMCRole, setHasOnChainAMCRole] = useState<boolean>(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
   
   // Verification form state
   const [riskScore, setRiskScore] = useState<string>('');
@@ -74,6 +75,20 @@ const AMCReceivablesDashboard: React.FC = () => {
       checkOnChainAMCRole();
       fetchReceivables();
     }
+  }, [isConnected, address, isAmcAdmin, isSuperAdmin, isPlatformAdmin, provider]);
+
+  // Auto-refresh receivables every 30 seconds
+  useEffect(() => {
+    if (!isConnected || !address || (!isAmcAdmin && !isSuperAdmin && !isPlatformAdmin)) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      console.log('🔄 Auto-refreshing receivables...');
+      fetchReceivables();
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
   }, [isConnected, address, isAmcAdmin, isSuperAdmin, isPlatformAdmin, provider]);
 
   const checkOnChainAMCRole = async () => {
@@ -125,10 +140,14 @@ const AMCReceivablesDashboard: React.FC = () => {
         novaxContractService.initialize(null as any, provider);
       }
 
-      // Get all receivable IDs from events
-      console.log('📋 Fetching all receivables...');
+      // Get all receivable IDs using contract getter (much faster than events!)
+      console.log('📋 Fetching all receivables using contract getter...');
+      
       const receivableIds = await novaxContractService.getAllReceivables();
       console.log('✅ Found', receivableIds.length, 'receivables');
+      
+      // Update refresh time
+      setLastRefreshTime(new Date());
 
       if (receivableIds.length === 0) {
         setReceivables([]);
@@ -256,6 +275,16 @@ const AMCReceivablesDashboard: React.FC = () => {
     }
 
     setVerifying(true);
+    const startTime = Date.now();
+    
+    // Show initial toast
+    const progressToast = toast({
+      title: 'Verifying Receivable',
+      description: 'Submitting verification transaction... (This may take 2-3 minutes on Etherlink)',
+      variant: 'default',
+      duration: 10000
+    });
+    
     try {
       // Convert APR percentage to basis points (e.g., 15% = 1500)
       const aprBasisPoints = Math.round(aprNum * 100);
@@ -266,10 +295,13 @@ const AMCReceivablesDashboard: React.FC = () => {
         aprBasisPoints
       );
 
+      const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+      
       toast({
-        title: 'Success',
-        description: `Receivable verified successfully! Transaction: ${result.txHash.slice(0, 10)}...`,
-        variant: 'default'
+        title: '✅ Verification Successful!',
+        description: `Receivable verified! Transaction confirmed in ${elapsedSeconds}s. Hash: ${result.txHash.slice(0, 10)}...`,
+        variant: 'default',
+        duration: 8000
       });
 
       // Close modal and refresh
@@ -277,13 +309,26 @@ const AMCReceivablesDashboard: React.FC = () => {
       setSelectedReceivable(null);
       setRiskScore('');
       setApr('');
+      
+      // Wait a moment for blockchain state to update, then refresh
+      await new Promise(resolve => setTimeout(resolve, 2000));
       await fetchReceivables();
     } catch (error: any) {
       console.error('Error verifying receivable:', error);
+      const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+      
+      let errorMessage = error.message || 'Failed to verify receivable. Please try again.';
+      
+      // Add helpful message for timeout errors
+      if (errorMessage.includes('timeout') || errorMessage.includes('not confirmed')) {
+        errorMessage += ' The transaction may still be processing. Please check the explorer or try again in a few minutes.';
+      }
+      
       toast({
         title: 'Verification Failed',
-        description: error.message || 'Failed to verify receivable. Please try again.',
-        variant: 'destructive'
+        description: errorMessage,
+        variant: 'destructive',
+        duration: 10000
       });
     } finally {
       setVerifying(false);
@@ -390,15 +435,23 @@ const AMCReceivablesDashboard: React.FC = () => {
                 <p className="text-gray-600 mt-1">View and verify trade receivables for pool creation</p>
               </div>
             </div>
-            <Button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
+            <div className="flex items-center gap-3">
+              {lastRefreshTime && (
+                <span className="text-sm text-gray-500">
+                  Last updated: {lastRefreshTime.toLocaleTimeString()}
+                </span>
+              )}
+              <Button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                variant="outline"
+                className="flex items-center gap-2"
+                title="Refresh receivables from contract"
+              >
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                {refreshing ? 'Refreshing...' : 'Refresh'}
+              </Button>
+            </div>
           </div>
 
           {/* Filters */}

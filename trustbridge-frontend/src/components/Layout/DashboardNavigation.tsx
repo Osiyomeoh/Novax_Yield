@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { TrendingUp, BarChart3, Settings, X, Zap, User, LogOut, ChevronLeft, ChevronRight, ChevronDown, Shield, Coins, Vote, BarChart3 as BarChart, Building2, Crown, TreePine, Package, PieChart, Bot, Phone, ArrowLeftRight, DollarSign, FileText } from 'lucide-react';
+import { TrendingUp, BarChart3, Settings, X, Zap, User, LogOut, ChevronLeft, ChevronRight, ChevronDown, Shield, Coins, Vote, BarChart3 as BarChart, Building2, Crown, TreePine, Package, PieChart, Bot, Phone, ArrowLeftRight, DollarSign, FileText, Receipt, Home, Plus } from 'lucide-react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useSidebar } from '../../contexts/SidebarContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -23,13 +23,23 @@ const DashboardNavigation: React.FC = () => {
   const navigate = useNavigate();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Auto-expand Investment section when on related routes
+  // Auto-expand sections when on related routes
   useEffect(() => {
-    const investmentRoutes = ['/dashboard/pools', '/dashboard/pool-dashboard', '/dashboard/staking'];
-    const isOnInvestmentRoute = investmentRoutes.some(route => location.pathname.startsWith(route));
+    const investmentRoutes = ['/dashboard/marketplace', '/dashboard/staking', '/dashboard/portfolio'];
+    const createRoutes = ['/dashboard/create-receivable', '/dashboard/receivables'];
+    const adminRoutes = ['/dashboard/admin'];
     
-    if (isOnInvestmentRoute) {
-      setOpenDropdowns(prev => new Set([...prev, 'investment']));
+    const isOnInvestmentRoute = investmentRoutes.some(route => location.pathname.startsWith(route));
+    const isOnCreateRoute = createRoutes.some(route => location.pathname.startsWith(route));
+    const isOnAdminRoute = adminRoutes.some(route => location.pathname.startsWith(route));
+    
+    const newOpenDropdowns = new Set<string>();
+    if (isOnInvestmentRoute) newOpenDropdowns.add('investment');
+    if (isOnCreateRoute) newOpenDropdowns.add('create');
+    if (isOnAdminRoute) newOpenDropdowns.add('admin');
+    
+    if (newOpenDropdowns.size > 0) {
+      setOpenDropdowns(prev => new Set([...prev, ...newOpenDropdowns]));
     }
   }, [location.pathname]);
 
@@ -106,24 +116,29 @@ const DashboardNavigation: React.FC = () => {
     }
   };
 
+  // Main navigation - always visible
   const navItems = [
-    { id: 'discovery', label: 'Marketplace', icon: TrendingUp, href: '/dashboard/marketplace' },
-    { id: 'pools', label: 'Pool Marketplace', icon: BarChart, href: '/dashboard/pools' },
-    { id: 'staking', label: 'Staking Vault', icon: Coins, href: '/dashboard/staking' },
+    { id: 'home', label: 'Home', icon: Home, href: '/dashboard' },
+    { id: 'marketplace', label: 'Marketplace', icon: TrendingUp, href: '/dashboard/marketplace' },
     { id: 'profile', label: 'Profile', icon: User, href: '/dashboard/profile' },
     { id: 'settings', label: 'Settings', icon: Settings, href: '/dashboard/settings' },
   ];
 
+  // Investment section - for investors and stakers
   const investmentItems = [
-    { id: 'pools', label: 'Pool Marketplace', icon: BarChart, href: '/dashboard/pools' },
-    { id: 'pool-dashboard', label: 'Pool Management', icon: Building2, href: '/dashboard/pool-dashboard' },
+    { id: 'investor-hub', label: 'Investor Hub', icon: TrendingUp, href: '/dashboard/investor-hub' },
+    { id: 'pools', label: 'Pool Marketplace', icon: BarChart, href: '/dashboard/marketplace' },
     { id: 'staking', label: 'Staking Vault', icon: Coins, href: '/dashboard/staking' },
+    { id: 'portfolio', label: 'My Investments', icon: PieChart, href: '/dashboard/portfolio' },
+    { id: 'exchange', label: 'Exchange XTZ/NVX', icon: ArrowLeftRight, href: '/exchange' },
+    { id: 'test-tokens', label: 'Get Test USDC', icon: DollarSign, href: '/get-test-tokens' },
   ];
 
   // Check KYC status for RWA features
   const isKYCApproved = user && user.kycStatus === 'approved';
   
-  const rwaItems = [
+  // Create section - for exporters
+  const createItems = [
     { 
       id: 'create-receivable', 
       label: 'Create Receivable', 
@@ -132,26 +147,21 @@ const DashboardNavigation: React.FC = () => {
       disabled: false
     },
     { 
-      id: 'create-asset', 
-      label: 'Create Asset', 
-      icon: TreePine, 
-      href: '/dashboard/create-asset',
+      id: 'my-receivables', 
+      label: 'My Receivables', 
+      icon: Receipt, 
+      href: '/dashboard/receivables',
       disabled: false
     },
-    { id: 'rwa-management', label: 'RWA Management', icon: Package, href: '/dashboard/rwa-management' },
-    { id: 'amc-dashboard', label: 'AMC Dashboard', icon: Building2, href: '/dashboard/amc-dashboard' },
-  ];
-
-  const verificationItems = [
-    { id: 'verification', label: 'Verification', icon: Shield, href: '/dashboard/verification' },
   ];
 
   const adminItems = [
+    { id: 'admin-hub', label: 'Admin Hub', icon: Crown, href: '/dashboard/admin-hub' },
     { id: 'admin-dashboard', label: 'Admin Dashboard', icon: Crown, href: '/dashboard/admin' },
     { id: 'admin-receivables', label: 'Receivables Management', icon: FileText, href: '/dashboard/admin/receivables' },
+    { id: 'admin-create-pool', label: 'Create Pool', icon: Plus, href: '/dashboard/admin/create-pool' },
     { id: 'admin-pools', label: 'Pool Management', icon: BarChart3, href: '/dashboard/admin/amc-pools' },
     { id: 'admin-yield', label: 'Yield Distribution', icon: DollarSign, href: '/dashboard/admin/yield-distribution' },
-    // Removed: Asset Management (RWA - not needed for receivables)
   ];
 
   const dropdownSections = [
@@ -163,9 +173,8 @@ const DashboardNavigation: React.FC = () => {
       items: adminItems,
       highlight: true // Mark admin section as highlighted
     }] : []),
-    { id: 'rwa', label: 'Real-World Assets', icon: TreePine, items: rwaItems },
-    { id: 'investment', label: 'Investment', icon: BarChart, items: investmentItems },
-    { id: 'verification', label: 'Verification', icon: Shield, items: verificationItems },
+    { id: 'create', label: 'Create', icon: FileText, items: createItems },
+    { id: 'investment', label: 'Invest', icon: BarChart, items: investmentItems },
   ];
 
   // Helper functions

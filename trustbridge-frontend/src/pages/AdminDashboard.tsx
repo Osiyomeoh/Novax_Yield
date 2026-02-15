@@ -3,26 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Crown, 
   Shield, 
-  UserCheck, 
   Users, 
   BarChart3, 
   Settings, 
-  Activity,
   CheckCircle,
-  XCircle,
-  Clock,
   TrendingUp,
-  AlertTriangle,
-  Package,
   DollarSign,
   Building2,
-  FileText,
-  Eye
+  FileText
 } from 'lucide-react';
 import { useAdmin } from '../contexts/AdminContext';
 import { useWallet } from '../contexts/WalletContext';
 import { AdminGuard } from '../contexts/AdminContext';
-import { contractService } from '../services/contractService';
+import { novaxContractService } from '../services/novaxContractService';
 // Mantle service removed - using Etherlink/Novax contracts instead
 import { ethers } from 'ethers';
 import Card, { CardContent } from '../components/UI/Card';
@@ -36,48 +29,153 @@ const AdminDashboard: React.FC = () => {
     isSuperAdmin, 
     isPlatformAdmin, 
     isAmcAdmin, 
-    adminRole, 
     adminRoles, 
     loading 
   } = useAdmin();
-  const { address } = useWallet();
+  const { address, signer, isConnected, provider } = useWallet();
   const navigate = useNavigate();
   const hasAdminAccess = isAdmin || isAmcAdmin || isSuperAdmin || isPlatformAdmin;
   const [stats, setStats] = useState({
     totalVerifications: 0,
     activeVerifications: 0,
     totalAssets: 0,
-    pendingAssets: 0
+    pendingAssets: 0,
+    pendingReceivables: 0,
+    verifiedReceivables: 0,
+    activePools: 0,
+    fundedPools: 0,
+    totalInvested: '0',
+    poolsReadyForYield: 0,
+    totalPendingYield: '0'
   });
 
   useEffect(() => {
-    // Load admin statistics
-    loadAdminStats();
-  }, []);
+    // Load admin statistics from Novax contracts
+    if (isConnected && provider && (isAmcAdmin || isSuperAdmin || isPlatformAdmin)) {
+      loadAdminStats();
+    }
+  }, [isConnected, provider, isAmcAdmin, isSuperAdmin, isPlatformAdmin]);
 
   const loadAdminStats = async () => {
     try {
-      // Mantle service removed - using Etherlink/Novax contracts instead
-      // TODO: Replace with Etherlink/Novax asset fetching
-      const blockchainAssets: any[] = [];
-      
-      const stats = {
-        totalAssets: blockchainAssets.length,
-        pendingAssets: blockchainAssets.filter((a: any) => {
-          const status = typeof a.status === 'bigint' ? Number(a.status) : (typeof a.status === 'string' ? parseInt(a.status) : Number(a.status || 0));
-          return status === 0; // PENDING_VERIFICATION
-        }).length,
-        totalVerifications: blockchainAssets.filter((a: any) => {
-          const status = typeof a.status === 'bigint' ? Number(a.status) : (typeof a.status === 'string' ? parseInt(a.status) : Number(a.status || 0));
-          return status >= 1 && status <= 6; // VERIFIED to ACTIVE
-        }).length,
-        activeVerifications: blockchainAssets.filter((a: any) => {
-          const status = typeof a.status === 'bigint' ? Number(a.status) : (typeof a.status === 'string' ? parseInt(a.status) : Number(a.status || 0));
-          return status === 6; // ACTIVE_AMC_MANAGED
-        }).length
-      };
-      
-      setStats(stats);
+      if (!provider || !address) return;
+
+      // Initialize contract service
+      if (signer) {
+        novaxContractService.initialize(signer, provider);
+      } else {
+        // Use provider only for read operations
+        const tempSigner = {} as ethers.Signer;
+        novaxContractService.initialize(tempSigner, provider);
+      }
+
+      // Fetch receivables
+      let pendingReceivables = 0;
+      let verifiedReceivables = 0;
+      try {
+        const allReceivables = await novaxContractService.getAllReceivables();
+        const receivableDetails = await Promise.all(
+          allReceivables.slice(0, 50).map(async (id: string) => {
+            try {
+              const rec = await novaxContractService.getReceivable(id);
+              return {
+                status: Number(rec.status || 0),
+                verified: Number(rec.status || 0) === 1 // VERIFIED = 1
+              };
+            } catch (error) {
+              console.error(`Error fetching receivable ${id}:`, error);
+              return null;
+            }
+          })
+        );
+
+        const validReceivables = receivableDetails.filter((r): r is { status: number; verified: boolean } => r !== null);
+        pendingReceivables = validReceivables.filter(r => r.status === 0).length; // PENDING = 0
+        verifiedReceivables = validReceivables.filter(r => r.verified).length;
+      } catch (error) {
+        console.error('Error fetching receivables:', error);
+      }
+
+      // Fetch pools and calculate yield
+      let activePools = 0;
+      let fundedPools = 0;
+      let totalInvested = '0';
+      let poolsReadyForYield = 0;
+      let totalPendingYield = '0';
+      try {
+        const allPools = await novaxContractService.getAllPools();
+        const poolDetails = await Promise.all(
+          allPools.slice(0, 50).map(async (id: string) => {
+            try {
+              const pool = await novaxContractService.getPool(id);
+              return {
+                status: Number(pool.status || 0), // 0=ACTIVE, 1=FUNDED, 2=MATURED, 3=PAID, 4=DEFAULTED, 5=CLOSED, 6=PAUSED
+                totalInvested: pool.totalInvested || 0n,
+                apr: pool.apr || 0n,
+                createdAt: Number(pool.createdAt || 0),
+                maturityDate: Number(pool.maturityDate || 0),
+                totalPaid: pool.totalPaid || 0n,
+                targetAmount: pool.targetAmount || 0n
+              };
+            } catch (error) {
+              console.error(`Error fetching pool ${id}:`, error);
+              return null;
+            }
+          })
+        );
+
+        const validPools = poolDetails.filter((p): p is { 
+          status: number; 
+          totalInvested: bigint;
+          apr: bigint;
+          createdAt: number;
+          maturityDate: number;
+          totalPaid: bigint;
+          targetAmount: bigint;
+        } => p !== null);
+        
+        activePools = validPools.filter(p => p.status === 0).length; // ACTIVE = 0
+        fundedPools = validPools.filter(p => p.status === 1).length; // FUNDED = 1
+        
+        // Calculate total invested
+        const totalInvestedBigInt = validPools.reduce((sum, p) => sum + (p.totalInvested || 0n), 0n);
+        totalInvested = ethers.formatUnits(totalInvestedBigInt, 6); // USDC has 6 decimals
+        
+        // Calculate yield for pools ready for distribution (status = PAID = 3)
+        const paidPools = validPools.filter(p => p.status === 3); // PAID = 3
+        poolsReadyForYield = paidPools.length;
+        
+        // Calculate total pending yield using the same formula as the contract
+        // totalYield = (apr * daysHeld * totalInvested) / (365 * 10000)
+        let totalPendingYieldBigInt = 0n;
+        for (const pool of paidPools) {
+          if (pool.maturityDate > 0 && pool.createdAt > 0 && pool.totalInvested > 0n && pool.apr > 0n) {
+            const daysHeld = BigInt(Math.floor((pool.maturityDate - pool.createdAt) / (24 * 60 * 60)));
+            if (daysHeld > 0n) {
+              // Use BigInt arithmetic to match contract precision
+              const totalYield = (pool.apr * daysHeld * pool.totalInvested) / (365n * 10000n);
+              totalPendingYieldBigInt += totalYield;
+            }
+          }
+        }
+        totalPendingYield = ethers.formatUnits(totalPendingYieldBigInt, 6); // USDC has 6 decimals
+      } catch (error) {
+        console.error('Error fetching pools:', error);
+      }
+
+      setStats({
+        totalAssets: 0, // RWA assets not used in Novax Yield
+        pendingAssets: 0, // RWA assets not used in Novax Yield
+        totalVerifications: verifiedReceivables,
+        activeVerifications: verifiedReceivables,
+        pendingReceivables,
+        verifiedReceivables,
+        activePools,
+        fundedPools,
+        totalInvested,
+        poolsReadyForYield,
+        totalPendingYield
+      });
     } catch (error) {
       console.error('Failed to load admin stats:', error);
       // Set empty stats on error
@@ -85,7 +183,14 @@ const AdminDashboard: React.FC = () => {
         totalAssets: 0,
         pendingAssets: 0,
         totalVerifications: 0,
-        activeVerifications: 0
+        activeVerifications: 0,
+        pendingReceivables: 0,
+        verifiedReceivables: 0,
+        activePools: 0,
+        fundedPools: 0,
+        totalInvested: '0',
+        poolsReadyForYield: 0,
+        totalPendingYield: '0'
       });
     }
   };
@@ -186,24 +291,46 @@ const AdminDashboard: React.FC = () => {
 
   const statCards = [
     {
-      title: 'Total Assets',
-      value: stats.totalAssets,
-      icon: Package
+      title: 'Pending Receivables',
+      value: stats.pendingReceivables,
+      icon: FileText,
+      description: 'Awaiting verification'
     },
     {
-      title: 'Pending Assets',
-      value: stats.pendingAssets,
-      icon: Clock
+      title: 'Verified Receivables',
+      value: stats.verifiedReceivables,
+      icon: CheckCircle,
+      description: 'Ready for pool creation'
     },
     {
-      title: 'Total Verifications',
-      value: stats.totalVerifications,
-      icon: CheckCircle
+      title: 'Active Pools',
+      value: stats.activePools,
+      icon: BarChart3,
+      description: 'Open for investment'
     },
     {
-      title: 'Active Verifications',
-      value: stats.activeVerifications,
-      icon: Activity
+      title: 'Funded Pools',
+      value: stats.fundedPools,
+      icon: TrendingUp,
+      description: 'Fully funded'
+    },
+    {
+      title: 'Total Invested',
+      value: `$${parseFloat(stats.totalInvested).toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
+      icon: DollarSign,
+      description: 'Total USDC invested'
+    },
+    {
+      title: 'Pools Ready for Yield',
+      value: stats.poolsReadyForYield,
+      icon: DollarSign,
+      description: 'Ready for distribution'
+    },
+    {
+      title: 'Total Pending Yield',
+      value: `$${parseFloat(stats.totalPendingYield).toLocaleString(undefined, { maximumFractionDigits: 2 })}`,
+      icon: TrendingUp,
+      description: 'Calculated yield to distribute'
     }
   ];
 
@@ -286,7 +413,7 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 mb-8 sm:mb-12">
           {statCards.map((stat) => {
             const Icon = stat.icon;
             return (
@@ -296,7 +423,10 @@ const AdminDashboard: React.FC = () => {
                     <Icon className="w-5 h-5 text-gray-600" />
                     <p className="text-xs text-gray-600 uppercase tracking-wide">{stat.title}</p>
                   </div>
-                  <p className="text-2xl font-medium text-black">{stat.value}</p>
+                  <p className="text-2xl font-medium text-black mb-1">{stat.value}</p>
+                  {stat.description && (
+                    <p className="text-xs text-gray-500">{stat.description}</p>
+                  )}
                 </CardContent>
               </Card>
             );
@@ -453,30 +583,30 @@ const AdminDashboard: React.FC = () => {
         <div>
           <h2 className="text-xl font-medium text-black mb-6">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Asset Management Quick Action */}
-            {(isAdmin || isVerifier || isAmcAdmin) && (
+            {/* Receivables Management Quick Action */}
+            {(isAmcAdmin || isSuperAdmin || isPlatformAdmin) && (
               <Card variant="default">
                 <CardContent className="p-6">
                   <div className="flex items-center space-x-4">
                     <div className="p-3 bg-gray-100 rounded-lg">
-                      <Package className="w-6 h-6 text-gray-600" />
+                      <FileText className="w-6 h-6 text-gray-600" />
                     </div>
                     <div className="flex-1">
                       <h3 className="font-medium text-black mb-1">
-                        Manage Assets
+                        Review Receivables
                       </h3>
                       <p className="text-sm text-gray-600">
-                        {stats.pendingAssets} pending {stats.pendingAssets === 1 ? 'asset' : 'assets'}
+                        {stats.pendingReceivables} pending {stats.pendingReceivables === 1 ? 'receivable' : 'receivables'}
                       </p>
                     </div>
                     <Button 
                       variant="default"
                       size="sm"
                       onClick={() => {
-                        navigate('/dashboard/admin/assets');
+                        navigate('/dashboard/admin/receivables');
                       }}
                     >
-                      Manage
+                      Review
                     </Button>
                   </div>
                 </CardContent>

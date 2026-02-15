@@ -218,7 +218,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       // Create authentication message for profile completion
       const timestamp = Date.now();
-      const message = `TrustBridge Profile Completion\nAddress: ${walletAddress}\nEmail: ${email}\nTimestamp: ${timestamp}`;
+      const message = `Novax Yield Profile Completion\nNetwork: Etherlink Shadownet (Chain ID: 127823)\nAddress: ${walletAddress}\nEmail: ${email}\nTimestamp: ${timestamp}`;
       
       console.log('AuthContext - Signing message for profile completion...');
       const signature = await signMessageFn(message);
@@ -443,7 +443,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       // Create authentication message
       const timestamp = Date.now();
-      const message = `TrustBridge Authentication\nAddress: ${address}\nTimestamp: ${timestamp}`;
+      const message = `Novax Yield Authentication\nNetwork: Etherlink Shadownet (Chain ID: 127823)\nAddress: ${address}\nTimestamp: ${timestamp}`;
       
       console.log('AuthContext - Signing message for backend authentication...');
       const signature = await signMessage(message);
@@ -1146,7 +1146,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       // Create profile completion message
       const timestamp = Date.now();
-      const message = `TrustBridge Profile Completion\nAddress: ${address}\nTimestamp: ${timestamp}`;
+      const message = `Novax Yield Authentication\nNetwork: Etherlink Shadownet (Chain ID: 127823)\nAddress: ${address}\nTimestamp: ${timestamp}`;
       
       console.log('Attempting to sign message for profile completion:', {
         address,

@@ -21,7 +21,11 @@ const config = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 200,
+            runs: 10000, // Very high runs to minimize contract size (prioritizes deployment size over execution gas)
+          },
+          viaIR: true, // Enable IR pipeline for better optimization
+          metadata: {
+            bytecodeHash: "none", // Don't include metadata hash to reduce size
           },
         },
       },

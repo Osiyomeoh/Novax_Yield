@@ -10,7 +10,9 @@ import {
   FileText,
   Loader2,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Search,
+  ChevronDown
 } from 'lucide-react';
 import { useWallet } from '../../contexts/PrivyWalletContext';
 import { useAdmin } from '../../contexts/AdminContext';
@@ -55,6 +57,7 @@ const CreateNovaxPool: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [hasOnChainAMCRole, setHasOnChainAMCRole] = useState<boolean>(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState<CreatePoolForm>({
     receivableId: '',
     targetAmount: '',
@@ -313,6 +316,20 @@ const CreateNovaxPool: React.FC = () => {
     });
   };
 
+  // Filter receivables based on search term
+  const filteredReceivables = receivables.filter(rec => {
+    if (!searchTerm) return true;
+    const search = searchTerm.toLowerCase();
+    return (
+      rec.receivableId.toLowerCase().includes(search) ||
+      formatAmount(rec.amountUSD).includes(search) ||
+      formatDate(rec.dueDate).toLowerCase().includes(search)
+    );
+  });
+
+  // Get selected receivable details
+  const selectedReceivable = receivables.find(r => r.receivableId === formData.receivableId);
+
   if (!isConnected) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -327,81 +344,98 @@ const CreateNovaxPool: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-6 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Create Investment Pool</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">Create Investment Pool</h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Receivable Selection */}
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Select Receivable</h2>
+          {/* Receivable Selection - Compact Dropdown */}
+          <Card className="p-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-3">Select Receivable</h2>
             
             {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-                <span className="ml-3 text-gray-600">Loading verified receivables...</span>
+              <div className="flex items-center justify-center py-6">
+                <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                <span className="ml-2 text-sm text-gray-600">Loading verified receivables...</span>
               </div>
             ) : receivables.length === 0 ? (
-              <div className="text-center py-8">
-                <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">No verified receivables available.</p>
-                <p className="text-sm text-gray-500 mt-2">Please verify receivables first.</p>
+              <div className="text-center py-6">
+                <FileText className="w-10 h-10 text-gray-400 mx-auto mb-3" />
+                <p className="text-sm text-gray-600">No verified receivables available.</p>
+                <p className="text-xs text-gray-500 mt-1">Please verify receivables first.</p>
               </div>
             ) : (
               <div className="space-y-3">
-                {receivables.map((receivable) => (
-                  <div
-                    key={receivable.receivableId}
-                    onClick={() => handleReceivableSelect(receivable.receivableId)}
-                    className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                      formData.receivableId === receivable.receivableId
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
+                {/* Search/Filter Input */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    type="text"
+                    placeholder={`Search ${receivables.length} receivables by ID, amount, or date...`}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 pr-4"
+                  />
+                </div>
+
+                {/* Dropdown Select */}
+                <div className="relative">
+                  <select
+                    value={formData.receivableId}
+                    onChange={(e) => handleReceivableSelect(e.target.value)}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none cursor-pointer"
+                    disabled={creating}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="font-mono text-sm text-gray-600">
-                            {receivable.receivableId.slice(0, 16)}...
-                          </span>
-                          {formData.receivableId === receivable.receivableId && (
-                            <CheckCircle className="w-5 h-5 text-blue-600" />
-                          )}
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <p className="text-gray-500">Amount</p>
-                            <p className="font-semibold text-gray-900">${formatAmount(receivable.amountUSD)}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500">Due Date</p>
-                            <p className="font-medium text-gray-900">{formatDate(receivable.dueDate)}</p>
-                          </div>
-                          {receivable.riskScore !== undefined && receivable.apr !== undefined && (
-                            <>
-                              <div>
-                                <p className="text-gray-500">Risk Score</p>
-                                <p className="font-medium text-gray-900">{receivable.riskScore}</p>
-                              </div>
-                              <div>
-                                <p className="text-gray-500">APR</p>
-                                <p className="font-medium text-gray-900">{(receivable.apr / 100).toFixed(2)}%</p>
-                              </div>
-                            </>
-                          )}
-                        </div>
+                    <option value="">-- Select a receivable --</option>
+                    {filteredReceivables.map((receivable) => (
+                      <option key={receivable.receivableId} value={receivable.receivableId}>
+                        {receivable.receivableId.slice(0, 20)}... | ${formatAmount(receivable.amountUSD)} | {formatDate(receivable.dueDate)} | APR: {receivable.apr ? (receivable.apr / 100).toFixed(2) + '%' : 'N/A'}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                </div>
+
+                {/* Selected Receivable Details - Compact */}
+                {selectedReceivable && (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm font-semibold text-blue-900">Selected Receivable</span>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                      <div>
+                        <p className="text-gray-500">ID</p>
+                        <p className="font-mono text-gray-900">{selectedReceivable.receivableId.slice(0, 12)}...</p>
                       </div>
+                      <div>
+                        <p className="text-gray-500">Amount</p>
+                        <p className="font-semibold text-gray-900">${formatAmount(selectedReceivable.amountUSD)}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Due Date</p>
+                        <p className="font-medium text-gray-900">{formatDate(selectedReceivable.dueDate)}</p>
+                      </div>
+                      {selectedReceivable.riskScore !== undefined && selectedReceivable.apr !== undefined && (
+                        <div>
+                          <p className="text-gray-500">APR / Risk</p>
+                          <p className="font-medium text-gray-900">{(selectedReceivable.apr / 100).toFixed(2)}% / {selectedReceivable.riskScore}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
-                ))}
+                )}
+
+                {searchTerm && filteredReceivables.length === 0 && (
+                  <p className="text-sm text-gray-500 text-center py-2">No receivables match your search.</p>
+                )}
               </div>
             )}
           </Card>
 
           {/* Pool Configuration */}
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Pool Configuration</h2>
+          <Card className="p-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-3">Pool Configuration</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -522,34 +556,36 @@ const CreateNovaxPool: React.FC = () => {
             </div>
           </Card>
 
-          {/* Submit Button */}
-          <div className="flex gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate('/dashboard/admin/amc-pools')}
-              disabled={creating}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={creating || !formData.receivableId}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              {creating ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Creating Pool...
-                </>
-              ) : (
-                <>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Pool
-                </>
-              )}
-            </Button>
+          {/* Submit Button - Sticky at bottom */}
+          <div className="sticky bottom-0 bg-gray-50 pt-4 pb-2 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-t border-gray-200">
+            <div className="max-w-4xl mx-auto flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate('/dashboard/admin/amc-pools')}
+                disabled={creating}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={creating || !formData.receivableId}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {creating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating Pool...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Pool
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </form>
       </div>

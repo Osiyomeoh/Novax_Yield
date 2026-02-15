@@ -11,7 +11,6 @@ import { useToast } from '../../hooks/useToast';
 import { ethers } from 'ethers';
 import Button from '../UI/Button';
 import Input from '../UI/Input';
-import ProviderDebugger from '../Debug/ProviderDebugger';
 
 interface CreateReceivableForm {
   amountUSD: string;
@@ -468,16 +467,8 @@ const CreateReceivable: React.FC = () => {
   }
 
 
-  // Show debugger in development
-  const showDebugger = import.meta.env.DEV;
-
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      {showDebugger && (
-        <div className="max-w-4xl mx-auto mb-6">
-          <ProviderDebugger />
-        </div>
-      )}
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">

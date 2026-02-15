@@ -93,11 +93,9 @@ async function main() {
   console.log("⚠️  VRF Module skipped for local testing (requires Chainlink VRF)");
 
   // Deploy Verification Module (with zero addresses for local testing)
-  console.log("\n📦 Deploying NovaxVerificationModule...");
-  const NovaxVerificationModule = await ethers.getContractFactory("NovaxVerificationModule");
-  // Note: Functions requires valid oracle, so we'll skip for local testing
-  // const verificationModule = await NovaxVerificationModule.deploy(...);
-  console.log("⚠️  Verification Module skipped for local testing (requires Chainlink Functions)");
+  // Note: Skipped for local testing - requires Chainlink Functions
+  console.log("\n⚠️  Verification Module skipped for local testing (requires Chainlink Functions)");
+  let verificationModuleAddress = ethers.ZeroAddress;
 
   // Deploy Fallback Library
   console.log("\n📦 Deploying NovaxFallbackLibrary...");

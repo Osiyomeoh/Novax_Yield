@@ -98,14 +98,14 @@ const AssetMarketplace: React.FC = () => {
     try {
       console.log('🚀 fetchAmcPools() - Fetching Novax pools from Etherlink...');
       
-      if (!provider) {
+      if (!walletProvider) {
         console.warn('⚠️ No provider available, cannot fetch pools');
         setAmcPools([]);
         return;
       }
 
       // Initialize Novax contract service
-      const readOnlyProvider = provider;
+      const readOnlyProvider = walletProvider;
       novaxContractService.initialize(null as any, readOnlyProvider);
 
       // Get all pools from Novax PoolManager
@@ -132,10 +132,10 @@ const AssetMarketplace: React.FC = () => {
               expectedAPY: pool.apr ? Number(pool.apr) / 100 : 0,
               minimumInvestment: Number(ethers.formatUnits(pool.minInvestment || '0', 6)),
               maximumInvestment: Number(ethers.formatUnits(pool.maxInvestment || '0', 6)),
-              status: pool.status === 0 ? 'ACTIVE' : pool.status === 1 ? 'FUNDED' : 'INACTIVE',
-              isActive: pool.status === 0,
-              isTradeable: pool.status === 0,
-              isListed: pool.status === 0,
+              status: pool.status === 0 ? 'ACTIVE' : pool.status === 1 ? 'FUNDED' : pool.status === 2 ? 'MATURED' : pool.status === 3 ? 'PAID' : pool.status === 4 ? 'DEFAULTED' : pool.status === 5 ? 'CLOSED' : 'PAUSED',
+              isActive: pool.status === 0, // Only ACTIVE pools can receive investments
+              isTradeable: pool.status === 0 || pool.status === 1, // ACTIVE and FUNDED pools are tradeable
+              isListed: pool.status === 0 || pool.status === 1, // Show ACTIVE and FUNDED pools in marketplace
               location: 'Etherlink Network',
               createdAt: new Date().toISOString(),
               assets: [],
@@ -152,11 +152,12 @@ const AssetMarketplace: React.FC = () => {
         })
       );
 
-      // Filter out nulls and only active pools
-      const activePools = pools.filter((p: any) => p !== null && p.isActive);
-      console.log(`✅ Found ${activePools.length} active Novax pools`);
+      // Filter out nulls - show all pools (not just active ones)
+      const validPools = pools.filter((p: any) => p !== null);
+      console.log(`✅ Found ${validPools.length} Novax pools (including all statuses)`);
+      console.log('   Pool statuses:', validPools.map((p: any) => ({ id: p.poolId?.slice(0, 10), status: p.status, isActive: p.isActive })));
       
-      setAmcPools(activePools);
+      setAmcPools(validPools);
     } catch (error) {
       console.error('❌ Failed to fetch Novax pools:', error);
       setAmcPools([]);
@@ -337,7 +338,15 @@ const AssetMarketplace: React.FC = () => {
 
   useEffect(() => {
     console.log('🔄 AssetMarketplace useEffect triggered - fetching pools...');
+    console.log('   isConnected:', isConnected);
+    console.log('   walletProvider:', walletProvider ? 'available' : 'not available');
     console.log('   Current amcPools state:', amcPools.length);
+    
+    if (!isConnected || !walletProvider) {
+      console.warn('⚠️ Wallet not connected or provider not available, skipping pool fetch');
+      setAmcPools([]);
+      return;
+    }
     
     const loadData = async () => {
       try {
@@ -347,10 +356,11 @@ const AssetMarketplace: React.FC = () => {
         // Note: fetchMarketplaceData() will be called automatically by the useEffect that watches amcPools
       } catch (error) {
         console.error('❌ Error in loadData():', error);
+        setError(`Failed to load pools: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     };
     loadData();
-  }, []);
+  }, [isConnected, walletProvider]);
 
   // Refetch marketplace data when pools are loaded
   useEffect(() => {

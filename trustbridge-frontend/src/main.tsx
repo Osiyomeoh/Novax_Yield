@@ -48,8 +48,16 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           externalWallets: {
             // Solana is disabled - we only support Ethereum/EVM chains
           },
+          // Configure default chain for signature requests
           // Note: Privy doesn't natively support custom chains like Etherlink
-          // Users should manually switch MetaMask to Etherlink network when needed
+          // We'll use Sepolia as default (standard testnet), but all transactions use Etherlink
+          defaultChain: {
+            id: 11155111, // Sepolia testnet (standard testnet for Privy)
+            name: 'Sepolia',
+          },
+          // Note: Privy doesn't support custom chains in supportedChains
+          // The signature request may show Sepolia, but all transactions use Etherlink network
+          // Etherlink network is configured in the provider (PrivyWalletContext)
         }}
       >
         <QueryClientProvider client={queryClient}>
