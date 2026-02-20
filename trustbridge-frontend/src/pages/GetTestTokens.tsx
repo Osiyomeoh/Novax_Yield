@@ -190,11 +190,11 @@ export default function GetTestTokens() {
     try {
       // Check network first
       const network = await provider.getNetwork();
-      const expectedChainId = BigInt(127823);
+      const expectedChainId = BigInt(421614); // Arbitrum Sepolia
       if (network.chainId !== expectedChainId) {
         toast({
           title: 'Wrong Network',
-          description: `Please switch to Etherlink Shadownet (Chain ID: 127823). Current: ${network.chainId}`,
+          description: `Please switch to Arbitrum Sepolia (Chain ID: 421614). Current: ${network.chainId}`,
           variant: 'destructive'
         });
         setIsMinting(false);
@@ -214,7 +214,7 @@ export default function GetTestTokens() {
       if (code === '0x' || !code || code.length <= 2) {
         toast({
           title: 'Contract Not Found',
-          description: `MockUSDC not found at ${USDC_ADDRESS.slice(0, 10)}... Make sure you're on Etherlink Shadownet and the contract is deployed.`,
+          description: `USDC not found at ${USDC_ADDRESS.slice(0, 10)}... Make sure you're on Arbitrum Sepolia and the contract is deployed.`,
           variant: 'destructive'
         });
         setIsMinting(false);

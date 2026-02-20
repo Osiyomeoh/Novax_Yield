@@ -40,40 +40,56 @@ const config = {
       url: process.env.SEPOLIA_RPC_URL || "",
       accounts: process.env.SEPOLIA_PRIVATE_KEY ? [process.env.SEPOLIA_PRIVATE_KEY] : [],
     },
-    etherlink_testnet: {
-      url: process.env.ETHERLINK_TESTNET_RPC_URL || "https://node.shadownet.etherlink.com",
-      chainId: 127823,
+    arbitrum_one: {
+      url: process.env.ARBITRUM_RPC_URL || "https://arb1.arbitrum.io/rpc",
+      chainId: 42161,
       accounts: (() => {
         const accounts: string[] = [];
-        if (process.env.ETHERLINK_PRIVATE_KEY) {
-          accounts.push(process.env.ETHERLINK_PRIVATE_KEY);
+        if (process.env.ARBITRUM_PRIVATE_KEY) {
+          accounts.push(process.env.ARBITRUM_PRIVATE_KEY);
         }
-        // Support both ETHERLINK_PRIVATE_KEY2 and ETHERLINK_PRIVATE_KEY_2 naming conventions
-        // Prefer ETHERLINK_PRIVATE_KEY2 if both exist to avoid duplicates
-        if (process.env.ETHERLINK_PRIVATE_KEY2) {
-          accounts.push(process.env.ETHERLINK_PRIVATE_KEY2);
-        } else if (process.env.ETHERLINK_PRIVATE_KEY_2) {
-          accounts.push(process.env.ETHERLINK_PRIVATE_KEY_2);
+        // Support multiple private keys for deployment
+        if (process.env.ARBITRUM_PRIVATE_KEY2) {
+          accounts.push(process.env.ARBITRUM_PRIVATE_KEY2);
         }
-        if (process.env.ETHERLINK_PRIVATE_KEY3) {
-          accounts.push(process.env.ETHERLINK_PRIVATE_KEY3);
-        } else if (process.env.ETHERLINK_PRIVATE_KEY_3) {
-          accounts.push(process.env.ETHERLINK_PRIVATE_KEY_3);
+        if (process.env.ARBITRUM_PRIVATE_KEY3) {
+          accounts.push(process.env.ARBITRUM_PRIVATE_KEY3);
         }
-        if (process.env.ETHERLINK_PRIVATE_KEY4) {
-          accounts.push(process.env.ETHERLINK_PRIVATE_KEY4);
-        } else if (process.env.ETHERLINK_PRIVATE_KEY_4) {
-          accounts.push(process.env.ETHERLINK_PRIVATE_KEY_4);
+        if (process.env.ARBITRUM_PRIVATE_KEY4) {
+          accounts.push(process.env.ARBITRUM_PRIVATE_KEY4);
+        }
+        // Fallback to generic PRIVATE_KEY if no Arbitrum-specific key
+        if (accounts.length === 0 && process.env.PRIVATE_KEY) {
+          accounts.push(process.env.PRIVATE_KEY);
         }
         return accounts;
       })(),
       gas: "auto",
       gasPrice: "auto",
     },
-    etherlink_mainnet: {
-      url: process.env.ETHERLINK_MAINNET_RPC_URL || "https://rpc.mainnet.etherlink.com",
-      chainId: 42793,
-      accounts: process.env.ETHERLINK_PRIVATE_KEY ? [process.env.ETHERLINK_PRIVATE_KEY] : [],
+    arbitrum_sepolia: {
+      url: process.env.ARBITRUM_SEPOLIA_RPC_URL || "https://sepolia-rollup.arbitrum.io/rpc",
+      chainId: 421614,
+      accounts: (() => {
+        const accounts: string[] = [];
+        if (process.env.ARBITRUM_PRIVATE_KEY) {
+          accounts.push(process.env.ARBITRUM_PRIVATE_KEY);
+        }
+        if (process.env.ARBITRUM_PRIVATE_KEY2) {
+          accounts.push(process.env.ARBITRUM_PRIVATE_KEY2);
+        }
+        if (process.env.ARBITRUM_PRIVATE_KEY3) {
+          accounts.push(process.env.ARBITRUM_PRIVATE_KEY3);
+        }
+        if (process.env.ARBITRUM_PRIVATE_KEY4) {
+          accounts.push(process.env.ARBITRUM_PRIVATE_KEY4);
+        }
+        // Fallback to generic PRIVATE_KEY if no Arbitrum-specific key
+        if (accounts.length === 0 && process.env.PRIVATE_KEY) {
+          accounts.push(process.env.PRIVATE_KEY);
+        }
+        return accounts;
+      })(),
       gas: "auto",
       gasPrice: "auto",
     },
@@ -81,46 +97,35 @@ const config = {
   },
   verify: {
     etherscan: {
-      apiKey: process.env.ETHERSCAN_API_KEY || "",
+      apiKey: process.env.ARBISCAN_API_KEY || process.env.ETHERSCAN_API_KEY || "",
       customChains: [
         {
-          network: "etherlink_testnet",
-          chainId: 127823,
+          network: "arbitrum_one",
+          chainId: 42161,
           urls: {
-            apiURL: "https://shadownet.explorer.etherlink.com/api",
-            browserURL: "https://shadownet.explorer.etherlink.com",
+            apiURL: "https://api.arbiscan.io/api",
+            browserURL: "https://arbiscan.io",
           },
         },
         {
-          network: "etherlinkMainnet",
-          chainId: 42793,
+          network: "arbitrum_sepolia",
+          chainId: 421614,
           urls: {
-            apiURL: "https://explorer.etherlink.com/api",
-            browserURL: "https://explorer.etherlink.com",
+            apiURL: "https://api-sepolia.arbiscan.io/api",
+            browserURL: "https://sepolia.arbiscan.io",
           },
         },
       ],
     },
   } as any,
   chainDescriptors: {
-    // Mantle chain descriptors removed
-    127823: {
-      name: "etherlinkShadownet",
+    42161: {
+      name: "arbitrumOne",
       blockExplorers: {
         etherscan: {
-          name: "Etherlink Shadownet Explorer",
-          url: "https://shadownet.explorer.etherlink.com",
-          apiUrl: "https://shadownet.explorer.etherlink.com/api",
-        },
-      },
-    },
-    42793: {
-      name: "etherlinkMainnet",
-      blockExplorers: {
-        etherscan: {
-          name: "Etherlink Mainnet Explorer",
-          url: "https://explorer.etherlink.com",
-          apiUrl: "https://explorer.etherlink.com/api",
+          name: "Arbiscan",
+          url: "https://arbiscan.io",
+          apiUrl: "https://api.arbiscan.io/api",
         },
       },
     },

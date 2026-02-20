@@ -13,7 +13,7 @@ import MockUSDCABI from '../contracts/MockUSDC.json';
 
 /**
  * Novax Contract Service
- * Handles all smart contract interactions for Novax Yield on Etherlink
+ * Handles all smart contract interactions for Novax Yield on Arbitrum One
  */
 export class NovaxContractService {
   private signer: ethers.Signer | null = null;
@@ -21,18 +21,16 @@ export class NovaxContractService {
   
   // RPC endpoints with fallback support
   private readonly rpcEndpoints = [
-    import.meta.env.VITE_RPC_URL || 'https://node.shadownet.etherlink.com',
-    'https://node.shadownet.etherlink.com',
+    import.meta.env.VITE_RPC_URL || 'https://sepolia-rollup.arbitrum.io/rpc',
+    'https://sepolia-rollup.arbitrum.io/rpc',
   ].filter(Boolean);
 
-  // Etherlink network configuration
-  private readonly ETHERLINK_CHAIN_ID = '0x1F2EF'; // 127823 in hex
-  private readonly ETHERLINK_CHAIN_ID_DECIMAL = 127823;
-  // Alternative chain IDs that MetaMask might use for Etherlink
-  private readonly ETHERLINK_CHAIN_ID_ALT = '0x1f34f'; // Alternative format (127823 in hex, lowercase)
-  private readonly ETHERLINK_RPC_URL = import.meta.env.VITE_RPC_URL || 'https://node.shadownet.etherlink.com';
-  private readonly ETHERLINK_CHAIN_NAME = 'Etherlink Shadownet';
-  private readonly ETHERLINK_EXPLORER = import.meta.env.VITE_EXPLORER_URL || 'https://shadownet.explorer.etherlink.com';
+  // Arbitrum Sepolia network configuration
+  private readonly ARBITRUM_CHAIN_ID = '0x66EEE'; // 421614 in hex
+  private readonly ARBITRUM_CHAIN_ID_DECIMAL = 421614;
+  private readonly ARBITRUM_RPC_URL = import.meta.env.VITE_RPC_URL || 'https://sepolia-rollup.arbitrum.io/rpc';
+  private readonly ARBITRUM_CHAIN_NAME = 'Arbitrum Sepolia';
+  private readonly ARBITRUM_EXPLORER = import.meta.env.VITE_EXPLORER_URL || 'https://sepolia.arbiscan.io';
 
   /**
    * Initialize with signer and provider
@@ -46,7 +44,7 @@ export class NovaxContractService {
   private pendingNetworkSwitch: Promise<void> | null = null;
 
   /**
-   * Ensure we're connected to Etherlink network (for MetaMask/external wallets)
+   * Ensure we're connected to Arbitrum Sepolia network (for MetaMask/external wallets)
    * This should ONLY be called before WRITE operations (transactions), NOT read operations
    * 
    * IMPORTANT: This function will trigger MetaMask prompts, so it should NEVER be called for:
@@ -56,7 +54,7 @@ export class NovaxContractService {
    * 
    * Only call this before actual write operations like createReceivable, verifyReceivable, etc.
    */
-  private async ensureEtherlinkNetwork(): Promise<void> {
+  private async ensureArbitrumNetwork(): Promise<void> {
     // Only check for external wallets (MetaMask)
     // Embedded wallets (Privy) don't need network switching - they use Privy's RPC
     // If we don't have window.ethereum, we're likely using an embedded wallet, so skip
@@ -98,99 +96,66 @@ export class NovaxContractService {
         
         // Normalize chain IDs for comparison (handle case differences)
         const normalizedCurrent = currentChainId.toLowerCase();
-        const normalizedRequired = this.ETHERLINK_CHAIN_ID.toLowerCase();
-        const normalizedAlt = this.ETHERLINK_CHAIN_ID_ALT.toLowerCase();
+        const normalizedRequired = this.ARBITRUM_CHAIN_ID.toLowerCase();
         
-        // Check if we're already on Etherlink (either format)
-        const isOnEtherlink = normalizedCurrent === normalizedRequired || normalizedCurrent === normalizedAlt;
+        // Check if we're already on Arbitrum Sepolia
+        const isOnArbitrum = normalizedCurrent === normalizedRequired;
         
-        if (isOnEtherlink) {
-          console.log('✅ Already on Etherlink network', {
+        if (isOnArbitrum) {
+          console.log('✅ Already on Arbitrum Sepolia network', {
             chainId: currentChainId,
             normalized: normalizedCurrent
           });
         } else {
-          console.log('🔄 MetaMask is on wrong network, switching to Etherlink...', {
+          console.log('🔄 MetaMask is on wrong network, switching to Arbitrum Sepolia...', {
             current: currentChainId,
-            required: this.ETHERLINK_CHAIN_ID
+            required: this.ARBITRUM_CHAIN_ID
           });
           
           // Create a promise for the network switch
           this.pendingNetworkSwitch = (async () => {
             try {
-              // Try to switch to our preferred chain ID first
+              // Try to switch to Arbitrum One
               try {
                 await window.ethereum.request({
                   method: 'wallet_switchEthereumChain',
-                  params: [{ chainId: this.ETHERLINK_CHAIN_ID }],
+                  params: [{ chainId: this.ARBITRUM_CHAIN_ID }],
                 });
                 // Verify the switch was successful
                 const verifyChainId = await window.ethereum.request({ method: 'eth_chainId' });
-                console.log('✅ Successfully switched to Etherlink network', {
+                console.log('✅ Successfully switched to Arbitrum Sepolia network', {
                   previousChainId: currentChainId,
                   newChainId: verifyChainId,
-                  chainIdDecimal: this.ETHERLINK_CHAIN_ID_DECIMAL
+                  chainIdDecimal: this.ARBITRUM_CHAIN_ID_DECIMAL
                 });
               } catch (switchError: any) {
                 if (switchError.code === 4902) {
                   // Chain not added, try to add it
-                  console.log('➕ Adding Etherlink network to MetaMask...');
+                  console.log('➕ Adding Arbitrum Sepolia network to MetaMask...');
                   try {
                     await window.ethereum.request({
                       method: 'wallet_addEthereumChain',
                       params: [{
-                        chainId: this.ETHERLINK_CHAIN_ID,
-                        chainName: this.ETHERLINK_CHAIN_NAME,
-                        rpcUrls: [this.ETHERLINK_RPC_URL],
+                        chainId: this.ARBITRUM_CHAIN_ID,
+                        chainName: this.ARBITRUM_CHAIN_NAME,
+                        rpcUrls: [this.ARBITRUM_RPC_URL, 'https://rpc.ankr.com/arbitrum', 'https://arbitrum.llamarpc.com'],
                         nativeCurrency: {
-                          name: 'XTZ',
-                          symbol: 'XTZ',
+                          name: 'Ether',
+                          symbol: 'ETH',
                           decimals: 18,
                         },
-                        blockExplorerUrls: [this.ETHERLINK_EXPLORER],
+                        blockExplorerUrls: [this.ARBITRUM_EXPLORER],
                       }],
                     });
                     // Verify the network was added and we're on it
                     const verifyChainId = await window.ethereum.request({ method: 'eth_chainId' });
-                    console.log('✅ Successfully added and switched to Etherlink network', {
+                    console.log('✅ Successfully added and switched to Arbitrum Sepolia network', {
                       chainId: verifyChainId,
-                      chainIdDecimal: this.ETHERLINK_CHAIN_ID_DECIMAL,
-                      networkName: this.ETHERLINK_CHAIN_NAME
+                      chainIdDecimal: this.ARBITRUM_CHAIN_ID_DECIMAL,
+                      networkName: this.ARBITRUM_CHAIN_NAME
                     });
                   } catch (addError: any) {
-                    // If add fails because network already exists with different chain ID
-                    if (addError.code === -32603 && addError.message?.includes('same RPC endpoint')) {
-                      console.log('⚠️ Network already exists with different chain ID, trying to switch to existing network...');
-                      // Try switching to the alternative chain ID that MetaMask knows about
-                      try {
-                        await window.ethereum.request({
-                          method: 'wallet_switchEthereumChain',
-                          params: [{ chainId: this.ETHERLINK_CHAIN_ID_ALT }],
-                        });
-                        // Verify the switch was successful
-                        const verifyChainId = await window.ethereum.request({ method: 'eth_chainId' });
-                        console.log('✅ Successfully switched to existing Etherlink network', {
-                          chainId: verifyChainId,
-                          chainIdDecimal: this.ETHERLINK_CHAIN_ID_DECIMAL,
-                          note: 'Network was already added with different chain ID format'
-                        });
-                      } catch (altSwitchError: any) {
-                        // If that also fails, check if we're already on the right network
-                        const checkChainId = await window.ethereum.request({ method: 'eth_chainId' });
-                        const normalizedCheck = checkChainId.toLowerCase();
-                        if (normalizedCheck === normalizedRequired || normalizedCheck === normalizedAlt) {
-                          console.log('✅ Successfully on Etherlink network (different chain ID format)', {
-                            chainId: checkChainId,
-                            chainIdDecimal: this.ETHERLINK_CHAIN_ID_DECIMAL,
-                            note: 'Network was already configured in MetaMask'
-                          });
-                        } else {
-                          throw new Error('Network already exists in MetaMask but could not switch to it. Please manually switch to Etherlink network.');
-                        }
-                      }
-                    } else {
-                      throw addError;
-                    }
+                    throw new Error(`Failed to add Arbitrum Sepolia network: ${addError.message}`);
                   }
                 } else if (switchError.code === -32002) {
                   // Request already pending - wait a bit and check again
@@ -199,18 +164,18 @@ export class NovaxContractService {
                   // Check if we're on the right network now
                   const newChainId = await window.ethereum.request({ method: 'eth_chainId' });
                   const normalizedNew = newChainId.toLowerCase();
-                  if (normalizedNew === normalizedRequired || normalizedNew === normalizedAlt) {
+                  if (normalizedNew === normalizedRequired) {
                     console.log('✅ Network switch completed successfully', {
                       chainId: newChainId,
-                      chainIdDecimal: this.ETHERLINK_CHAIN_ID_DECIMAL,
+                      chainIdDecimal: this.ARBITRUM_CHAIN_ID_DECIMAL,
                       note: 'Pending request was approved'
                     });
                   } else {
                     throw new Error('Network switch is still pending. Please approve the request in MetaMask.');
                   }
-                } else {
-                  throw new Error(`Failed to switch to Etherlink network: ${switchError.message}`);
-                }
+                  } else {
+                    throw new Error(`Failed to switch to Arbitrum Sepolia network: ${switchError.message}`);
+                  }
               }
             } finally {
               this.pendingNetworkSwitch = null;
@@ -289,7 +254,7 @@ export class NovaxContractService {
     }
 
     // Ensure we're on Etherlink network before signing
-    await this.ensureEtherlinkNetwork();
+    await this.ensureArbitrumNetwork();
 
     const factory = this.getContract(
       novaxContractAddresses.RWA_FACTORY,
@@ -443,7 +408,7 @@ export class NovaxContractService {
     }
 
     // Ensure we're on Etherlink network before signing
-    await this.ensureEtherlinkNetwork();
+    await this.ensureArbitrumNetwork();
 
     const factory = this.getContract(
       novaxContractAddresses.RECEIVABLE_FACTORY,
@@ -550,7 +515,7 @@ export class NovaxContractService {
     }
 
     // Ensure we're on Etherlink network before signing
-    await this.ensureEtherlinkNetwork();
+    await this.ensureArbitrumNetwork();
 
     const factory = this.getContract(
       novaxContractAddresses.RECEIVABLE_FACTORY,
@@ -677,7 +642,7 @@ export class NovaxContractService {
     }
 
     // Ensure we're on Etherlink network before signing
-    await this.ensureEtherlinkNetwork();
+    await this.ensureArbitrumNetwork();
 
     const poolManager = this.getContract(
       novaxContractAddresses.POOL_MANAGER,
@@ -758,7 +723,7 @@ export class NovaxContractService {
     }
 
     // Ensure we're on Etherlink network before signing
-    await this.ensureEtherlinkNetwork();
+    await this.ensureArbitrumNetwork();
 
     const poolManager = this.getContract(
       novaxContractAddresses.POOL_MANAGER,
@@ -913,7 +878,7 @@ export class NovaxContractService {
     }
 
     // Ensure we're on Etherlink network before signing
-    await this.ensureEtherlinkNetwork();
+    await this.ensureArbitrumNetwork();
 
     const poolManager = this.getContract(
       novaxContractAddresses.POOL_MANAGER,
@@ -949,7 +914,7 @@ export class NovaxContractService {
     }
 
     // Ensure we're on Etherlink network before signing
-    await this.ensureEtherlinkNetwork();
+    await this.ensureArbitrumNetwork();
 
     const poolManager = this.getContract(
       novaxContractAddresses.POOL_MANAGER,

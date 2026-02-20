@@ -77,8 +77,8 @@ export const contractAddresses: ContractAddresses = {
 };
 
 /**
- * Novax Yield Contract Addresses (Etherlink Shadownet)
- * Updated with latest deployed addresses
+ * Novax Yield Contract Addresses (Arbitrum One)
+ * Contract addresses will be populated after deployment to Arbitrum
  */
 export interface NovaxContractAddresses {
   RWA_FACTORY: string;
@@ -92,26 +92,27 @@ export interface NovaxContractAddresses {
 }
 
 export const novaxContractAddresses: NovaxContractAddresses = {
-  // Updated with latest deployed addresses from novax-etherlink-127823.json (Feb 14, 2026 - with getters)
-  RWA_FACTORY: import.meta.env.VITE_NOVAX_RWA_FACTORY_ADDRESS || '0xD7201C0030Eb65B28270a5C095947abFF1725168',
-  RECEIVABLE_FACTORY: import.meta.env.VITE_NOVAX_RECEIVABLE_FACTORY_ADDRESS || '0x34f1d26CCFbEEdd90f215F46003fBA0AdC034a69',
-        POOL_MANAGER: import.meta.env.VITE_NOVAX_POOL_MANAGER_ADDRESS || '0x8e2BD4865F1F120f8d5efabd2bCF1c34F39734E9',
-  MARKETPLACE: import.meta.env.VITE_NOVAX_MARKETPLACE_ADDRESS || '0x0C66b29384919Ea0CaC553f23Cda58076AF3450C',
-  NVX_TOKEN: import.meta.env.VITE_NVX_TOKEN_ADDRESS || '0x75FAD2C4d58fD54B2e0f9D4e44D119758c7854aa',
-  USDC: import.meta.env.VITE_USDC_ADDRESS || '0x1557Cd76B77117a356133EDc0Ebdf33e7dF4b563', // MockUSDC (deployed on Etherlink Shadownet)
-  STAKING_VAULT: import.meta.env.VITE_STAKING_VAULT_ADDRESS || '0x1a10c80F4fC09EF2658E555cc7DB8dA68C710bd5',
-  VAULT_CAPACITY_MANAGER: import.meta.env.VITE_VAULT_CAPACITY_MANAGER_ADDRESS || '0xB1F97FF54F34e0552a889f4C841d6637574Ea554',
+  // Contract addresses on Arbitrum Sepolia (deployed Feb 18, 2026)
+  // These can be overridden via environment variables
+  RWA_FACTORY: import.meta.env.VITE_NOVAX_RWA_FACTORY_ADDRESS || '0x83E58aaa63B9437ec39985Eb913CABA27f85A442',
+  RECEIVABLE_FACTORY: import.meta.env.VITE_NOVAX_RECEIVABLE_FACTORY_ADDRESS || '0xEbf84CE8945B7e1BE6dBfB6914320222Cf05467b',
+  POOL_MANAGER: import.meta.env.VITE_NOVAX_POOL_MANAGER_ADDRESS || '0x31838f29811Fdb9822C0b7d56c290ccF358f0cb5',
+  MARKETPLACE: import.meta.env.VITE_NOVAX_MARKETPLACE_ADDRESS || '',
+  NVX_TOKEN: import.meta.env.VITE_NVX_TOKEN_ADDRESS || '0x9fF0637bCEEb4263DcA3ECdc00380E7C5077C8ff',
+  USDC: import.meta.env.VITE_USDC_ADDRESS || '0xD1A4AB603d489F6A6D74e7A5E853ad880cB7C24D', // MockUSDC on Arbitrum Sepolia
+  STAKING_VAULT: import.meta.env.VITE_STAKING_VAULT_ADDRESS || '',
+  VAULT_CAPACITY_MANAGER: import.meta.env.VITE_VAULT_CAPACITY_MANAGER_ADDRESS || '',
 };
 
 /**
  * Network configuration
- * Updated for Etherlink Shadownet (Novax Yield)
+ * Updated for Arbitrum Sepolia (Novax Yield)
  */
 export const networkConfig = {
-  name: import.meta.env.VITE_NETWORK || 'etherlink_testnet',
-  chainId: parseInt(import.meta.env.VITE_CHAIN_ID || '127823'),
-  rpcUrl: import.meta.env.VITE_RPC_URL || 'https://node.shadownet.etherlink.com',
-  explorer: import.meta.env.VITE_EXPLORER_URL || 'https://shadownet.explorer.etherlink.com',
+  name: import.meta.env.VITE_NETWORK || 'arbitrum_sepolia',
+  chainId: parseInt(import.meta.env.VITE_CHAIN_ID || '421614'),
+  rpcUrl: import.meta.env.VITE_RPC_URL || 'https://sepolia-rollup.arbitrum.io/rpc',
+  explorer: import.meta.env.VITE_EXPLORER_URL || 'https://sepolia.arbiscan.io',
 };
 
 /**
