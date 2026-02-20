@@ -1,6 +1,6 @@
 # Novax Yield - Trade Receivables Financing Platform
 
-**Trade Receivables Tokenization on Etherlink - Connecting Africa & Asia**
+**Trade Receivables Tokenization on Arbitrum Sepolia - Connecting Africa & Asia**
 
 **Live Platform:** [novaxyield.com](https://novaxyield.com) | **Documentation:** [Documentation Page](https://novaxyield.com/documentation) | **One-Pager Pitch:** [View on Google Drive](https://drive.google.com/file/d/1hNhHUClXNU4i8NvwcMFX35VmI_VbwpSH/view?usp=sharing)
 
@@ -8,14 +8,15 @@
 
 ## Quick Start
 
-**Novax Yield is built on Etherlink** - an EVM-compatible blockchain optimized for real-world asset tokenization and cross-border trade financing.
+**Novax Yield is built on Arbitrum Sepolia** - an EVM-compatible Layer 2 blockchain optimized for real-world asset tokenization and cross-border trade financing.
 
-### Why Etherlink?
+### Why Arbitrum Sepolia?
 
 - **Low Gas Fees** - Perfect for fractional ownership and micro-investments
 - **High Throughput** - Handles thousands of asset tokenizations
 - **EVM Compatibility** - Seamless MetaMask integration
 - **Scalable Architecture** - Ideal for scaling RWA tokenization across Africa and Asia
+- **Ethereum Security** - Inherits security from Ethereum mainnet
 
 ### Installation
 
@@ -56,8 +57,8 @@ cd ../trustbridge-backend/contracts && npm install
    ```bash
    cd trustbridge-backend/contracts
    cp env.example .env
-   # Configure Etherlink Network RPC and private keys
-   npx hardhat deploy --network etherlink_testnet
+   # Configure Arbitrum Sepolia Network RPC and private keys
+   npx hardhat deploy --network arbitrum_sepolia
    ```
 
 ---
@@ -69,7 +70,7 @@ Novax Yield enables **exporters and importers** to access immediate liquidity fr
 ### Mission
 **Democratize $200B+ in African and Asian trade receivables** via:
 - **Trade Receivables Financing**: Tokenize invoices for immediate liquidity
-- **Etherlink Network**: Low-cost EVM blockchain for fast, cheap transactions
+- **Arbitrum Sepolia Network**: Low-cost EVM Layer 2 blockchain for fast, cheap transactions
 - **Smart Contracts**: Automated pool creation, investment, and yield distribution
 - **Staking Vault**: Auto-deploy capital to pools with dynamic capacity management
 - **Real Yields**: 8-12% APY from actual trade receivables, not speculation
@@ -115,7 +116,7 @@ Africa and Asia hold **$2+ trillion in "dead capital"** - assets that cannot be 
 
 ### **The Solution: Novax Yield**
 
-Novax Yield **tokenizes trade receivables** (invoices) on Etherlink, enabling exporters to get paid immediately while investors earn sustainable yields from financing cross-border trade:
+Novax Yield **tokenizes trade receivables** (invoices) on Arbitrum Sepolia, enabling exporters to get paid immediately while investors earn sustainable yields from financing cross-border trade:
 
 #### **For Exporters (Business Owners)**
 - **Tokenize Trade Receivables** - Convert unpaid invoices into liquid assets
@@ -158,7 +159,7 @@ Novax Yield **tokenizes trade receivables** (invoices) on Etherlink, enabling ex
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                          NOVAX YIELD PLATFORM                               │
-│                      Built on Etherlink Network                             │
+│                      Built on Arbitrum Sepolia Network                     │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌────────────────────────────────────────────────────────────────────────────┐
@@ -177,7 +178,7 @@ Novax Yield **tokenizes trade receivables** (invoices) on Etherlink, enabling ex
 │  ┌────────────────────────────────────────────────────────────┐            │
 │  │              NestJS Backend API                             │            │
 │  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  │            │
-│  │  │ Asset    │  │ AMC      │  │ ROI      │  │ Etherlink│  │            │
+│  │  │ Asset    │  │ AMC      │  │ ROI      │  │ Arbitrum │  │            │
 │  │  │ Service  │  │ Pools    │  │ Calc     │  │ Service  │  │            │
 │  │  │          │  │ Service  │  │ Service  │  │          │  │            │
 │  │  └──────────┘  └──────────┘  └──────────┘  └──────────┘  │            │
@@ -191,7 +192,7 @@ Novax Yield **tokenizes trade receivables** (invoices) on Etherlink, enabling ex
 └────────────────────────────────────────────────────────────────────────────┘
                            ↓
 ┌────────────────────────────────────────────────────────────────────────────┐
-│                    ETHERLINK NETWORK (EVM Compatible)                      │
+│                    ARBITRUM SEPOLIA NETWORK (EVM Compatible)               │
 │                                                                              │
 │  ┌──────────────────────────────────────────────────────────────┐          │
 │  │  Smart Contracts (Solidity)                                   │          │
@@ -321,7 +322,7 @@ Novax Yield focuses on **Trade Receivables** - unpaid invoices from cross-border
 - **Pool Creation**: `NovaxPoolManager.createPool()` creates investment pool
 - **Auto-Deployment**: `NovaxStakingVault.deployToPool()` automatically deploys capital
 - **Yield Distribution**: `NovaxPoolManager.distributeYield()` distributes returns
-- **Blockchain**: All transactions recorded on Etherlink Network
+- **Blockchain**: All transactions recorded on Arbitrum Sepolia Network
 
 ### Staking Vault System
 
@@ -406,7 +407,7 @@ The **NVX token** is the governance and utility token for the Novax Yield platfo
 - **Pools**: Investment pool statistics
 
 **Implementation:**
-- Backend aggregates from Etherlink Network + MongoDB
+- Backend aggregates from Arbitrum Sepolia Network + MongoDB
 - HCS topic queries for asset count
 - Real-time updates via polling
 - Charts and visualizations in frontend
@@ -432,19 +433,19 @@ NestJS + MongoDB + JWT + Swagger
 ├── Asset Management Service
 ├── AMC Pool Management Service
 ├── USSD Handler Service
-├── Etherlink Network Integration Layer
+├── Arbitrum Sepolia Network Integration Layer
 ├── IPFS Service (Pinata)
 ├── Google AI Service
 ├── Analytics Service
 └── Admin Management Service
 ```
 
-### **Blockchain (Etherlink Network)**
+### **Blockchain (Arbitrum Sepolia Network)**
 ```typescript
 Ethers.js + Hardhat
-├── Smart Contracts: CoreAssetFactory, PoolManager, AMCManager
-├── ERC-20 Tokens: TrustToken, PoolToken
-├── Web3 Integration: MetaMask, WalletConnect
+├── Smart Contracts: NovaxReceivableFactory, NovaxPoolManager, NovaxStakingVault
+├── ERC-20 Tokens: NVXToken, PoolToken, MockUSDC
+├── Web3 Integration: MetaMask, Privy
 └── Contract Deployment: Hardhat deployment scripts
 ```
 
@@ -571,7 +572,7 @@ Ethers.js + Hardhat
 19. Exporter checks: "Receivables: 1, Paid: $90,000, Status: Paid"
 ```
 
-**Etherlink Network Transactions**:
+**Arbitrum Sepolia Network Transactions**:
 - Receivable creation: `NovaxReceivableFactory.createReceivable()`
 - Verification: `NovaxReceivableFactory.verifyReceivable()`
 - Pool creation: `NovaxPoolManager.createPool()`
@@ -635,7 +636,7 @@ Ethers.js + Hardhat
 18. Sarah receives: $10,525 USDC (5.25% for 6 months)
 ```
 
-**Etherlink Network Transactions**:
+**Arbitrum Sepolia Network Transactions**:
 - Staking: `NovaxStakingVault.stake()`
 - Auto-deployment: `NovaxStakingVault.deployToPool()`
 - Yield distribution: `NovaxPoolManager.distributeYield()` → `NovaxStakingVault.receivePayment()`
@@ -704,10 +705,10 @@ Ethers.js + Hardhat
 ## Security & Compliance
 
 ### **Blockchain Security**
-- **On-Chain Audit Trail**: All transactions immutable on Etherlink Network
+- **On-Chain Audit Trail**: All transactions immutable on Arbitrum Sepolia Network
 - **Smart Contracts**: Automated, audited business logic
 - **Access Control**: Role-based permissions (AMC, Admin, Operator)
-- **Block Explorer**: Real-time transaction verification
+- **Block Explorer**: Real-time transaction verification via Arbiscan
 
 ### **Platform Security**
 - **PIN Security**: Bcrypt hashing, lockout mechanisms
@@ -728,20 +729,20 @@ Ethers.js + Hardhat
 | Metric | Value |
 |--------|-------|
 | **Platform** | novaxyield.com |
-| **Blockchain** | Etherlink Shadownet (testnet only) |
-| **Assets** | Test RWAs tokenized (test data only) |
+| **Blockchain** | Arbitrum Sepolia (testnet) |
+| **Assets** | Test receivables tokenized (test data only) |
 | **Users** | Test users (testnet) |
 | **Pools** | Test AMC pools (test data only) |
 | **Volume** | Test investments (no real money) |
 | **Uptime** | 99.9% |
-| **Gas Fees** | Ultra-low on Etherlink |
+| **Gas Fees** | Ultra-low on Arbitrum Sepolia |
 | **Status** | **Testnet with test data only - no real assets or real money** |
 
 ### **Technical Performance**
 | Metric | Value |
 |--------|-------|
-| **Transaction Speed** | ~2 seconds finality |
-| **Transaction Cost** | Ultra-low on Etherlink |
+| **Transaction Speed** | ~1-2 seconds finality |
+| **Transaction Cost** | Ultra-low on Arbitrum Sepolia |
 | **Gas Fees** | Fraction of Ethereum mainnet |
 | **API Latency** | <500ms |
 | **Frontend Load** | <2s |
@@ -802,24 +803,23 @@ Ethers.js + Hardhat
 - **Backend API**: NestJS backend with MongoDB
 - **Frontend**: React + Vite application
 - **Database**: MongoDB Atlas
-- **Blockchain**: Etherlink Shadownet (testnet only - no real assets)
+- **Blockchain**: Arbitrum Sepolia (testnet - no real assets)
 - **IPFS**: Pinata infrastructure
 - **Analytics**: Real-time blockchain data
 - **Status**: Platform operates with **test data only** - no real assets, real money, or real investments
 
-### **Smart Contracts Deployed (Testnet)**
+### **Smart Contracts Deployed (Arbitrum Sepolia)**
 | Contract | Address | Purpose |
 |----------|---------|---------|
-| **NovaxReceivableFactory** | Deployed on Etherlink Shadownet | Trade receivables creation & verification (test data only) |
-| **NovaxPoolManager** | Deployed on Etherlink Shadownet | Investment pool creation & yield distribution (test data only) |
-| **NovaxStakingVault** | Deployed on Etherlink Shadownet | USDC staking vault with auto-deployment (test data only) |
-| **VaultCapacityManager** | Deployed on Etherlink Shadownet | Dynamic capacity management (test data only) |
-| **AutoCompounder** | Deployed on Etherlink Shadownet | Automatic yield reinvestment (test data only) |
-| **NVXToken** | Deployed on Etherlink Shadownet | Platform utility token (NVX) - test tokens only |
-| **MockUSDC** | Deployed on Etherlink Shadownet | Test USDC token for payments (test tokens only) |
+| **NovaxReceivableFactory** | `0xEbf84CE8945B7e1BE6dBfB6914320222Cf05467b` | Trade receivables creation & verification (test data only) |
+| **NovaxPoolManager** | `0x31838f29811Fdb9822C0b7d56c290ccF358f0cb5` | Investment pool creation & yield distribution (test data only) |
+| **NovaxStakingVault** | `0x94FBbA3EB7799e9eb037d63cDfea60Ab3985e048` | USDC staking vault with auto-deployment (test data only) |
+| **VaultCapacityManager** | `0x12870fcf8666cF8C3a1f6745c7D387dCc5210eAE` | Dynamic capacity management (test data only) |
+| **NVXToken** | `0x9fF0637bCEEb4263DcA3ECdc00380E7C5077C8ff` | Platform utility token (NVX) - test tokens only |
+| **MockUSDC** | `0xD1A4AB603d489F6A6D74e7A5E853ad880cB7C24D` | Test USDC token for payments (test tokens only) |
 | **PoolToken** | Created per pool (testnet) | ERC-20 tokens for pool investments (test data only) |
 
-**Note**: All contracts are deployed on Etherlink Shadownet. No real assets or real money are involved.
+**Note**: All contracts are deployed on Arbitrum Sepolia. No real assets or real money are involved.
 
 ---
 
@@ -834,14 +834,15 @@ Ethers.js + Hardhat
 ### **Developer Resources**
 - **API Docs**: [Swagger UI](https://trustbridge-backend.onrender.com/api-docs)
 - **GitHub**: [Source Code](https://github.com/Osiyomeoh/TrustBridgeAfrica)
-- **Etherlink Network**: [Documentation](https://docs.etherlink.com)
+- **Arbitrum Sepolia**: [Documentation](https://docs.arbitrum.io)
+- **Arbiscan**: [Explorer](https://sepolia.arbiscan.io)
 
 ---
 
 ## Partnerships
 
 ### **Blockchain**
-- **Etherlink Network** - EVM Compatible blockchain
+- **Arbitrum Sepolia** - EVM Compatible Layer 2 blockchain
 - **Privy** - Wallet provider (MetaMask + social login)
 - **Pinata** - IPFS storage partner
 - **Chainlink** - Oracle price feeds (planned)
@@ -862,18 +863,19 @@ Ethers.js + Hardhat
 ## Roadmap
 
 ### Q1 2026 - Complete
-- Core RWA tokenization platform
+- Core trade receivables financing platform
 - AMC pool management system
-- Etherlink Network integration
+- Arbitrum Sepolia Network integration
 - Analytics dashboard
 - Smart contract deployment
 - IPFS storage
 - Google AI integration
-- Trust Token economy
+- NVX Token economy
 - Real yield system
 - ROI calculation & tracking
-- Asset owner management
+- Staking vault system
 - Fraud prevention system
+- Light theme UI design system
 
 ### Q2 2026
 - Mobile apps (iOS/Android)
@@ -886,10 +888,10 @@ Ethers.js + Hardhat
 ## Why Novax Yield Wins
 
 ### **1. First-Mover in African & Asian Trade Receivables Financing**
-No platform offers trade receivables tokenization on Etherlink with real yields (8-12% APY), connecting Africa and Asia
+No platform offers trade receivables tokenization on Arbitrum Sepolia with real yields (8-12% APY), connecting Africa and Asia
 
 ### **2. Blockchain-Native Architecture**
-Built entirely on Etherlink Network (EVM Compatible) for speed & low cost
+Built entirely on Arbitrum Sepolia Network (EVM Compatible Layer 2) for speed & low cost
 
 ### **3. Actual Market Need**
 60% of Africans and 30%+ of Asians are unbanked but own mobile phones → $1.85T+ untapped market
@@ -901,7 +903,7 @@ KYC/AML + AMC certification = institutional-ready
 Actual ROI from assets, not synthetic DeFi products
 
 ### **6. Scalable Technology**
-Handles millions of users on Etherlink Network's scalable infrastructure
+Handles millions of users on Arbitrum Sepolia's scalable Layer 2 infrastructure
 
 ---
 
@@ -924,25 +926,25 @@ Handles millions of users on Etherlink Network's scalable infrastructure
 5. Create password
 6. Wallet created!
 
-#### **Step 3: Connect to Etherlink Shadownet**
-Novax Yield uses **Etherlink Shadownet** for all transactions.
+#### **Step 3: Connect to Arbitrum Sepolia**
+Novax Yield uses **Arbitrum Sepolia** for all transactions.
 
 1. Connect your wallet (MetaMask or social login via Privy)
-2. The platform will automatically connect to Etherlink Shadownet
+2. The platform will automatically connect to Arbitrum Sepolia
 3. If using MetaMask, you may need to add the network:
-   - **Network Name**: Etherlink Shadownet
-   - **RPC URL**: `https://node.shadownet.etherlink.com`
-   - **Chain ID**: `127823`
-   - **Currency Symbol**: `XTZ`
-   - **Block Explorer**: `https://explorer.shadownet.etherlink.com`
+   - **Network Name**: Arbitrum Sepolia
+   - **RPC URL**: `https://sepolia-rollup.arbitrum.io/rpc`
+   - **Chain ID**: `421614`
+   - **Currency Symbol**: `ETH`
+   - **Block Explorer**: `https://sepolia.arbiscan.io`
 
 #### **Step 4: Get Free Test Tokens**
 You need test tokens to pay for transactions on Testnet:
 
-**Get Test XTZ (for gas):**
-1. Visit Etherlink faucet (if available)
+**Get Test ETH (for gas):**
+1. Visit Arbitrum Sepolia faucet: [https://faucet.quicknode.com/arbitrum/sepolia](https://faucet.quicknode.com/arbitrum/sepolia)
 2. Enter your wallet address
-3. Request test tokens for gas fees
+3. Request test ETH for gas fees
 
 **Get Test USDC:**
 1. Connect wallet to Novax Yield platform
@@ -959,16 +961,16 @@ You need test tokens to pay for transactions on Testnet:
 ---
 
 **For Developers**:
-1. Connect wallet to Etherlink Shadownet
+1. Connect wallet to Arbitrum Sepolia
 2. Get test tokens from faucet
 3. Clone repo: `git clone https://github.com/Osiyomeoh/TrustBridgeAfrica.git`
-4. Configure `.env` files with Etherlink RPC and private keys
-5. Deploy contracts: `cd trustbridge-backend/contracts && npx hardhat deploy --network etherlink_testnet`
+4. Configure `.env` files with Arbitrum Sepolia RPC and private keys
+5. Deploy contracts: `cd trustbridge-backend/contracts && npx hardhat deploy --network arbitrum_sepolia`
 6. Run `npm run dev`
 
 **For Investors**:
 1. Connect wallet (MetaMask or social login)
-2. Connect to Etherlink Shadownet
+2. Connect to Arbitrum Sepolia
 3. Get test tokens
 4. Connect to platform
 5. Browse pools and start investing
@@ -980,7 +982,7 @@ You need test tokens to pay for transactions on Testnet:
 
 ### **IMPORTANT: Testnet Status**
 
-**CURRENT STATUS**: Novax Yield is currently operating on **Etherlink Shadownet** with **test data only**. **No real assets are being tokenized or traded on the platform at this time.** All assets, pools, investments, and transactions are for testing and demonstration purposes only.
+**CURRENT STATUS**: Novax Yield is currently operating on **Arbitrum Sepolia** with **test data only**. **No real assets are being tokenized or traded on the platform at this time.** All assets, pools, investments, and transactions are for testing and demonstration purposes only.
 
 ### **Regulated Assets Disclosure**
 
@@ -1067,7 +1069,7 @@ Novax Yield is designed to implement the following compliance measures when oper
 
 ### **Legal Disclaimer**
 
-**TESTNET STATUS**: Novax Yield is currently operating on Etherlink Shadownet with test data only. No real assets, real money, or real investments are involved. All transactions, assets, and pools are for testing and demonstration purposes only.
+**TESTNET STATUS**: Novax Yield is currently operating on Arbitrum Sepolia with test data only. No real assets, real money, or real investments are involved. All transactions, assets, and pools are for testing and demonstration purposes only.
 
 **This platform is not intended to provide legal, financial, or investment advice. Users should consult with qualified legal and financial advisors before participating in asset tokenization or making investment decisions. Novax Yield does not guarantee regulatory compliance in all jurisdictions and users are responsible for ensuring their participation complies with applicable laws in their jurisdiction.**
 
@@ -1079,9 +1081,9 @@ Novax Yield  is committed to maintaining compliance with evolving regulatory fra
 
 ---
 
-**TrustBridge Africa** - *Where Real-World Assets Meet Blockchain Innovation*
+**Novax Yield** - *Where Trade Receivables Meet Blockchain Innovation*
 
-*Built on Etherlink Network • Global Trading Platform • Connecting Asia & Africa to International Markets • Real Yields from Real Assets*
+*Built on Arbitrum Sepolia Network • Global Trading Platform • Connecting Asia & Africa to International Markets • Real Yields from Real Trade Receivables*
 
 ---
 

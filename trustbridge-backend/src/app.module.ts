@@ -13,6 +13,7 @@ import { AuthModule } from './auth/auth.module';
 import { VerificationModule } from './verification/verification.module';
 import { AMCModule } from './amc/amc.module';
 import { AMCPoolsModule } from './amc-pools/amc-pools.module';
+import { NovaxModule } from './novax/novax.module';
 
 // Service modules - Only essential services for Novax Yield
 import { ChainlinkModule } from './chainlink/chainlink.module';
@@ -70,6 +71,7 @@ import { AppController } from './app.controller';
     VerificationModule,
     AMCModule,
     AMCPoolsModule,
+    NovaxModule,
 
     // Service modules - Only essential services
     ChainlinkModule,

@@ -49,15 +49,15 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             // Solana is disabled - we only support Ethereum/EVM chains
           },
           // Configure default chain for signature requests
-          // Note: Privy doesn't natively support custom chains like Etherlink
-          // We'll use Sepolia as default (standard testnet), but all transactions use Etherlink
+          // Note: Privy doesn't natively support Arbitrum Sepolia in default chain
+          // We'll use Sepolia as default (standard testnet), but all transactions use Arbitrum Sepolia
           defaultChain: {
             id: 11155111, // Sepolia testnet (standard testnet for Privy)
             name: 'Sepolia',
           },
           // Note: Privy doesn't support custom chains in supportedChains
-          // The signature request may show Sepolia, but all transactions use Etherlink network
-          // Etherlink network is configured in the provider (PrivyWalletContext)
+          // The signature request may show Sepolia, but all transactions use Arbitrum Sepolia network
+          // Arbitrum Sepolia network is configured in the provider (PrivyWalletContext)
         }}
       >
         <QueryClientProvider client={queryClient}>

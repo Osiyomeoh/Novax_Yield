@@ -233,9 +233,9 @@ const CreateReceivableEnhanced: React.FC = () => {
       const initWithFallback = async () => {
         try {
           const { ethers } = await import('ethers');
-          // Use Etherlink RPC as fallback - contract service will use Privy signMessage for transactions
-          const etherlinkRpcUrl = import.meta.env.VITE_RPC_URL || 'https://node.shadownet.etherlink.com';
-          const fallbackProvider = new ethers.JsonRpcProvider(etherlinkRpcUrl);
+          // Use Arbitrum RPC as fallback - contract service will use Privy signMessage for transactions
+          const arbitrumRpcUrl = import.meta.env.VITE_RPC_URL || 'https://sepolia-rollup.arbitrum.io/rpc';
+          const fallbackProvider = new ethers.JsonRpcProvider(arbitrumRpcUrl);
           novaxContractService.initialize(null, fallbackProvider);
           console.log('Initialized contract service with fallback provider');
         } catch (error) {
@@ -1036,7 +1036,7 @@ const CreateReceivableEnhanced: React.FC = () => {
                       className="w-full font-mono"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      The importer's wallet address on Etherlink network
+                      The importer's wallet address on Arbitrum network
                     </p>
                   </div>
                 </motion.div>

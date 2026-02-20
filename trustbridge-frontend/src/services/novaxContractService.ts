@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { novaxContractAddresses } from '../config/contracts';
 import { waitForTransaction } from '../utils/transactionUtils';
+import { retryWithBackoff, batchRetry } from '../utils/retryUtils';
 
 // Import Novax contract ABIs
 import NovaxRwaFactoryABI from '../contracts/NovaxRwaFactory.json';
@@ -23,7 +24,43 @@ export class NovaxContractService {
   private readonly rpcEndpoints = [
     import.meta.env.VITE_RPC_URL || 'https://sepolia-rollup.arbitrum.io/rpc',
     'https://sepolia-rollup.arbitrum.io/rpc',
+    'https://arbitrum-sepolia-rpc.publicnode.com',
+    'https://rpc.ankr.com/arbitrum_sepolia',
   ].filter(Boolean);
+  
+  /**
+   * Get a reliable provider, falling back to public RPC if current provider fails
+   * For read operations, always prefer public RPC to avoid MetaMask RPC issues
+   */
+  private async getReliableProvider(): Promise<ethers.Provider> {
+    // Always use public RPC for read operations - skip MetaMask entirely
+    // MetaMask RPC is unreliable for read operations (frequent -32603 errors)
+    console.log('🔄 Using public RPC for read operations (skipping MetaMask)...');
+    
+    // Try public RPC endpoints in order (always use public RPC, never MetaMask)
+    for (const rpcUrl of this.rpcEndpoints) {
+      try {
+        const publicProvider = new ethers.JsonRpcProvider(rpcUrl);
+        const blockNumber = await Promise.race([
+          publicProvider.getBlockNumber(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('RPC timeout')), 5000))
+        ]);
+        console.log(`✅ Using public RPC: ${rpcUrl} (block: ${blockNumber})`);
+        return publicProvider;
+      } catch (error) {
+        console.warn(`⚠️ Failed to connect to ${rpcUrl}:`, error instanceof Error ? error.message : error);
+        continue;
+      }
+    }
+    
+    // If all public RPCs fail, fall back to current provider as last resort
+    if (this.provider) {
+      console.warn('⚠️ All public RPCs failed, falling back to current provider...');
+      return this.provider;
+    }
+    
+    throw new Error('Failed to connect to any RPC endpoint');
+  }
 
   // Arbitrum Sepolia network configuration
   private readonly ARBITRUM_CHAIN_ID = '0x66EEE'; // 421614 in hex
@@ -44,6 +81,40 @@ export class NovaxContractService {
   private pendingNetworkSwitch: Promise<void> | null = null;
 
   /**
+   * Get gas options with proper buffering to prevent "max fee per gas less than block base fee" errors
+   * This fetches current fee data and adds a buffer to account for base fee increases
+   */
+  private async getGasOptions(bufferPercent: number = 20): Promise<any> {
+    if (!this.provider) {
+      return {};
+    }
+
+    try {
+      const feeData = await this.provider.getFeeData();
+      
+      // Use EIP-1559 fees if available, otherwise use legacy gas price
+      if (feeData.maxFeePerGas && feeData.maxPriorityFeePerGas) {
+        // Add buffer to maxFeePerGas to account for base fee increases
+        const bufferedMaxFee = (feeData.maxFeePerGas * BigInt(100 + bufferPercent)) / 100n;
+        const bufferedPriorityFee = (feeData.maxPriorityFeePerGas * BigInt(100 + bufferPercent)) / 100n;
+        
+        return {
+          maxFeePerGas: bufferedMaxFee,
+          maxPriorityFeePerGas: bufferedPriorityFee
+        };
+      } else if (feeData.gasPrice) {
+        // Use legacy gas price with buffer
+        const bufferedGasPrice = (feeData.gasPrice * BigInt(100 + bufferPercent)) / 100n;
+        return { gasPrice: bufferedGasPrice };
+      }
+    } catch (feeError) {
+      console.warn('⚠️ Could not fetch fee data:', feeError);
+    }
+    
+    return {}; // Return empty object to let ethers/MetaMask estimate
+  }
+
+  /**
    * Ensure we're connected to Arbitrum Sepolia network (for MetaMask/external wallets)
    * This should ONLY be called before WRITE operations (transactions), NOT read operations
    * 
@@ -55,26 +126,17 @@ export class NovaxContractService {
    * Only call this before actual write operations like createReceivable, verifyReceivable, etc.
    */
   private async ensureArbitrumNetwork(): Promise<void> {
-    // Only check for external wallets (MetaMask)
-    // Embedded wallets (Privy) don't need network switching - they use Privy's RPC
-    // If we don't have window.ethereum, we're likely using an embedded wallet, so skip
+    // Always check network if window.ethereum exists (MetaMask/external wallet)
+    // Only skip if we truly don't have window.ethereum
     if (typeof window === 'undefined' || !window.ethereum) {
       console.log('⏭️ Skipping network check - no window.ethereum (likely embedded wallet)');
       return;
     }
     
-    // Check if we're using an embedded wallet by checking if provider is from Privy
-    // Privy embedded wallets don't use window.ethereum, so if provider exists but window.ethereum
-    // is not the source, we're likely using Privy's embedded wallet
-    // We can detect this by checking if the provider was created from window.ethereum
-    const isEmbeddedWallet = this.provider && 
-      !(this.provider instanceof ethers.BrowserProvider && 
-        (this.provider as any).provider === window.ethereum);
-    
-    if (isEmbeddedWallet) {
-      console.log('⏭️ Skipping network check - using embedded wallet (Privy)');
-      return;
-    }
+    // If window.ethereum exists, ALWAYS check and switch network
+    // This ensures MetaMask users are on the correct network
+    // Even if Privy embedded wallet is also available, MetaMask takes precedence for network switching
+    console.log('🔍 Checking network - window.ethereum detected (MetaMask or external wallet), verifying network...');
     
     // Only proceed if we have window.ethereum (MetaMask/external wallet)
     if (window.ethereum) {
@@ -138,7 +200,11 @@ export class NovaxContractService {
                       params: [{
                         chainId: this.ARBITRUM_CHAIN_ID,
                         chainName: this.ARBITRUM_CHAIN_NAME,
-                        rpcUrls: [this.ARBITRUM_RPC_URL, 'https://rpc.ankr.com/arbitrum', 'https://arbitrum.llamarpc.com'],
+                        rpcUrls: [
+                          this.ARBITRUM_RPC_URL,
+                          'https://sepolia-rollup.arbitrum.io/rpc',
+                          'https://arbitrum-sepolia-rpc.publicnode.com'
+                        ],
                         nativeCurrency: {
                           name: 'Ether',
                           symbol: 'ETH',
@@ -190,19 +256,19 @@ export class NovaxContractService {
           if (normalizedFinal === normalizedRequired || normalizedFinal === normalizedAlt) {
             console.log('✅ Network switch verified - ready to proceed', {
               chainId: finalChainId,
-              chainIdDecimal: this.ETHERLINK_CHAIN_ID_DECIMAL
+              chainIdDecimal: this.ARBITRUM_CHAIN_ID_DECIMAL
             });
           }
         }
       } catch (error: any) {
         this.pendingNetworkSwitch = null;
-        console.error('⚠️ Failed to ensure Etherlink network:', error);
+        console.error('⚠️ Failed to ensure Arbitrum network:', error);
         
         // Provide more helpful error messages
         if (error.code === -32002) {
           throw new Error('Network switch request is already pending in MetaMask. Please approve or reject the request in MetaMask and try again.');
         }
-        throw new Error(`Network error: Please switch MetaMask to Etherlink network (Chain ID: ${this.ETHERLINK_CHAIN_ID_DECIMAL})`);
+        throw new Error(`Network error: Please switch MetaMask to Arbitrum Sepolia network (Chain ID: ${this.ARBITRUM_CHAIN_ID_DECIMAL})`);
       }
     }
     
@@ -210,10 +276,10 @@ export class NovaxContractService {
     if (this.provider && 'getNetwork' in this.provider) {
       try {
         const network = await this.provider.getNetwork();
-        if (network.chainId !== BigInt(this.ETHERLINK_CHAIN_ID_DECIMAL)) {
+        if (network.chainId !== BigInt(this.ARBITRUM_CHAIN_ID_DECIMAL)) {
           console.warn('⚠️ Provider chain ID mismatch:', {
             provider: network.chainId.toString(),
-            required: this.ETHERLINK_CHAIN_ID_DECIMAL.toString()
+            required: this.ARBITRUM_CHAIN_ID_DECIMAL.toString()
           });
         }
       } catch (err) {
@@ -253,7 +319,7 @@ export class NovaxContractService {
       throw new Error('Signer not initialized. Please connect wallet first.');
     }
 
-    // Ensure we're on Etherlink network before signing
+    // Ensure we're on Arbitrum network before signing
     await this.ensureArbitrumNetwork();
 
     const factory = this.getContract(
@@ -407,13 +473,24 @@ export class NovaxContractService {
       throw new Error('Signer not available. Please ensure your wallet is fully connected and try again.');
     }
 
-    // Ensure we're on Etherlink network before signing
+    // Ensure we're on Arbitrum network before signing
     await this.ensureArbitrumNetwork();
 
     const factory = this.getContract(
       novaxContractAddresses.RECEIVABLE_FACTORY,
       NovaxReceivableFactoryABI
     );
+
+    // Check if contract is paused before attempting transaction
+    try {
+      const isPaused = await factory.paused();
+      if (isPaused) {
+        throw new Error('Contract is currently paused. Please contact support.');
+      }
+    } catch (pauseCheckError) {
+      console.warn('Could not check pause status:', pauseCheckError);
+      // Continue anyway - pause check might fail but transaction might succeed
+    }
 
     // Convert metadataCID to bytes32
     let metadataCIDBytes32: string;
@@ -425,17 +502,285 @@ export class NovaxContractService {
       metadataCIDBytes32 = ethers.hexlify(metadataCID);
     }
 
+    // Validate parameters before sending transaction
+    if (amountUSD <= 0n) {
+      throw new Error('Amount must be greater than 0');
+    }
+    
+    // Convert dueDate to BigInt to ensure proper uint256 encoding
+    // JavaScript numbers can lose precision, so we explicitly convert to BigInt
+    const dueDateBigInt = typeof dueDate === 'bigint' ? dueDate : BigInt(Math.floor(dueDate));
+    
+    // Get current block timestamp to validate due date
+    try {
+      const currentBlock = await this.provider!.getBlock('latest');
+      const currentTimestamp = currentBlock?.timestamp || BigInt(Math.floor(Date.now() / 1000));
+      const currentTimestampBigInt = typeof currentTimestamp === 'bigint' ? currentTimestamp : BigInt(currentTimestamp);
+      
+      if (dueDateBigInt <= currentTimestampBigInt) {
+        throw new Error(`Due date (${dueDateBigInt.toString()}) must be greater than current block timestamp (${currentTimestampBigInt.toString()}). Please select a date further in the future.`);
+      }
+      
+      console.log('✅ Pre-flight validation:', {
+        amountUSD: amountUSD.toString(),
+        dueDate: dueDateBigInt.toString(),
+        currentBlockTimestamp: currentTimestampBigInt.toString(),
+        difference: (dueDateBigInt - currentTimestampBigInt).toString(),
+        differenceDays: Number(dueDateBigInt - currentTimestampBigInt) / (24 * 60 * 60),
+        metadataCIDBytes32,
+        importer
+      });
+    } catch (validationError) {
+      console.warn('Could not validate against block timestamp:', validationError);
+      // Continue anyway - validation might fail but transaction might succeed
+    }
+
     // createReceivable requires 5 parameters: importer, amountUSD, dueDate, metadataCID, importerApprovalId
     // importerApprovalId can be zero (bytes32(0)) if not using ImporterApproval contract
     const importerApprovalId = ethers.ZeroHash; // Default to zero if not provided
     
-    const tx = await factory.createReceivable(
+    console.log('📤 Calling createReceivable with params:', {
       importer,
-      amountUSD,
-      dueDate,
+      amountUSD: amountUSD.toString(),
+      dueDate: dueDateBigInt.toString(),
+      dueDateOriginal: dueDate,
+      dueDateAsDate: new Date(Number(dueDateBigInt) * 1000).toISOString(),
       metadataCIDBytes32,
       importerApprovalId
-    );
+    });
+    
+    // Validate dueDate is a valid BigInt
+    if (dueDateBigInt <= 0n) {
+      throw new Error(`Invalid due date: ${dueDateBigInt.toString()}. Due date must be a positive Unix timestamp.`);
+    }
+    
+    // Try to simulate the transaction first using a public RPC to get better error messages
+    // This helps identify real contract errors vs MetaMask RPC errors
+    try {
+      const publicRpcUrl = 'https://sepolia-rollup.arbitrum.io/rpc';
+      const publicProvider = new ethers.JsonRpcProvider(publicRpcUrl);
+      const publicFactory = new ethers.Contract(
+        novaxContractAddresses.RECEIVABLE_FACTORY,
+        factory.interface,
+        publicProvider
+      );
+      
+      // Try to call static (simulate) to get the actual revert reason
+      try {
+        const signerAddress = await this.signer.getAddress();
+        
+        // Get current block timestamp from public RPC for comparison
+        const publicBlock = await publicProvider.getBlock('latest');
+        const publicBlockTimestamp = publicBlock?.timestamp || 0;
+        
+        console.log('🔍 Public RPC block info:', {
+          blockNumber: publicBlock?.number,
+          blockTimestamp: publicBlockTimestamp,
+          dueDate: dueDateBigInt.toString(),
+          difference: Number(dueDateBigInt) - Number(publicBlockTimestamp),
+          isValid: Number(dueDateBigInt) > Number(publicBlockTimestamp)
+        });
+        
+        await publicFactory.createReceivable.staticCall(
+          importer,
+          amountUSD,
+          dueDateBigInt,
+          metadataCIDBytes32,
+          importerApprovalId,
+          { from: signerAddress }
+        );
+        console.log('✅ Static call succeeded - transaction should work');
+      } catch (staticError: any) {
+        console.error('❌ Static call failed:', staticError);
+        // Extract revert reason if available
+        if (staticError.reason) {
+          throw new Error(`Transaction will fail: ${staticError.reason}`);
+        } else if (staticError.data) {
+          // Try to decode the error
+          try {
+            const errorFragment = factory.interface.parseError(staticError.data);
+            throw new Error(`Transaction will fail: ${errorFragment?.name || 'Unknown error'}`);
+          } catch {
+            throw new Error(`Transaction will fail. Error data: ${staticError.data}`);
+          }
+        }
+        throw staticError;
+      }
+    } catch (simError: any) {
+      // If simulation fails with a clear error, throw it
+      if (simError.message && !simError.message.includes('Could not simulate')) {
+        throw simError;
+      }
+      console.warn('⚠️ Could not simulate transaction, proceeding anyway:', simError.message);
+      // Continue with actual transaction - simulation might fail but transaction might succeed
+    }
+    
+    // Use try-catch around the actual transaction call to handle MetaMask RPC errors
+    let tx;
+    try {
+      // Log the exact parameters being sent
+      console.log('🔍 Final transaction parameters:', {
+        importer,
+        amountUSD: amountUSD.toString(),
+        dueDateBigInt: dueDateBigInt.toString(),
+        dueDateHex: '0x' + dueDateBigInt.toString(16),
+        metadataCIDBytes32,
+        importerApprovalId
+      });
+      
+      // Get current block timestamp from the provider being used for the transaction
+      // This helps debug timestamp-related issues
+      try {
+        const currentBlock = await this.provider!.getBlock('latest');
+        const currentBlockTimestamp = currentBlock?.timestamp || 0;
+        const currentBlockTimestampBigInt = typeof currentBlockTimestamp === 'bigint' 
+          ? currentBlockTimestamp 
+          : BigInt(currentBlockTimestamp);
+        
+        console.log('🔍 Transaction provider block info:', {
+          blockNumber: currentBlock?.number,
+          blockTimestamp: currentBlockTimestampBigInt.toString(),
+          dueDate: dueDateBigInt.toString(),
+          difference: (dueDateBigInt - currentBlockTimestampBigInt).toString(),
+          differenceSeconds: Number(dueDateBigInt - currentBlockTimestampBigInt),
+          isValid: dueDateBigInt > currentBlockTimestampBigInt
+        });
+        
+        if (dueDateBigInt <= currentBlockTimestampBigInt) {
+          throw new Error(`Due date (${dueDateBigInt.toString()}) must be greater than current block timestamp (${currentBlockTimestampBigInt.toString()}). Block timestamp may have advanced since validation.`);
+        }
+      } catch (blockError: any) {
+        console.warn('⚠️ Could not verify block timestamp before transaction:', blockError);
+        // Continue anyway - the contract will validate
+      }
+      
+      // Note: We skip explicit gas estimation here because:
+      // 1. Static call already validated the transaction will work
+      // 2. MetaMask's estimateGas might fail due to RPC issues, but the transaction can still succeed
+      // 3. We'll use a reasonable default gas limit and let ethers.js handle it
+      console.log('⏭️ Skipping explicit gas estimation (static call already validated transaction)');
+      
+      // Fetch current gas prices to ensure we have enough for the transaction
+      // This prevents "max fee per gas less than block base fee" errors
+      let gasOptions: any = {};
+      try {
+        const feeData = await this.provider!.getFeeData();
+        console.log('⛽ Current fee data:', {
+          gasPrice: feeData.gasPrice?.toString(),
+          maxFeePerGas: feeData.maxFeePerGas?.toString(),
+          maxPriorityFeePerGas: feeData.maxPriorityFeePerGas?.toString()
+        });
+        
+        // Use EIP-1559 fees if available, otherwise use legacy gas price
+        if (feeData.maxFeePerGas && feeData.maxPriorityFeePerGas) {
+          // Add 20% buffer to maxFeePerGas to account for base fee increases
+          const bufferedMaxFee = (feeData.maxFeePerGas * 120n) / 100n;
+          const bufferedPriorityFee = (feeData.maxPriorityFeePerGas * 120n) / 100n;
+          
+          gasOptions = {
+            maxFeePerGas: bufferedMaxFee,
+            maxPriorityFeePerGas: bufferedPriorityFee
+          };
+          
+          console.log('⛽ Using buffered EIP-1559 fees:', {
+            maxFeePerGas: bufferedMaxFee.toString(),
+            maxPriorityFeePerGas: bufferedPriorityFee.toString()
+          });
+        } else if (feeData.gasPrice) {
+          // Use legacy gas price with 20% buffer
+          const bufferedGasPrice = (feeData.gasPrice * 120n) / 100n;
+          gasOptions = { gasPrice: bufferedGasPrice };
+          
+          console.log('⛽ Using buffered legacy gas price:', {
+            gasPrice: bufferedGasPrice.toString()
+          });
+        }
+      } catch (feeError) {
+        console.warn('⚠️ Could not fetch fee data, using default:', feeError);
+        // Continue without explicit gas options - ethers will estimate
+      }
+      
+      // Try to send the transaction with proper gas prices
+      // If estimateGas failed but static call succeeded, use a reasonable gas limit
+      const DEFAULT_GAS_LIMIT = 500000n; // Reasonable default for createReceivable
+      
+      try {
+        tx = await factory.createReceivable(
+          importer,
+          amountUSD,
+          dueDateBigInt,
+          metadataCIDBytes32,
+          importerApprovalId,
+          {
+            ...gasOptions,
+            gasLimit: DEFAULT_GAS_LIMIT // Use default gas limit as fallback
+          }
+        );
+      } catch (txError: any) {
+        // If it fails due to gas price, try with fresh fee data
+        if (txError.message?.includes('max fee per gas') || txError.message?.includes('base fee')) {
+          console.warn('⚠️ Gas price issue detected, fetching fresh fee data and retrying...');
+          try {
+            const freshFeeData = await this.provider!.getFeeData();
+            if (freshFeeData.maxFeePerGas && freshFeeData.maxPriorityFeePerGas) {
+              // Add 30% buffer this time to be safe
+              const bufferedMaxFee = (freshFeeData.maxFeePerGas * 130n) / 100n;
+              const bufferedPriorityFee = (freshFeeData.maxPriorityFeePerGas * 130n) / 100n;
+              
+              tx = await factory.createReceivable(
+                importer,
+                amountUSD,
+                dueDateBigInt,
+                metadataCIDBytes32,
+                importerApprovalId,
+                {
+                  maxFeePerGas: bufferedMaxFee,
+                  maxPriorityFeePerGas: bufferedPriorityFee,
+                  gasLimit: DEFAULT_GAS_LIMIT
+                }
+              );
+            } else {
+              throw txError; // Re-throw original error if we can't get fee data
+            }
+          } catch (retryError: any) {
+            // If retry fails, try without explicit gas options (let MetaMask handle it)
+            if (retryError.message?.includes('max fee per gas') || retryError.message?.includes('base fee')) {
+              console.warn('⚠️ Retrying transaction without explicit gas prices (let MetaMask estimate)...');
+              tx = await factory.createReceivable(
+                importer,
+                amountUSD,
+                dueDateBigInt,
+                metadataCIDBytes32,
+                importerApprovalId
+              );
+            } else {
+              throw retryError;
+            }
+          }
+        } else if (txError.message?.includes('gas') || txError.code === 'UNPREDICTABLE_GAS_LIMIT') {
+          console.warn('⚠️ Retrying transaction without explicit gas limit...');
+          tx = await factory.createReceivable(
+            importer,
+            amountUSD,
+            dueDateBigInt,
+            metadataCIDBytes32,
+            importerApprovalId,
+            gasOptions // Still use the gas price options
+          );
+        } else {
+          throw txError;
+        }
+      }
+    } catch (txError: any) {
+      console.error('❌ Transaction call failed:', txError);
+      // If it's a MetaMask RPC error, the transaction might still be pending
+      if (txError.code === -32603 || txError.message?.includes('Internal JSON-RPC error')) {
+        console.warn('⚠️ MetaMask RPC error during transaction. The transaction might still be pending in your wallet.');
+        console.warn('   Please check MetaMask for pending transactions. The transaction may succeed despite this error.');
+        throw new Error('MetaMask RPC error. Please check your wallet for pending transactions - the transaction may still be processing.');
+      }
+      throw txError;
+    }
 
     const receipt = await waitForTransaction(tx, this.provider, 180);
     if (!receipt) {
@@ -471,7 +816,8 @@ export class NovaxContractService {
       gasUsed: receipt.gasUsed?.toString(),
       importer,
       amountUSD: amountUSD.toString(),
-      dueDate: new Date(dueDate * 1000).toISOString(),
+      dueDate: new Date(Number(dueDateBigInt) * 1000).toISOString(),
+      dueDateTimestamp: dueDateBigInt.toString(),
       metadataCID: typeof metadataCID === 'string' ? metadataCID : 'bytes',
       timestamp: new Date().toISOString()
     });
@@ -486,13 +832,18 @@ export class NovaxContractService {
    * Get receivable details
    */
   async getReceivable(receivableId: string): Promise<any> {
-    if (!this.provider) {
-      throw new Error('Provider not initialized');
-    }
-
-    const factory = this.getContract(
+    // Get a reliable provider (with fallback to public RPC)
+    const reliableProvider = await this.getReliableProvider();
+    
+    // Extract ABI from JSON if needed
+    const abiArray = Array.isArray(NovaxReceivableFactoryABI) 
+      ? NovaxReceivableFactoryABI 
+      : (NovaxReceivableFactoryABI.abi || NovaxReceivableFactoryABI);
+    
+    const factory = new ethers.Contract(
       novaxContractAddresses.RECEIVABLE_FACTORY,
-      NovaxReceivableFactoryABI
+      abiArray,
+      reliableProvider
     );
 
     const receivableIdBytes32 = receivableId.startsWith('0x') && receivableId.length === 66
@@ -514,7 +865,7 @@ export class NovaxContractService {
       throw new Error('Signer not initialized. Please connect wallet first.');
     }
 
-    // Ensure we're on Etherlink network before signing
+    // Ensure we're on Arbitrum network before signing
     await this.ensureArbitrumNetwork();
 
     const factory = this.getContract(
@@ -526,10 +877,25 @@ export class NovaxContractService {
       ? receivableId
       : ethers.id(receivableId);
 
-    const tx = await factory.verifyReceivable(receivableIdBytes32, riskScore, apr);
+    // Get gas options with buffer to prevent gas price errors
+    const gasOptions = await this.getGasOptions(30); // Use 30% buffer for safety
     
-    // Use polling for Etherlink (slow network)
-    const receipt = await waitForTransaction(tx, this.provider, 180);
+    let tx;
+    try {
+      tx = await factory.verifyReceivable(receivableIdBytes32, riskScore, apr, gasOptions);
+    } catch (txError: any) {
+      // If it fails due to gas price, retry with fresh fee data
+      if (txError.message?.includes('max fee per gas') || txError.message?.includes('base fee')) {
+        console.warn('⚠️ Gas price issue detected, retrying with fresh fee data...');
+        const freshGasOptions = await this.getGasOptions(40); // Use 40% buffer on retry
+        tx = await factory.verifyReceivable(receivableIdBytes32, riskScore, apr, freshGasOptions);
+      } else {
+        throw txError;
+      }
+    }
+    
+    // Use polling for Arbitrum (may take time)
+    const receipt = await waitForTransaction(tx, this.provider, 120);
     
     if (!receipt) {
       throw new Error('Transaction not confirmed. Please check the explorer.');
@@ -544,17 +910,22 @@ export class NovaxContractService {
    * @returns Array of receivable IDs
    */
   async getAllReceivables(): Promise<string[]> {
-    if (!this.provider) {
-      throw new Error('Provider not initialized');
-    }
-
-    const factory = this.getContract(
-      novaxContractAddresses.RECEIVABLE_FACTORY,
-      NovaxReceivableFactoryABI
-    );
-
     try {
       console.log('🔍 Fetching all receivables using contract getter (allReceivables array)...');
+      
+      // Get a reliable provider (with fallback to public RPC)
+      const reliableProvider = await this.getReliableProvider();
+      
+      // Extract ABI from JSON if needed
+      const abiArray = Array.isArray(NovaxReceivableFactoryABI) 
+        ? NovaxReceivableFactoryABI 
+        : (NovaxReceivableFactoryABI.abi || NovaxReceivableFactoryABI);
+      
+      const factory = new ethers.Contract(
+        novaxContractAddresses.RECEIVABLE_FACTORY,
+        abiArray,
+        reliableProvider
+      );
       
       // Use the allReceivables public array getter - much faster than querying events!
       // Read totalReceivables first to know how many to fetch
@@ -566,8 +937,11 @@ export class NovaxContractService {
         return [];
       }
       
-      // Use getAllReceivableIds() - same as test scripts
-      const receivableIds = await factory.getAllReceivableIds();
+      // Use getAllReceivableIds() - same as test scripts, with retry for reliability
+      const receivableIds = await retryWithBackoff(
+        () => factory.getAllReceivableIds(),
+        { maxRetries: 3, initialDelay: 500 }
+      );
       console.log(`✅ Found ${receivableIds.length} receivables using getAllReceivableIds()`);
       
       // Convert bytes32[] to string[]
@@ -586,19 +960,29 @@ export class NovaxContractService {
    * @returns Array of receivable IDs
    */
   async getExporterReceivables(exporterAddress: string): Promise<string[]> {
-    if (!this.provider) {
-      throw new Error('Provider not initialized');
-    }
-
-    const factory = this.getContract(
-      novaxContractAddresses.RECEIVABLE_FACTORY,
-      NovaxReceivableFactoryABI
-    );
-
     try {
       console.log('📥 Fetching receivables for exporter:', exporterAddress);
+      
+      // Get a reliable provider (with fallback to public RPC)
+      const reliableProvider = await this.getReliableProvider();
+      
+      // Extract ABI from JSON if needed
+      const abiArray = Array.isArray(NovaxReceivableFactoryABI) 
+        ? NovaxReceivableFactoryABI 
+        : (NovaxReceivableFactoryABI.abi || NovaxReceivableFactoryABI);
+      
+      const factory = new ethers.Contract(
+        novaxContractAddresses.RECEIVABLE_FACTORY,
+        abiArray,
+        reliableProvider
+      );
+      
       // Use the contract's built-in mapping - much more efficient than querying events!
-      const receivableIds = await factory.getExporterReceivables(exporterAddress);
+      // Use retry for reliability
+      const receivableIds = await retryWithBackoff(
+        () => factory.getExporterReceivables(exporterAddress),
+        { maxRetries: 3, initialDelay: 500 }
+      );
       console.log(`✅ Found ${receivableIds.length} receivables for exporter`);
       
       // Convert bytes32[] to string[]
@@ -641,7 +1025,7 @@ export class NovaxContractService {
       throw new Error('Signer not initialized. Please connect wallet first.');
     }
 
-    // Ensure we're on Etherlink network before signing
+    // Ensure we're on Arbitrum network before signing
     await this.ensureArbitrumNetwork();
 
     const poolManager = this.getContract(
@@ -664,18 +1048,43 @@ export class NovaxContractService {
       rewardPool: ethers.formatUnits(rewardPool, 18),
     });
 
-    const tx = await poolManager.createPool(
-      poolType,
-      assetIdBytes32,
-      targetAmount,
-      minInvestment,
-      maxInvestment,
-      apr,
-      maturityDate,
-      rewardPool,
-      tokenName,
-      tokenSymbol
-    );
+    const gasOptions = await this.getGasOptions(30);
+    let tx;
+    try {
+      tx = await poolManager.createPool(
+        poolType,
+        assetIdBytes32,
+        targetAmount,
+        minInvestment,
+        maxInvestment,
+        apr,
+        maturityDate,
+        rewardPool,
+        tokenName,
+        tokenSymbol,
+        gasOptions
+      );
+    } catch (txError: any) {
+      if (txError.message?.includes('max fee per gas') || txError.message?.includes('base fee')) {
+        console.warn('⚠️ Gas price issue detected, retrying with fresh fee data...');
+        const freshGasOptions = await this.getGasOptions(40);
+        tx = await poolManager.createPool(
+          poolType,
+          assetIdBytes32,
+          targetAmount,
+          minInvestment,
+          maxInvestment,
+          apr,
+          maturityDate,
+          rewardPool,
+          tokenName,
+          tokenSymbol,
+          freshGasOptions
+        );
+      } else {
+        throw txError;
+      }
+    }
 
     const receipt = await waitForTransaction(tx, this.provider, 180);
     if (!receipt) {
@@ -722,7 +1131,7 @@ export class NovaxContractService {
       throw new Error('Signer not initialized. Please connect wallet first.');
     }
 
-    // Ensure we're on Etherlink network before signing
+    // Ensure we're on Arbitrum network before signing
     await this.ensureArbitrumNetwork();
 
     const poolManager = this.getContract(
@@ -741,13 +1150,26 @@ export class NovaxContractService {
     const allowance = await usdc.allowance(userAddress, novaxContractAddresses.POOL_MANAGER);
     if (allowance < usdcAmount) {
       console.log('📝 Approving USDC spending...');
-      const approveTx = await usdc.approve(novaxContractAddresses.POOL_MANAGER, usdcAmount);
+      const approveGasOptions = await this.getGasOptions(30);
+      const approveTx = await usdc.approve(novaxContractAddresses.POOL_MANAGER, usdcAmount, approveGasOptions);
       await waitForTransaction(approveTx, this.provider, 180);
       console.log('✅ USDC approved');
     }
 
     // Invest in pool
-    const tx = await poolManager.invest(poolIdBytes32, usdcAmount);
+    const gasOptions = await this.getGasOptions(30);
+    let tx;
+    try {
+      tx = await poolManager.invest(poolIdBytes32, usdcAmount, gasOptions);
+    } catch (txError: any) {
+      if (txError.message?.includes('max fee per gas') || txError.message?.includes('base fee')) {
+        console.warn('⚠️ Gas price issue detected, retrying with fresh fee data...');
+        const freshGasOptions = await this.getGasOptions(40);
+        tx = await poolManager.invest(poolIdBytes32, usdcAmount, freshGasOptions);
+      } else {
+        throw txError;
+      }
+    }
     const receipt = await waitForTransaction(tx, this.provider, 180);
 
     // Get shares from event or pool
@@ -831,20 +1253,43 @@ export class NovaxContractService {
    * Get pool details
    */
   async getPool(poolId: string): Promise<any> {
-    if (!this.provider) {
-      throw new Error('Provider not initialized');
+    const poolManagerAddress = novaxContractAddresses.POOL_MANAGER;
+    if (!poolManagerAddress) {
+      throw new Error('POOL_MANAGER address not configured');
     }
 
-    const poolManager = this.getContract(
-      novaxContractAddresses.POOL_MANAGER,
-      NovaxPoolManagerABI
+    // Get a reliable provider (with fallback)
+    const reliableProvider = await this.getReliableProvider();
+    // Extract ABI from JSON if needed (same logic as getContract)
+    const abiArray = Array.isArray(NovaxPoolManagerABI) ? NovaxPoolManagerABI : (NovaxPoolManagerABI.abi || NovaxPoolManagerABI);
+    const poolManager = new ethers.Contract(
+      poolManagerAddress,
+      abiArray,
+      reliableProvider
     );
 
     const poolIdBytes32 = poolId.startsWith('0x') && poolId.length === 66
       ? poolId
       : ethers.id(poolId);
 
-    return await poolManager.getPool(poolIdBytes32);
+    // Use retry for reliability with fallback RPC
+    return await retryWithBackoff(
+      () => poolManager.getPool(poolIdBytes32),
+      { 
+        maxRetries: 3, 
+        initialDelay: 500,
+        retryableErrors: [
+          'CALL_EXCEPTION',
+          'NETWORK_ERROR',
+          'TIMEOUT',
+          'ECONNRESET',
+          'ETIMEDOUT',
+          'Internal JSON-RPC error',
+          'missing revert data',
+          '-32603', // Internal JSON-RPC error code
+        ]
+      }
+    );
   }
 
   /**
@@ -877,7 +1322,7 @@ export class NovaxContractService {
       throw new Error('Signer not initialized. Please connect wallet first.');
     }
 
-    // Ensure we're on Etherlink network before signing
+    // Ensure we're on Arbitrum network before signing
     await this.ensureArbitrumNetwork();
 
     const poolManager = this.getContract(
@@ -894,7 +1339,19 @@ export class NovaxContractService {
       paymentAmount: ethers.formatUnits(paymentAmount, 6),
     });
 
-    const tx = await poolManager.recordPayment(poolIdBytes32, paymentAmount);
+    const gasOptions = await this.getGasOptions(30);
+    let tx;
+    try {
+      tx = await poolManager.recordPayment(poolIdBytes32, paymentAmount, gasOptions);
+    } catch (txError: any) {
+      if (txError.message?.includes('max fee per gas') || txError.message?.includes('base fee')) {
+        console.warn('⚠️ Gas price issue detected, retrying with fresh fee data...');
+        const freshGasOptions = await this.getGasOptions(40);
+        tx = await poolManager.recordPayment(poolIdBytes32, paymentAmount, freshGasOptions);
+      } else {
+        throw txError;
+      }
+    }
     const receipt = await waitForTransaction(tx, this.provider, 180);
     
     if (!receipt) {
@@ -913,7 +1370,7 @@ export class NovaxContractService {
       throw new Error('Signer not initialized. Please connect wallet first.');
     }
 
-    // Ensure we're on Etherlink network before signing
+    // Ensure we're on Arbitrum network before signing
     await this.ensureArbitrumNetwork();
 
     const poolManager = this.getContract(
@@ -927,7 +1384,19 @@ export class NovaxContractService {
 
     console.log('💰 Distributing yield for pool:', poolIdBytes32);
 
-    const tx = await poolManager.distributeYield(poolIdBytes32);
+    const gasOptions = await this.getGasOptions(30);
+    let tx;
+    try {
+      tx = await poolManager.distributeYield(poolIdBytes32, gasOptions);
+    } catch (txError: any) {
+      if (txError.message?.includes('max fee per gas') || txError.message?.includes('base fee')) {
+        console.warn('⚠️ Gas price issue detected, retrying with fresh fee data...');
+        const freshGasOptions = await this.getGasOptions(40);
+        tx = await poolManager.distributeYield(poolIdBytes32, freshGasOptions);
+      } else {
+        throw txError;
+      }
+    }
     const receipt = await waitForTransaction(tx, this.provider, 180);
     
     if (!receipt) {
@@ -938,34 +1407,143 @@ export class NovaxContractService {
   }
 
   /**
-   * Get all pools using contract getter (much faster than querying events!)
-   * Uses the allPools array from the contract
+   * Get all pools using contract getters (much faster than pagination!)
+   * Uses the public allPools array and totalPools getter
    * @returns Array of pool IDs
    */
   async getAllPools(): Promise<string[]> {
-    if (!this.provider) {
-      throw new Error('Provider not initialized');
+    const poolManagerAddress = novaxContractAddresses.POOL_MANAGER;
+    if (!poolManagerAddress) {
+      throw new Error('POOL_MANAGER address not configured');
     }
 
-    const poolManager = this.getContract(
-      novaxContractAddresses.POOL_MANAGER,
-      NovaxPoolManagerABI
+    console.log('🔍 Fetching all pools using contract getters (allPools array)...');
+    console.log('   Pool Manager address:', poolManagerAddress);
+
+    // Get a reliable provider (with fallback)
+    const reliableProvider = await this.getReliableProvider();
+    // Extract ABI from JSON if needed (same logic as getContract)
+    const abiArray = Array.isArray(NovaxPoolManagerABI) ? NovaxPoolManagerABI : (NovaxPoolManagerABI.abi || NovaxPoolManagerABI);
+    const poolManager = new ethers.Contract(
+      poolManagerAddress,
+      abiArray,
+      reliableProvider
     );
 
     try {
-      console.log('🔍 Fetching all pools using getPoolsPaginated()...');
+      // Based on test results: getPoolsPaginated is fastest (353ms vs 625ms for parallel getters)
+      // Use getPoolsPaginated with retry for best performance and reliability
+      console.log('📊 Getting all pools using getPoolsPaginated (with retry and fallback RPC)...');
+      console.log(`   Contract address: ${poolManagerAddress}`);
+      console.log(`   ABI length: ${abiArray.length} functions`);
       
-      // Use getPoolsPaginated() - same as test scripts
-      const [allPools] = await poolManager.getPoolsPaginated(0, 100);
-      const poolIds = allPools.map((pool: any) => {
+      const [pools, total] = await retryWithBackoff(
+        async () => {
+          console.log('   🔄 Attempting getPoolsPaginated call...');
+          // Try to get all pools in one call (up to 1000)
+          const result = await poolManager.getPoolsPaginated(0, 1000);
+          console.log('   ✅ getPoolsPaginated call succeeded');
+          return result;
+        },
+        { 
+          maxRetries: 3, 
+          initialDelay: 500,
+          retryableErrors: [
+            'CALL_EXCEPTION',
+            'NETWORK_ERROR',
+            'TIMEOUT',
+            'ECONNRESET',
+            'ETIMEDOUT',
+            'Internal JSON-RPC error',
+            'missing revert data',
+            '-32603', // Internal JSON-RPC error code
+          ]
+        }
+      );
+      
+      const totalCount = Number(total);
+      console.log(`   📊 Total pools in contract: ${totalCount}`);
+      console.log(`   📦 Fetched ${pools.length} pools from contract`);
+      console.log(`   📋 Pools data type:`, Array.isArray(pools) ? 'array' : typeof pools);
+      
+      if (pools.length === 0 && totalCount === 0) {
+        console.log('   ℹ️ No pools exist in the contract yet');
+        return [];
+      }
+      
+      if (pools.length === 0 && totalCount > 0) {
+        console.warn(`   ⚠️ Contract reports ${totalCount} pools but returned 0 pools - trying direct getters as fallback...`);
+        
+        // Fallback: Use direct getters (totalPools and allPools)
+        try {
+          const directTotal = await poolManager.totalPools();
+          const directTotalNum = Number(directTotal);
+          console.log(`   📊 Direct totalPools() call: ${directTotalNum}`);
+          
+          if (directTotalNum === 0) {
+            return [];
+          }
+          
+          const directPoolIds: string[] = [];
+          for (let i = 0; i < Math.min(directTotalNum, 100); i++) {
+            try {
+              const poolId = await poolManager.allPools(i);
+              const poolIdString = ethers.hexlify(poolId);
+              directPoolIds.push(poolIdString);
+              if (i < 5) {
+                console.log(`   Pool ${i + 1}/${directTotalNum}: ${poolIdString.slice(0, 10)}...`);
+              }
+            } catch (error) {
+              console.error(`   Error fetching pool at index ${i}:`, error);
+            }
+          }
+          
+          console.log(`✅ Found ${directPoolIds.length} pools using direct getters (fallback)`);
+          return directPoolIds;
+        } catch (fallbackError) {
+          console.error('❌ Fallback to direct getters also failed:', fallbackError);
+          return [];
+        }
+      }
+
+      if (pools.length === 0) {
+        console.log('📦 No pools in contract');
+        return [];
+      }
+
+      // Extract pool IDs from the pool structs
+      const poolIds = pools.map((pool: any, index: number) => {
         const id = pool.id || pool.poolId;
-        return typeof id === 'string' ? id : ethers.hexlify(id);
-      });
+        if (!id) {
+          console.warn(`⚠️ Pool at index ${index} missing ID:`, pool);
+          return null;
+        }
+        const poolIdString = typeof id === 'string' ? id : ethers.hexlify(id);
+        if (index < 5 || index === pools.length - 1) {
+          console.log(`   Pool ${index + 1}/${totalCount}: ${poolIdString.slice(0, 10)}... (status: ${pool.status})`);
+        }
+        return poolIdString;
+      }).filter((id: string | null): id is string => id !== null);
       
-      console.log(`✅ Found ${poolIds.length} pools using getPoolsPaginated()`);
+      console.log(`✅ Found ${poolIds.length} pools using getPoolsPaginated (with retry)`);
       return poolIds;
     } catch (error) {
-      console.error('Error fetching pools:', error);
+      console.error('❌ Error fetching pools:', error);
+      console.error('   Provider:', this.provider ? 'initialized' : 'not initialized');
+      console.error('   Pool Manager address:', novaxContractAddresses.POOL_MANAGER);
+      
+      // Check if it's a CALL_EXCEPTION (contract doesn't exist or function doesn't exist)
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'CALL_EXCEPTION') {
+        const errorMsg = `Contract call failed. This usually means:
+1. The contract at ${poolManagerAddress} doesn't exist or isn't deployed
+2. The contract doesn't have the getPoolsPaginated function
+3. The function is reverting (check contract state)
+4. Network mismatch (provider connected to wrong network)
+
+Original error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+        throw new Error(errorMsg);
+      }
+      
       throw new Error(`Failed to fetch pools: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -1348,8 +1926,25 @@ export class NovaxContractService {
       throw new Error('Signer not initialized. Please connect wallet first.');
     }
 
+    // Get gas options with buffer to prevent gas price errors
+    const gasOptions = await this.getGasOptions(30);
+    
     const usdc = this.getContract(novaxContractAddresses.USDC, MockUSDCABI);
-    const tx = await usdc.approve(spender, amount);
+    
+    let tx;
+    try {
+      tx = await usdc.approve(spender, amount, gasOptions);
+    } catch (txError: any) {
+      // If it fails due to gas price, retry with fresh fee data
+      if (txError.message?.includes('max fee per gas') || txError.message?.includes('base fee')) {
+        console.warn('⚠️ Gas price issue detected in approveUSDC, retrying with fresh fee data...');
+        const freshGasOptions = await this.getGasOptions(40);
+        tx = await usdc.approve(spender, amount, freshGasOptions);
+      } else {
+        throw txError;
+      }
+    }
+    
     const receipt = await tx.wait();
 
     return { txHash: receipt.hash };
@@ -1368,9 +1963,9 @@ export class NovaxContractService {
   }
 
   /**
-   * Get native token (XTZ) balance for gas
+   * Get native token (ETH) balance for gas
    */
-  async getXTZBalance(address?: string): Promise<bigint> {
+  async getETHBalance(address?: string): Promise<bigint> {
     if (!this.provider) {
       throw new Error('Provider not initialized');
     }

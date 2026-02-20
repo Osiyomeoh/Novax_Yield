@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Coins, Plus, Loader2 } from 'lucide-react';
 import { useWallet } from '../../contexts/WalletContext';
 import { novaxContractService } from '../../services/novaxContractService';
@@ -13,6 +14,7 @@ const NVXTokenBalance: React.FC<NVXTokenBalanceProps> = ({
   className = '',
   showPurchaseButton = true
 }) => {
+  const navigate = useNavigate();
   const { address, isConnected } = useWallet();
   const [balance, setBalance] = useState<number>(0);
   const [loading, setLoading] = useState(false);
@@ -57,33 +59,41 @@ const NVXTokenBalance: React.FC<NVXTokenBalanceProps> = ({
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
     >
-      {/* NVX Token Icon */}
-      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+      {/* NVX Token Icon - Clickable */}
+      <button
+        onClick={() => navigate('/exchange')}
+        className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
+        title="View NVX balance and exchange"
+      >
         <Coins className="w-3 h-3 text-white" />
-      </div>
+      </button>
 
-      {/* Balance */}
-      <div className="flex items-center space-x-1">
+      {/* Balance - Clickable */}
+      <button
+        onClick={() => navigate('/exchange')}
+        className="flex items-center space-x-1 hover:opacity-80 transition-opacity cursor-pointer"
+        title="View NVX balance and exchange"
+      >
         {loading ? (
           <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
         ) : (
           <>
-            <span className="text-sm font-mono text-gray-300">
+            <span className="text-sm font-mono text-gray-600">
               {formatBalance(balance)}
             </span>
             <span className="text-xs text-gray-500">NVX</span>
           </>
         )}
-      </div>
+      </button>
 
       {/* Purchase Button */}
       {showPurchaseButton && (
         <button
           onClick={() => {
-            // TODO: Open NVX purchase modal or navigate to exchange
-            console.log('Open NVX purchase');
+            // Navigate to exchange page to buy NVX tokens
+            navigate('/exchange');
           }}
-          className="w-5 h-5 rounded-full bg-blue-500 hover:bg-blue-600 flex items-center justify-center transition-colors relative z-10 shadow-sm"
+          className="w-5 h-5 rounded-full bg-black hover:bg-gray-800 flex items-center justify-center transition-colors relative z-10 shadow-sm cursor-pointer"
           title="Buy NVX tokens"
         >
           <Plus className="w-3 h-3 text-white" />

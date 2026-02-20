@@ -8,10 +8,11 @@ import * as fs from 'fs';
 import { AMCPool, AMCPoolDocument, PoolStatus, PoolType } from '../schemas/amc-pool.schema';
 import { Asset, AssetDocument } from '../schemas/asset.schema';
 import { AssetV2, AssetV2Document } from '../schemas/asset-v2.schema';
-// MantleService removed - using Etherlink/Novax contracts directly
+// MantleService removed - using Arbitrum Sepolia/Novax contracts directly
 import { AdminService } from '../admin/admin.service';
 import { Inject, Optional, forwardRef } from '@nestjs/common';
 import { ROICalculationService } from './roi-calculation.service';
+import { NovaxService } from '../novax/novax.service';
 
 export interface CreateAMCPoolDto {
   name: string;
@@ -70,10 +71,11 @@ export class AMCPoolsService {
     @InjectModel(AMCPool.name) private amcPoolModel: Model<AMCPoolDocument>,
     @InjectModel(Asset.name) private assetModel: Model<AssetDocument>,
     @InjectModel(AssetV2.name) private assetV2Model: Model<AssetV2Document>,
-    // MantleService removed - using Etherlink/Novax contracts directly
+    // MantleService removed - using Arbitrum Sepolia/Novax contracts directly
     private adminService: AdminService,
     private configService: ConfigService,
     private roiCalculationService: ROICalculationService,
+    private novaxService: NovaxService,
     // Optional: AssetOwnersService (will be undefined if module not loaded)
     @Optional() private assetOwnersService?: any,
   ) {}
@@ -478,6 +480,31 @@ export class AMCPoolsService {
   }
 
   /**
+   * Map on-chain pool status to AMCPool status
+   */
+  private mapPoolStatus(onChainStatus: number): PoolStatus {
+    // On-chain status: 0=ACTIVE, 1=FUNDED, 2=MATURED, 3=PAID, 4=DEFAULTED, 5=CLOSED, 6=PAUSED
+    switch (onChainStatus) {
+      case 0:
+        return PoolStatus.ACTIVE;
+      case 1:
+        return PoolStatus.ACTIVE; // FUNDED pools are still active for investments
+      case 2:
+        return PoolStatus.MATURED;
+      case 3:
+        return PoolStatus.CLOSED; // PAID pools are closed
+      case 4:
+        return PoolStatus.SUSPENDED; // DEFAULTED pools are suspended
+      case 5:
+        return PoolStatus.CLOSED;
+      case 6:
+        return PoolStatus.SUSPENDED; // PAUSED pools are suspended
+      default:
+        return PoolStatus.ACTIVE;
+    }
+  }
+
+  /**
    * Get all pools (only on-chain pools)
    * CRITICAL: Only returns pools that exist on-chain (have hederaContractId)
    */
@@ -657,13 +684,53 @@ export class AMCPoolsService {
         ? poolId
         : ethers.id(poolId);
       
-      // TODO: Replace with Novax contract calls for Etherlink
-      // MantleService removed - using Etherlink/Novax contracts directly
-      // For now, fetch from database only
+      // Fetch pool from Arbitrum Sepolia using Novax contracts
       try {
-        // TODO: Add Novax contract call here to fetch pool from Etherlink
-        // const onChainPool = await this.novaxService.getPool(poolIdBytes32);
-        throw new Error('MantleService removed - use Novax contracts for Etherlink');
+        this.logger.log(`🔍 Fetching pool ${poolId} from Arbitrum Sepolia...`);
+        const onChainPool = await this.novaxService.getPool(poolIdBytes32);
+        
+        if (!onChainPool || !onChainPool.id || onChainPool.id === ethers.ZeroHash) {
+          throw new Error('Pool not found on-chain');
+        }
+
+        this.logger.log(`✅ Pool found on-chain: ${poolId}`);
+        
+        // Convert on-chain pool data to AMCPool format
+        // Check database for additional metadata
+        const dbPool = await this.amcPoolModel.findOne({ poolId });
+        
+        if (dbPool) {
+          // Update database pool with on-chain data
+          dbPool.status = this.mapPoolStatus(Number(onChainPool.status));
+          dbPool.totalInvested = Number(ethers.formatUnits(onChainPool.totalInvested || '0', 6));
+          dbPool.tokenSupply = Number(ethers.formatUnits(onChainPool.totalShares || '0', 18));
+          await dbPool.save();
+          return dbPool;
+        } else {
+          // Pool exists on-chain but not in database - create minimal pool document
+          const minimalPool = new this.amcPoolModel({
+            poolId,
+            name: `Pool ${poolId.slice(0, 8)}`,
+            description: 'Novax Yield Investment Pool',
+            status: this.mapPoolStatus(Number(onChainPool.status)),
+            totalInvested: Number(ethers.formatUnits(onChainPool.totalInvested || '0', 6)),
+            tokenSupply: Number(ethers.formatUnits(onChainPool.totalShares || '0', 18)),
+            expectedAPY: Number(onChainPool.apr || 0) / 100,
+            minimumInvestment: Number(ethers.formatUnits(onChainPool.minInvestment || '0', 6)),
+            maximumInvestment: Number(ethers.formatUnits(onChainPool.maxInvestment || '0', 6)),
+            type: PoolType.MIXED, // Default type
+            assets: [],
+            totalValue: Number(ethers.formatUnits(onChainPool.targetAmount || '0', 6)),
+            tokenPrice: 1,
+            investments: [],
+            dividends: [],
+            operations: [],
+            createdBy: onChainPool.creator || '0x0000000000000000000000000000000000000000',
+            createdByName: 'Unknown',
+            createdAt: new Date(Number(onChainPool.createdAt || 0) * 1000),
+          });
+          return minimalPool;
+        }
       } catch (error: any) {
         // If pool doesn't exist on-chain, check database as fallback
         if (error.message?.includes('Pool not found') || 

@@ -56,7 +56,7 @@ const AMCReceivablesDashboard: React.FC = () => {
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'verified' | 'paid'>('pending');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'verified' | 'paid'>('all');
   const [hasOnChainAMCRole, setHasOnChainAMCRole] = useState<boolean>(false);
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
   
@@ -98,13 +98,14 @@ const AMCReceivablesDashboard: React.FC = () => {
       const hasRole = await hasAMCRoleOnReceivableFactory(address, provider);
       setHasOnChainAMCRole(hasRole);
       
-      if (!hasRole && (isAmcAdmin || isSuperAdmin || isPlatformAdmin)) {
-        toast({
-          title: 'On-Chain Role Missing',
-          description: 'You have backend admin access but not on-chain AMC_ROLE. Please contact an admin to grant the role.',
-          variant: 'destructive'
-        });
-      }
+      // Removed toast notification - silently check role status
+      // if (!hasRole && (isAmcAdmin || isSuperAdmin || isPlatformAdmin)) {
+      //   toast({
+      //     title: 'On-Chain Role Missing',
+      //     description: 'You have backend admin access but not on-chain AMC_ROLE. Please contact an admin to grant the role.',
+      //     variant: 'destructive'
+      //   });
+      // }
     } catch (error) {
       console.error('Failed to check on-chain AMC role:', error);
     }
@@ -191,6 +192,11 @@ const AMCReceivablesDashboard: React.FC = () => {
       const validReceivables = receivablesData.filter((rec): rec is Receivable => rec !== null);
       
       console.log('✅ Loaded', validReceivables.length, 'valid receivables');
+      console.log('📊 Receivable statuses:', validReceivables.map(r => ({ 
+        id: r.receivableId.slice(0, 10) + '...', 
+        status: r.status, 
+        statusName: r.status === 0 ? 'PENDING' : r.status === 1 ? 'VERIFIED' : r.status === 2 ? 'REJECTED' : r.status === 3 ? 'PAID' : 'UNKNOWN'
+      })));
       setReceivables(validReceivables);
       
       if (validReceivables.length === 0) {
@@ -280,7 +286,7 @@ const AMCReceivablesDashboard: React.FC = () => {
     // Show initial toast
     const progressToast = toast({
       title: 'Verifying Receivable',
-      description: 'Submitting verification transaction... (This may take 2-3 minutes on Etherlink)',
+      description: 'Submitting verification transaction... (This may take 1-2 minutes on Arbitrum)',
       variant: 'default',
       duration: 10000
     });
@@ -589,14 +595,7 @@ const AMCReceivablesDashboard: React.FC = () => {
                         )}
                         <Button
                           variant="outline"
-                          onClick={() => {
-                            // TODO: Navigate to receivable detail page
-                            toast({
-                              title: 'Receivable Details',
-                              description: `Receivable ID: ${receivable.receivableId}`,
-                              variant: 'default'
-                            });
-                          }}
+                          onClick={() => navigate(`/dashboard/receivables/${receivable.receivableId}`)}
                         >
                           <Eye className="w-4 h-4 mr-2" />
                           View Details

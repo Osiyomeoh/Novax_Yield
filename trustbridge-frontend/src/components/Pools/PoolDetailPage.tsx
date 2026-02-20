@@ -490,7 +490,12 @@ const PoolDetailPage: React.FC<PoolDetailPageProps> = ({ poolId, onBack }) => {
       loadingTimeout = setTimeout(() => {
         console.warn('⚠️ fetchPoolDetails taking too long, forcing completion');
         setLoading(false);
-      }, 15000); // 15 second max
+        toast({
+          title: 'Loading Timeout',
+          description: 'Pool details are taking too long to load. Please try refreshing.',
+          variant: 'destructive'
+        });
+      }, 10000); // 10 second max
       
       const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
       const apiUrl = import.meta.env.VITE_API_URL;
@@ -531,26 +536,30 @@ const PoolDetailPage: React.FC<PoolDetailPageProps> = ({ poolId, onBack }) => {
       if (!poolData) {
         console.log('🔍 Fetching pool directly from blockchain using novaxContractService...');
         
-        // Use provider from wallet context, or create a read-only provider
-        let readOnlyProvider: ethers.Provider | null = provider || null;
+        // For read operations, always use public RPC (bypasses MetaMask RPC issues)
+        // MetaMask RPC frequently fails with -32603 errors for read operations
+        console.log('🔧 Using public RPC for pool read operations (bypassing MetaMask)...');
+        const rpcEndpoints = [
+          import.meta.env.VITE_RPC_URL,
+          'https://sepolia-rollup.arbitrum.io/rpc',
+          'https://arbitrum-sepolia-rpc.publicnode.com',
+          'https://rpc.ankr.com/arbitrum_sepolia',
+        ].filter(Boolean);
         
-        if (!readOnlyProvider) {
-          // Fallback: Use multiple RPC endpoints with fallback
-          const rpcEndpoints = [
-            import.meta.env.VITE_RPC_URL,
-            'https://node.shadownet.etherlink.com',
-            'https://node.mainnet.etherlink.com',
-          ].filter(Boolean);
-          
-          for (const rpcUrl of rpcEndpoints) {
-            try {
-              readOnlyProvider = new ethers.JsonRpcProvider(rpcUrl);
-              await readOnlyProvider.getBlockNumber();
-              console.log(`✅ Connected to RPC: ${rpcUrl}`);
-              break;
-            } catch (error) {
-              console.warn(`⚠️ Failed to connect to ${rpcUrl}`);
-            }
+        let readOnlyProvider: ethers.Provider | null = null;
+        for (const rpcUrl of rpcEndpoints) {
+          try {
+            readOnlyProvider = new ethers.JsonRpcProvider(rpcUrl);
+            // Quick connection test with timeout
+            await Promise.race([
+              readOnlyProvider.getBlockNumber(),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('Connection timeout')), 3000))
+            ]);
+            console.log(`✅ Connected to public RPC: ${rpcUrl}`);
+            break;
+          } catch (error) {
+            console.warn(`⚠️ Failed to connect to ${rpcUrl}:`, error);
+            continue;
           }
         }
         
@@ -558,11 +567,20 @@ const PoolDetailPage: React.FC<PoolDetailPageProps> = ({ poolId, onBack }) => {
           throw new Error('Failed to connect to any RPC endpoint');
         }
         
-        // Initialize novaxContractService with the provider
+        // Initialize novaxContractService with the public RPC provider
         novaxContractService.initialize(null as any, readOnlyProvider);
         
-        // Use the service to get pool data
-        const poolInfo = await novaxContractService.getPool(poolId);
+        // Use the service to get pool data with timeout
+        const fetchPromise = novaxContractService.getPool(poolId);
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Pool fetch timeout')), 8000)
+        );
+        
+        const poolInfo = await Promise.race([fetchPromise, timeoutPromise]) as any;
+        
+        if (!poolInfo) {
+          throw new Error('Pool data is empty');
+        }
         
         // Parse pool data from blockchain (Pool struct from NovaxPoolManager)
         // Structure: id, poolType, assetId, assetFactory, poolToken, usdcToken, totalInvested, totalShares, 
@@ -687,7 +705,7 @@ const PoolDetailPage: React.FC<PoolDetailPageProps> = ({ poolId, onBack }) => {
       console.log('📋 Pool info:', { poolIdBytes32 });
       
       // Create contract instance for Novax pools (no tranches)
-      const readOnlyProvider = provider || new ethers.JsonRpcProvider(import.meta.env.VITE_RPC_URL || 'https://node.shadownet.etherlink.com');
+      const readOnlyProvider = provider || new ethers.JsonRpcProvider(import.meta.env.VITE_RPC_URL || 'https://sepolia-rollup.arbitrum.io/rpc');
       
       // Use Novax contract service to get pool token balance
       const poolData = await novaxContractService.getPool(poolIdBytes32);
@@ -799,7 +817,7 @@ const PoolDetailPage: React.FC<PoolDetailPageProps> = ({ poolId, onBack }) => {
         ? onChainPoolId
         : ethers.id(onChainPoolId);
       
-      const readOnlyProvider = provider || new ethers.JsonRpcProvider(import.meta.env.VITE_RPC_URL || 'https://node.shadownet.etherlink.com');
+      const readOnlyProvider = provider || new ethers.JsonRpcProvider(import.meta.env.VITE_RPC_URL || 'https://sepolia-rollup.arbitrum.io/rpc');
       
       // Get pool data from Novax contract (fetch once, reuse for all calculations)
       let poolData: any;

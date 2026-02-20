@@ -1,24 +1,24 @@
 import { ethers } from 'ethers';
 
 /**
- * Wait for transaction confirmation with polling (for slow networks like Etherlink)
+ * Wait for transaction confirmation with polling (for Arbitrum networks)
  * @param provider - Ethers provider
  * @param txHash - Transaction hash
- * @param maxWaitTime - Maximum time to wait in seconds (default: 180 for Etherlink)
+ * @param maxWaitTime - Maximum time to wait in seconds (default: 120 for Arbitrum)
  * @param pollInterval - Polling interval in milliseconds (default: 2000)
  * @returns Transaction receipt or null if timeout
  */
 export async function waitForTransactionWithPolling(
   provider: ethers.Provider,
   txHash: string,
-  maxWaitTime: number = 180, // 3 minutes for Etherlink
+  maxWaitTime: number = 120, // 2 minutes for Arbitrum
   pollInterval: number = 2000 // Poll every 2 seconds
 ): Promise<ethers.TransactionReceipt | null> {
   const startTime = Date.now();
   const maxWaitMs = maxWaitTime * 1000;
   
   console.log(`⏳ Waiting for transaction confirmation: ${txHash.slice(0, 10)}...`);
-  console.log(`   Network: Etherlink (may take 2-3 minutes)`);
+  console.log(`   Network: Arbitrum Sepolia`);
   
   while (Date.now() - startTime < maxWaitMs) {
     try {
@@ -37,7 +37,7 @@ export async function waitForTransactionWithPolling(
   }
   
   console.warn(`⚠️ Transaction not confirmed after ${maxWaitTime} seconds: ${txHash}`);
-  console.warn(`   Check status at: https://shadownet.explorer.etherlink.com/tx/${txHash}`);
+  console.warn(`   Check status at: https://sepolia.arbiscan.io/tx/${txHash}`);
   return null;
 }
 
@@ -51,7 +51,7 @@ export async function waitForTransactionWithPolling(
 export async function waitForTransaction(
   tx: ethers.ContractTransactionResponse,
   provider?: ethers.Provider,
-  timeout: number = 180
+  timeout: number = 120
 ): Promise<ethers.TransactionReceipt> {
   try {
     // Try the standard wait() first (works on fast networks)
@@ -83,9 +83,9 @@ export function getTransactionStatusMessage(elapsedSeconds: number): string {
   if (elapsedSeconds < 30) {
     return 'Submitting transaction...';
   } else if (elapsedSeconds < 60) {
-    return 'Waiting for confirmation (this may take 1-2 minutes on Etherlink)...';
+    return 'Waiting for confirmation on Arbitrum...';
   } else if (elapsedSeconds < 120) {
-    return 'Still waiting for confirmation (Etherlink can be slow)...';
+    return 'Still waiting for confirmation...';
   } else {
     return 'Transaction is taking longer than usual. Please check the explorer if needed.';
   }

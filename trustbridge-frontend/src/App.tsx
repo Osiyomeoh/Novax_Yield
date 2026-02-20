@@ -28,6 +28,7 @@ import VerificationDashboard from './pages/VerificationDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminAssets from './pages/AdminAssets';
 import AssetMarketplace from './pages/AssetMarketplace';
+import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import ProfileSimple from './pages/ProfileSimple';
 import ProfileCompletionModal from './components/Auth/ProfileCompletionModal';
@@ -69,6 +70,7 @@ import Documentation from './pages/Documentation';
 import CreateReceivable from './components/Receivables/CreateReceivable';
 import ReceivablesDashboard from './components/Receivables/ReceivablesDashboard';
 import AMCReceivablesDashboard from './components/Receivables/AMCReceivablesDashboard';
+import ReceivableDetailPage from './components/Receivables/ReceivableDetailPage';
 import RecordPayment from './components/Receivables/RecordPayment';
 import AssetTypeSelector from './components/Assets/AssetTypeSelector';
 
@@ -256,7 +258,7 @@ const App: React.FC = () => {
                     <DashboardLayout>
                       <AuthGuard>
                         <Routes>
-                        <Route path="/" element={<Profile />} />
+                        <Route path="/" element={<Dashboard />} />
                         <Route path="/marketplace" element={<AssetMarketplace />} />
                         <Route path="/portfolio" element={<Portfolio />} />
                         <Route path="/analytics" element={<Analytics />} />
@@ -293,6 +295,7 @@ const App: React.FC = () => {
                         <Route path="/create-rwa-asset" element={<CreateRWAAsset />} />
                         <Route path="/create-receivable" element={<CreateReceivable />} />
                         <Route path="/receivables" element={<ReceivablesDashboard />} />
+                        <Route path="/receivables/:receivableId" element={<ReceivableDetailPage />} />
                         <Route path="/submit-rwa-asset" element={<RWAAssetSubmission />} />
                         <Route path="/ai-studio" element={<AIStudio />} />
                         <Route path="/rwa-trading" element={<RWATradingInterface />} />

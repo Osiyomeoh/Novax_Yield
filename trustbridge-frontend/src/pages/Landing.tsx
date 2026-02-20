@@ -53,7 +53,7 @@ const Landing: React.FC = () => {
   ];
 
   const stats = [
-    { label: 'Transaction Speed', value: '< 2 seconds', change: 'Etherlink L2' },
+    { label: 'Transaction Speed', value: '< 2 seconds', change: 'Arbitrum L2' },
     { label: 'Transaction Cost', value: 'Low fees', change: 'Layer 2 scaling' },
     { label: 'Asset Types', value: 'Unlimited', change: 'Universal' },
     { label: 'Storage', value: 'IPFS', change: 'Decentralized' }
@@ -182,7 +182,7 @@ const Landing: React.FC = () => {
                 transition={{ delay: 0.2, duration: 0.5 }}
               >
                 <Zap className="w-4 h-4 text-blue-600" />
-                <span className="text-sm font-semibold text-blue-700 uppercase tracking-wider">Live on Etherlink</span>
+                <span className="text-sm font-semibold text-blue-700 uppercase tracking-wider">Live on Arbitrum</span>
               </motion.div>
 
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-extrabold mb-6 sm:mb-8 leading-[1.1] tracking-tight">
@@ -732,8 +732,8 @@ const Landing: React.FC = () => {
                     </a>
                   </li>
                   <li>
-                    <a href="https://etherlink.com" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-700 hover:text-blue-600 transition-colors font-medium">
-                      About Etherlink
+                    <a href="https://arbitrum.io" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-700 hover:text-blue-600 transition-colors font-medium">
+                      About Arbitrum
                     </a>
                   </li>
                 </ul>
@@ -760,7 +760,7 @@ const Landing: React.FC = () => {
               <span className="text-sm text-gray-600 mb-2 md:mb-0">© 2026 Novax Yield</span>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
-                <span className="text-sm text-gray-700 font-medium">Live on Etherlink</span>
+                <span className="text-sm text-gray-700 font-medium">Live on Arbitrum</span>
               </div>
             </div>
           </div>

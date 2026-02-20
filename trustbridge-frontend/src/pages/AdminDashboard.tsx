@@ -16,7 +16,7 @@ import { useAdmin } from '../contexts/AdminContext';
 import { useWallet } from '../contexts/WalletContext';
 import { AdminGuard } from '../contexts/AdminContext';
 import { novaxContractService } from '../services/novaxContractService';
-// Mantle service removed - using Etherlink/Novax contracts instead
+// Using Arbitrum Sepolia/Novax contracts
 import { ethers } from 'ethers';
 import Card, { CardContent } from '../components/UI/Card';
 import Button from '../components/UI/Button';

@@ -287,7 +287,7 @@ const Profile: React.FC = () => {
   const KYCIcon = kycInfo.icon;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-midnight-900 via-midnight-800 to-midnight-900 p-6">
+    <div className="min-h-screen bg-white p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
@@ -300,14 +300,14 @@ const Profile: React.FC = () => {
               <Button
                 onClick={() => navigate(-1)}
                 variant="ghost"
-                className="flex items-center gap-2 text-text-secondary hover:text-off-white"
+                className="flex items-center gap-2 text-gray-600 hover:text-black"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back
               </Button>
               <div>
-                <h1 className="text-4xl font-bold text-off-white mb-2">Profile</h1>
-                <p className="text-text-secondary">Manage your receivables and investments</p>
+                <h1 className="text-4xl font-bold text-black mb-2">Profile</h1>
+                <p className="text-gray-600">Manage your receivables and investments</p>
               </div>
             </div>
             <Button
@@ -321,26 +321,26 @@ const Profile: React.FC = () => {
           </div>
 
           {/* User Info Card */}
-          <Card className="bg-midnight-800/50 border-medium-gray/30">
+          <Card className="bg-white border-gray-200">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary-blue to-primary-blue-light rounded-full flex items-center justify-center">
-                    <User className="w-8 h-8 text-midnight-900" />
+                  <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center">
+                    <User className="w-8 h-8 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-off-white">{displayName}</h2>
-                    <p className="text-text-secondary">{displayEmail}</p>
+                    <h2 className="text-2xl font-bold text-black">{displayName}</h2>
+                    <p className="text-gray-600">{displayEmail}</p>
                     <div className="flex items-center gap-2 mt-2">
-                      <span className="text-sm text-text-secondary font-mono">
+                      <span className="text-sm text-gray-600 font-mono">
                         {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Not connected'}
                       </span>
                       {address && (
                         <button
                           onClick={handleCopyAddress}
-                          className="p-1 hover:bg-midnight-700 rounded transition-colors"
+                          className="p-1 hover:bg-gray-100 rounded transition-colors"
                         >
-                          <Copy className="w-4 h-4 text-text-secondary" />
+                          <Copy className="w-4 h-4 text-gray-600" />
                         </button>
                       )}
                     </div>
@@ -348,8 +348,8 @@ const Profile: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <p className="text-sm text-text-secondary">NVX Balance</p>
-                    <p className="text-2xl font-bold text-off-white">
+                    <p className="text-sm text-gray-600">NVX Balance</p>
+                    <p className="text-2xl font-bold text-black">
                       {nvxLoading ? (
                         <Loader2 className="w-6 h-6 animate-spin inline" />
                       ) : (
@@ -372,7 +372,7 @@ const Profile: React.FC = () => {
                           {kycInfo.badge}
                         </span>
                       </div>
-                      <p className="text-xs text-text-secondary mt-1">
+                      <p className="text-xs text-gray-600 mt-1">
                         {kycInfo.description}
                       </p>
                     </div>
@@ -408,7 +408,7 @@ const Profile: React.FC = () => {
           transition={{ delay: 0.2 }}
           className="mb-6"
         >
-          <div className="flex gap-2 border-b border-medium-gray/30">
+          <div className="flex gap-2 border-b border-gray-200">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
@@ -417,8 +417,8 @@ const Profile: React.FC = () => {
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
                     activeTab === tab.id
-                      ? 'border-primary-blue text-primary-blue'
-                      : 'border-transparent text-text-secondary hover:text-off-white'
+                      ? 'border-black text-black'
+                      : 'border-transparent text-gray-600 hover:text-black'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -439,7 +439,7 @@ const Profile: React.FC = () => {
           {activeTab === 'overview' && (
             <div className="space-y-6">
               {/* KYC Status Card - Prominent */}
-              <Card className={`bg-midnight-800/50 border-medium-gray/30 ${!isKYCApproved ? 'ring-2 ring-yellow-500/50' : ''}`}>
+              <Card className={`bg-white border-gray-200 ${!isKYCApproved ? 'ring-2 ring-yellow-500/50' : ''}`}>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-2">
                     <KYCIcon className={`w-5 h-5 ${kycInfo.color}`} />
@@ -447,7 +447,7 @@ const Profile: React.FC = () => {
                       {kycInfo.badge}
                     </span>
                   </div>
-                  <p className="text-sm text-text-secondary mb-1">KYC Status</p>
+                  <p className="text-sm text-gray-600 mb-1">KYC Status</p>
                   <p className={`text-lg font-bold ${kycInfo.color} mt-1`}>
                     {kycInfo.label}
                   </p>
@@ -492,7 +492,7 @@ const Profile: React.FC = () => {
           {activeTab === 'receivables' && (
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-off-white">My Receivables</h2>
+                <h2 className="text-2xl font-bold text-black">My Receivables</h2>
                 <Button onClick={handleCreateReceivable} className="flex items-center gap-2">
                   <Plus className="w-4 h-4" />
                   Create Receivable
@@ -504,11 +504,11 @@ const Profile: React.FC = () => {
                   <Loader2 className="w-8 h-8 animate-spin text-primary-blue" />
                 </div>
               ) : receivables.length === 0 ? (
-                <Card className="bg-midnight-800/50 border-medium-gray/30">
+                <Card className="bg-white border-gray-200">
                   <CardContent className="p-12 text-center">
-                    <FileText className="w-16 h-16 text-text-secondary mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-off-white mb-2">No Receivables Yet</h3>
-                    <p className="text-text-secondary mb-6">
+                    <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-black mb-2">No Receivables Yet</h3>
+                    <p className="text-gray-600 mb-6">
                       Create your first trade receivable to get started
                     </p>
                     <Button onClick={handleCreateReceivable} className="flex items-center gap-2 mx-auto">
@@ -520,30 +520,30 @@ const Profile: React.FC = () => {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {receivables.map((receivable: any) => (
-                    <Card key={receivable.id} className="bg-midnight-800/50 border-medium-gray/30 hover:border-primary-blue/50 transition-colors">
+                    <Card key={receivable.id} className="bg-white border-gray-200 hover:border-black transition-colors">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-4">
                           <div>
-                            <p className="text-sm text-text-secondary">Invoice #{receivable.invoiceNumber || 'N/A'}</p>
-                            <p className="text-2xl font-bold text-off-white mt-1">
+                            <p className="text-sm text-gray-600">Invoice #{receivable.invoiceNumber || 'N/A'}</p>
+                            <p className="text-2xl font-bold text-black mt-1">
                               {formatUSD(Number(receivable.amountUSD) || 0)}
                             </p>
                           </div>
                           {receivable.status === 'VERIFIED' && (
-                            <CheckCircle className="w-6 h-6 text-green-400" />
+                            <CheckCircle className="w-6 h-6 text-green-600" />
                           )}
                           {receivable.status === 'PENDING_VERIFICATION' && (
-                            <Clock className="w-6 h-6 text-yellow-400" />
+                            <Clock className="w-6 h-6 text-yellow-600" />
                           )}
                         </div>
                         <div className="space-y-2">
                           <div className="flex items-center justify-between text-sm">
-                            <span className="text-text-secondary">Status</span>
-                            <span className="text-off-white font-medium">{receivable.status}</span>
+                            <span className="text-gray-600">Status</span>
+                            <span className="text-black font-medium">{receivable.status}</span>
                           </div>
                           <div className="flex items-center justify-between text-sm">
-                            <span className="text-text-secondary">Due Date</span>
-                            <span className="text-off-white">
+                            <span className="text-gray-600">Due Date</span>
+                            <span className="text-black">
                               {receivable.dueDate ? new Date(Number(receivable.dueDate) * 1000).toLocaleDateString() : 'N/A'}
                             </span>
                           </div>
@@ -568,7 +568,7 @@ const Profile: React.FC = () => {
           {activeTab === 'investments' && (
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-off-white">My Investments</h2>
+                <h2 className="text-2xl font-bold text-black">My Investments</h2>
                 <Button onClick={() => navigate('/dashboard/marketplace')} variant="outline">
                   Browse Pools
                 </Button>
@@ -579,11 +579,11 @@ const Profile: React.FC = () => {
                   <Loader2 className="w-8 h-8 animate-spin text-primary-blue" />
                 </div>
               ) : pools.length === 0 ? (
-                <Card className="bg-midnight-800/50 border-medium-gray/30">
+                <Card className="bg-white border-gray-200">
                   <CardContent className="p-12 text-center">
-                    <TrendingUp className="w-16 h-16 text-text-secondary mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-off-white mb-2">No Investments Yet</h3>
-                    <p className="text-text-secondary mb-6">
+                    <TrendingUp className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-black mb-2">No Investments Yet</h3>
+                    <p className="text-gray-600 mb-6">
                       Start investing in trade receivable pools to earn yield
                     </p>
                     <Button onClick={() => navigate('/dashboard/marketplace')} className="flex items-center gap-2 mx-auto">
@@ -595,17 +595,17 @@ const Profile: React.FC = () => {
               ) : (
                 <div className="space-y-4">
                   {pools.map((pool: any) => (
-                    <Card key={pool.poolId} className="bg-midnight-800/50 border-medium-gray/30">
+                    <Card key={pool.poolId} className="bg-white border-gray-200">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-4">
                           <div>
-                            <p className="text-sm text-text-secondary">Pool #{pool.poolId?.slice(0, 8)}</p>
-                            <p className="text-2xl font-bold text-off-white mt-1">
+                            <p className="text-sm text-gray-600">Pool #{pool.poolId?.slice(0, 8)}</p>
+                            <p className="text-2xl font-bold text-black mt-1">
                               {formatUSD(Number(pool.totalInvested) || 0)}
                             </p>
                           </div>
                           <div className="text-right">
-                            <p className="text-sm text-text-secondary">APR</p>
+                            <p className="text-sm text-gray-600">APR</p>
                             <p className="text-xl font-bold text-green-400">
                               {pool.apr ? `${Number(pool.apr) / 100}%` : 'N/A'}
                             </p>
@@ -613,12 +613,12 @@ const Profile: React.FC = () => {
                         </div>
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div>
-                            <p className="text-xs text-text-secondary">Status</p>
-                            <p className="text-sm font-medium text-off-white">{pool.status || 'ACTIVE'}</p>
+                            <p className="text-xs text-gray-600">Status</p>
+                            <p className="text-sm font-medium text-black">{pool.status || 'ACTIVE'}</p>
                           </div>
                           <div>
-                            <p className="text-xs text-text-secondary">Maturity</p>
-                            <p className="text-sm font-medium text-off-white">
+                            <p className="text-xs text-gray-600">Maturity</p>
+                            <p className="text-sm font-medium text-black">
                               {pool.maturityDate ? new Date(Number(pool.maturityDate) * 1000).toLocaleDateString() : 'N/A'}
                             </p>
                           </div>
@@ -641,12 +641,12 @@ const Profile: React.FC = () => {
 
           {/* Activity Tab */}
           {activeTab === 'activity' && (
-            <Card className="bg-midnight-800/50 border-medium-gray/30">
+            <Card className="bg-white border-gray-200">
               <CardContent className="p-6">
-                <h2 className="text-2xl font-bold text-off-white mb-6">Recent Activity</h2>
+                <h2 className="text-2xl font-bold text-black mb-6">Recent Activity</h2>
                 <div className="text-center py-12">
-                  <Activity className="w-16 h-16 text-text-secondary mx-auto mb-4" />
-                  <p className="text-text-secondary">Activity history coming soon</p>
+                  <Activity className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-600">Activity history coming soon</p>
                 </div>
               </CardContent>
             </Card>

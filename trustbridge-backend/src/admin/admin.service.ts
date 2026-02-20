@@ -3,6 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Asset, AssetDocument, AssetStatus } from '../schemas/asset.schema';
+import { NovaxService } from '../novax/novax.service';
+import { ethers } from 'ethers';
+import * as path from 'path';
+import * as fs from 'fs';
 
 export interface AdminRole {
   isAdmin: boolean;
@@ -31,6 +35,7 @@ export class AdminService {
   constructor(
     private configService: ConfigService,
     @InjectModel(Asset.name) private assetModel: Model<AssetDocument>,
+    private novaxService: NovaxService,
   ) {
     // Load admin configuration from environment
     this.adminWallets = this.configService
@@ -60,7 +65,7 @@ export class AdminService {
 
   /**
    * Check if a wallet address has admin privileges
-   * Checks environment variable admin wallets
+   * Checks both environment variables and on-chain smart contract roles
    */
   async checkAdminStatus(walletAddress: string): Promise<AdminRole> {
     if (!walletAddress) {
@@ -69,7 +74,18 @@ export class AdminService {
 
     const normalizedAddress = walletAddress.toLowerCase();
 
-    // Check environment variable admin roles (Mantle/ETH-based wallets)
+    // First, check on-chain smart contract roles (Novax contracts)
+    try {
+      const onChainRole = await this.checkOnChainAdminRole(normalizedAddress);
+      if (onChainRole.isAdmin || onChainRole.isAmcAdmin) {
+        this.logger.log(`Admin access granted via on-chain role for ${normalizedAddress}: ${onChainRole.role}`);
+        return onChainRole;
+      }
+    } catch (error) {
+      this.logger.warn('Failed to check on-chain admin role:', error);
+    }
+
+    // Fallback: Check environment variable admin roles
     try {
       const envAdminRole = await this.checkEnvironmentAdminRole(normalizedAddress);
       if (envAdminRole.isAdmin) {
@@ -82,6 +98,82 @@ export class AdminService {
 
     // No admin privileges found
     this.logger.debug(`No admin privileges found for ${normalizedAddress}`);
+    return this.getDefaultRole();
+  }
+
+  /**
+   * Check on-chain admin roles from Novax smart contracts
+   */
+  private async checkOnChainAdminRole(normalizedAddress: string): Promise<AdminRole> {
+    try {
+      // Get contract addresses from config
+      const poolManagerAddress = this.configService.get<string>('POOL_MANAGER_ADDRESS') || 
+        '0x31838f29811Fdb9822C0b7d56c290ccF358f0cb5';
+      const receivableFactoryAddress = this.configService.get<string>('RECEIVABLE_FACTORY_ADDRESS') || 
+        '0xEbf84CE8945B7e1BE6dBfB6914320222Cf05467b';
+      const rpcUrl = this.configService.get<string>('ARBITRUM_SEPOLIA_RPC_URL') || 
+        'https://sepolia-rollup.arbitrum.io/rpc';
+
+      const provider = new ethers.JsonRpcProvider(rpcUrl);
+      
+      // Role hashes (from AccessControl)
+      const DEFAULT_ADMIN_ROLE = '0x0000000000000000000000000000000000000000000000000000000000000000';
+      const ADMIN_ROLE = '0xa49807205ce4d355092ef5a8a18f56e8913cf4a201fbe287825b095693c21775';
+      const AMC_ROLE = '0xbdd8a13cde413bbdfec8b00148d478e80611d17275a7bd27c01e16b38c1df692';
+
+      // Load contract ABIs
+      const contractsDir = path.join(__dirname, '../../contracts/artifacts/contracts/novax');
+      
+      // Check PoolManager
+      const poolManagerAbiPath = path.join(contractsDir, 'NovaxPoolManager.sol/NovaxPoolManager.json');
+      if (fs.existsSync(poolManagerAbiPath)) {
+        const poolManagerArtifact = JSON.parse(fs.readFileSync(poolManagerAbiPath, 'utf-8'));
+        const poolManager = new ethers.Contract(poolManagerAddress, poolManagerArtifact.abi, provider);
+        
+        const hasDefaultAdmin = await poolManager.hasRole(DEFAULT_ADMIN_ROLE, normalizedAddress);
+        const hasAdminRole = await poolManager.hasRole(ADMIN_ROLE, normalizedAddress);
+        const hasAmcRole = await poolManager.hasRole(AMC_ROLE, normalizedAddress);
+
+        if (hasDefaultAdmin || hasAdminRole) {
+          return {
+            isAdmin: true,
+            isSuperAdmin: hasDefaultAdmin, // DEFAULT_ADMIN_ROLE = super admin
+            isPlatformAdmin: hasAdminRole || hasDefaultAdmin,
+            isAmcAdmin: hasAmcRole || hasDefaultAdmin,
+            role: hasDefaultAdmin ? 'SUPER_ADMIN' : 'ADMIN',
+            permissions: [
+              'manage_users',
+              'manage_assets',
+              'manage_pools',
+              'manage_kyc',
+              hasDefaultAdmin ? 'assign_roles' : undefined,
+              hasDefaultAdmin ? 'system_settings' : undefined,
+              'view_analytics',
+              hasDefaultAdmin ? 'manage_contracts' : undefined
+            ].filter(p => p !== undefined) as string[]
+          };
+        }
+
+        if (hasAmcRole) {
+          return {
+            isAdmin: true,
+            isSuperAdmin: false,
+            isPlatformAdmin: false,
+            isAmcAdmin: true,
+            role: 'AMC_ADMIN',
+            permissions: [
+              'manage_assets',
+              'manage_pools',
+              'manage_kyc',
+              'view_analytics'
+            ]
+          };
+        }
+      }
+    } catch (error) {
+      this.logger.warn('Error checking on-chain admin role:', error);
+    }
+
     return this.getDefaultRole();
   }
 

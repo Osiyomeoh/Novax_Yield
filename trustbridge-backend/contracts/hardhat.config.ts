@@ -97,10 +97,10 @@ const config = {
   },
   verify: {
     etherscan: {
-      apiKey: process.env.ARBISCAN_API_KEY || process.env.ETHERSCAN_API_KEY || "",
+      apiKey: process.env.ARBISCAN_API_KEY || process.env.ETHERSCAN_API_KEY || "QCWT16DQAEVMIZCY123ZC7422ZMEAEP3HB",
       customChains: [
         {
-          network: "arbitrum_one",
+          network: "arbitrumOne",
           chainId: 42161,
           urls: {
             apiURL: "https://api.arbiscan.io/api",
@@ -108,7 +108,7 @@ const config = {
           },
         },
         {
-          network: "arbitrum_sepolia",
+          network: "arbitrumSepolia",
           chainId: 421614,
           urls: {
             apiURL: "https://api-sepolia.arbiscan.io/api",

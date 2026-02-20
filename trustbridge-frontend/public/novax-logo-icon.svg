@@ -1,0 +1,14 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Rounded Square Background (matching rounded-lg) -->
+  <rect x="4" y="4" width="56" height="56" rx="6" ry="6" fill="url(#gradient1)"/>
+  
+  <!-- TrendingUp Arrow Icon (white) -->
+  <path d="M 32 20 L 42 30 L 37 30 L 37 44 L 27 44 L 27 30 L 22 30 Z" fill="white"/>
+</svg>

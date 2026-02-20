@@ -36,7 +36,7 @@ const InvestorHub: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  const [xtzBalance, setXtzBalance] = useState<string>('0');
+  const [ethBalance, setEthBalance] = useState<string>('0');
   const [nvxBalance, setNvxBalance] = useState<number>(0);
   const [usdcBalance, setUsdcBalance] = useState<string>('0');
   const [loading, setLoading] = useState(true);
@@ -66,13 +66,13 @@ const InvestorHub: React.FC = () => {
         console.error('Error initializing contract service:', error);
       }
 
-      // Fetch XTZ balance
+      // Fetch ETH balance
       try {
         const balance = await provider.getBalance(address);
-        setXtzBalance(ethers.formatEther(balance));
+        setEthBalance(ethers.formatEther(balance));
       } catch (error) {
-        console.error('Error fetching XTZ balance:', error);
-        setXtzBalance('0');
+        console.error('Error fetching ETH balance:', error);
+        setEthBalance('0');
       }
 
       // Fetch NVX balance
@@ -142,23 +142,23 @@ const InvestorHub: React.FC = () => {
   const steps: Step[] = [
     {
       id: 1,
-      title: 'Get XTZ (Native Token)',
-      description: 'You need XTZ for gas fees and to exchange for NVX tokens',
+      title: 'Get ETH (Native Token)',
+      description: 'You need ETH for gas fees and to exchange for NVX tokens',
       icon: Zap,
-      action: 'Get XTZ',
+      action: 'Get ETH',
       href: '/dashboard/get-test-tokens',
-      completed: parseFloat(xtzBalance) > 0.01,
+      completed: parseFloat(ethBalance) > 0.01,
       available: true
     },
     {
       id: 2,
-      title: 'Exchange XTZ for NVX',
-      description: 'Exchange XTZ for NVX tokens (1 XTZ = 100 NVX) for governance and rewards',
+      title: 'Exchange ETH for NVX',
+      description: 'Exchange ETH for NVX tokens (1 ETH = 100 NVX) for governance and rewards',
       icon: ArrowLeftRight,
       action: 'Exchange Now',
       href: '/exchange',
       completed: nvxBalance > 0,
-      available: parseFloat(xtzBalance) > 0.1
+      available: parseFloat(ethBalance) > 0.1
     },
     {
       id: 3,
@@ -210,7 +210,7 @@ const InvestorHub: React.FC = () => {
             </p>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 max-w-md mx-auto">
               <p className="text-sm text-blue-800">
-                <strong>Note:</strong> The signature request is for authentication only. All transactions will use <strong>Etherlink Shadownet</strong> network (Chain ID: 127823).
+                <strong>Note:</strong> The signature request is for authentication only. All transactions will use <strong>Arbitrum Sepolia</strong> network (Chain ID: 421614).
               </p>
             </div>
             <Button onClick={async () => {
@@ -255,13 +255,13 @@ const InvestorHub: React.FC = () => {
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-2">
                 <Zap className="w-6 h-6 text-yellow-500" />
-                <span className="text-sm text-gray-600">XTZ Balance</span>
+                <span className="text-sm text-gray-600">ETH Balance</span>
               </div>
               <div className="text-2xl font-bold">
                 {loading ? (
                   <Loader2 className="w-6 h-6 animate-spin" />
                 ) : (
-                  parseFloat(xtzBalance).toFixed(4)
+                  parseFloat(ethBalance).toFixed(4)
                 )}
               </div>
               <p className="text-xs text-gray-500 mt-1">For gas fees & exchange</p>
@@ -435,8 +435,8 @@ const InvestorHub: React.FC = () => {
                 className="h-auto py-4 flex flex-col items-center"
               >
                 <ArrowLeftRight className="w-8 h-8 mb-2" />
-                <span className="font-semibold">Exchange XTZ/NVX</span>
-                <span className="text-xs text-gray-500 mt-1">1 XTZ = 100 NVX</span>
+                <span className="font-semibold">Exchange ETH/NVX</span>
+                <span className="text-xs text-gray-500 mt-1">1 ETH = 100 NVX</span>
               </Button>
               <Button
                 variant="outline"
@@ -459,8 +459,8 @@ const InvestorHub: React.FC = () => {
               <div>
                 <h3 className="font-bold text-black mb-2">About Novax Yield Tokenomics</h3>
                 <ul className="text-sm text-gray-700 space-y-1">
-                  <li>• <strong>XTZ</strong>: Native token for gas fees and exchange</li>
-                  <li>• <strong>NVX</strong>: Governance token (1 XTZ = 100 NVX), used for voting and rewards</li>
+                  <li>• <strong>ETH</strong>: Native token for gas fees and exchange</li>
+                  <li>• <strong>NVX</strong>: Governance token (1 ETH = 100 NVX), used for voting and rewards</li>
                   <li>• <strong>USDC</strong>: Stablecoin for investing in pools and staking</li>
                   <li>• <strong>Pool Tokens</strong>: Represent your investment in trade receivable pools</li>
                 </ul>

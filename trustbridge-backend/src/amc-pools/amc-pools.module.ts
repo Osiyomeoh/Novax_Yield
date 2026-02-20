@@ -6,10 +6,11 @@ import { ROICalculationService } from './roi-calculation.service';
 import { AMCPool, AMCPoolSchema } from '../schemas/amc-pool.schema';
 import { Asset, AssetSchema } from '../schemas/asset.schema';
 import { AssetV2, AssetV2Schema } from '../schemas/asset-v2.schema';
-// Hedera and Mantle modules removed - using Etherlink/Novax
+// Hedera and Mantle modules removed - using Arbitrum Sepolia/Novax
 import { AdminModule } from '../admin/admin.module';
 // import { AssetOwnersModule } from '../asset-owners/asset-owners.module'; // Removed - asset-owners module deleted
 import { AuthModule } from '../auth/auth.module';
+import { NovaxModule } from '../novax/novax.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { AuthModule } from '../auth/auth.module';
     // Hedera and Mantle modules removed
     AuthModule,
     AdminModule,
+    NovaxModule,
     // AssetOwnersModule removed
   ],
   controllers: [AMCPoolsController],

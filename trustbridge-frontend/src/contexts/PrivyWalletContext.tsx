@@ -158,13 +158,13 @@ export const PrivyWalletProvider: React.FC<{ children: ReactNode }> = ({ childre
           ethersProvider = wallet.provider;
         }
         
-        // Method 3: For embedded wallets, use Etherlink RPC directly
-        // Embedded wallets from Privy don't have a direct provider, so we use Etherlink RPC
+        // Method 3: For embedded wallets, use Arbitrum Sepolia RPC directly
+        // Embedded wallets from Privy don't have a direct provider, so we use Arbitrum RPC
         if (!ethersProvider && isEmbeddedWallet) {
-          console.log('Privy - Embedded wallet detected, using Etherlink RPC...');
-          const etherlinkRpcUrl = import.meta.env.VITE_RPC_URL || 'https://node.shadownet.etherlink.com';
-          ethersProvider = new ethers.JsonRpcProvider(etherlinkRpcUrl);
-          console.log('✅ Privy - Created Etherlink provider for embedded wallet');
+          console.log('Privy - Embedded wallet detected, using Arbitrum Sepolia RPC...');
+          const arbitrumRpcUrl = import.meta.env.VITE_RPC_URL || 'https://sepolia-rollup.arbitrum.io/rpc';
+          ethersProvider = new ethers.JsonRpcProvider(arbitrumRpcUrl);
+          console.log('✅ Privy - Created Arbitrum Sepolia provider for embedded wallet');
         }
         
         // Method 4: Only use window.ethereum for external wallets (NOT embedded wallets)
@@ -173,12 +173,12 @@ export const PrivyWalletProvider: React.FC<{ children: ReactNode }> = ({ childre
           ethersProvider = new ethers.BrowserProvider(window.ethereum as any);
         }
         
-        // Method 5: For embedded wallets, use Etherlink RPC directly
+        // Method 5: For embedded wallets, use Arbitrum Sepolia RPC directly
         if (!ethersProvider && isEmbeddedWallet) {
-          console.log('Privy - Using Etherlink RPC for embedded wallet');
-          const etherlinkRpcUrl = import.meta.env.VITE_RPC_URL || 'https://node.shadownet.etherlink.com';
-          ethersProvider = new ethers.JsonRpcProvider(etherlinkRpcUrl);
-          console.log('✅ Privy - Created Etherlink provider for embedded wallet');
+          console.log('Privy - Using Arbitrum Sepolia RPC for embedded wallet');
+          const arbitrumRpcUrl = import.meta.env.VITE_RPC_URL || 'https://sepolia-rollup.arbitrum.io/rpc';
+          ethersProvider = new ethers.JsonRpcProvider(arbitrumRpcUrl);
+          console.log('✅ Privy - Created Arbitrum Sepolia provider for embedded wallet');
         }
         
         if (!ethersProvider) {

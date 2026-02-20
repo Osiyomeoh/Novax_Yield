@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../hooks/useToast';
 import { useAdmin } from '../../contexts/AdminContext';
+import { novaxContractService } from '../../services/novaxContractService';
+import { ethers } from 'ethers';
 import { 
   Plus, 
   TrendingUp, 
@@ -140,23 +142,87 @@ const AMCPoolManagement: React.FC = () => {
 
   const fetchPools = async () => {
     try {
-      const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-      const apiUrl = import.meta.env.VITE_API_URL || '';
-      if (!apiUrl) return;
+      setLoading(true);
+      console.log('🚀 Fetching pools from Arbitrum Sepolia...');
       
-      const response = await fetch(`${apiUrl}/amc-pools`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // Use public RPC for read operations (more reliable than MetaMask)
+      const rpcUrl = import.meta.env.VITE_RPC_URL || 'https://sepolia-rollup.arbitrum.io/rpc';
+      const readProvider = new ethers.JsonRpcProvider(rpcUrl);
       
-      if (response.ok) {
-        const data = await response.json();
-        setPools(data);
+      // Initialize Novax contract service with public RPC provider
+      novaxContractService.initialize(null as any, readProvider);
+      
+      // Get all pools from blockchain
+      const poolIds = await novaxContractService.getAllPools();
+      console.log(`📋 Found ${poolIds.length} pools on Arbitrum Sepolia`);
+      
+      if (poolIds.length === 0) {
+        console.log('⚠️ No pools found on blockchain');
+        setPools([]);
+        setLoading(false);
+        return;
       }
+      
+      // Fetch pool details for each pool
+      const poolsData = await Promise.all(
+        poolIds.map(async (poolId: string) => {
+          try {
+            const pool = await novaxContractService.getPool(poolId);
+            
+            // Convert pool data to AMCPool format
+            const totalValue = Number(ethers.formatUnits(pool.targetAmount || '0', 6));
+            const totalInvested = Number(ethers.formatUnits(pool.totalInvested || '0', 6));
+            const tokenSupply = Number(ethers.formatUnits(pool.totalShares || '0', 18));
+            const tokenPrice = totalInvested > 0 && tokenSupply > 0 
+              ? totalInvested / tokenSupply 
+              : 1;
+            
+            const statusMap: { [key: number]: string } = {
+              0: 'ACTIVE',
+              1: 'FUNDED',
+              2: 'MATURED',
+              3: 'PAID',
+              4: 'DEFAULTED',
+              5: 'CLOSED'
+            };
+            
+            return {
+              poolId: poolId,
+              name: pool.name || `Pool ${poolId.slice(0, 8)}`,
+              description: pool.description || 'Novax Yield Investment Pool',
+              type: pool.poolType === 1 ? 'RECEIVABLE' : 'RWA',
+              status: statusMap[pool.status] || 'UNKNOWN',
+              totalValue: totalValue,
+              tokenSupply: tokenSupply,
+              tokenPrice: tokenPrice,
+              minimumInvestment: Number(ethers.formatUnits(pool.minInvestment || '0', 6)),
+              expectedAPY: pool.apr ? Number(pool.apr) / 100 : 0,
+              maturityDate: pool.maturityDate ? new Date(Number(pool.maturityDate) * 1000).toISOString() : '',
+              totalInvested: totalInvested,
+              totalInvestors: 0, // TODO: Get from contract if available
+              assets: [],
+              hederaTokenId: '',
+              isTradeable: pool.status === 0 || pool.status === 1,
+              currentPrice: tokenPrice,
+              priceChange24h: 0,
+              tradingVolume: 0,
+              createdAt: new Date().toISOString()
+            };
+          } catch (error) {
+            console.error(`Failed to fetch pool ${poolId}:`, error);
+            return null;
+          }
+        })
+      );
+      
+      // Filter out nulls
+      const validPools = poolsData.filter((p): p is AMCPool => p !== null);
+      console.log(`✅ Loaded ${validPools.length} pools from blockchain`);
+      
+      setPools(validPools);
     } catch (error) {
-      console.error('Failed to fetch pools:', error);
+      console.error('Failed to fetch pools from blockchain:', error);
+      setPools([]);
     } finally {
       setLoading(false);
     }
@@ -573,11 +639,14 @@ const AMCPoolManagement: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'ACTIVE': return 'text-primary-blue bg-primary-blue';
-      case 'DRAFT': return 'text-yellow-500 bg-yellow-100';
-      case 'CLOSED': return 'text-red-500 bg-red-100';
-      case 'MATURED': return 'text-blue-500 bg-blue-100';
-      default: return 'text-gray-500 bg-gray-100';
+      case 'ACTIVE': return 'text-black bg-gray-100';
+      case 'FUNDED': return 'text-black bg-gray-100';
+      case 'DRAFT': return 'text-yellow-700 bg-yellow-50';
+      case 'CLOSED': return 'text-red-600 bg-red-50';
+      case 'MATURED': return 'text-gray-700 bg-gray-100';
+      case 'PAID': return 'text-green-700 bg-green-50';
+      case 'DEFAULTED': return 'text-red-600 bg-red-50';
+      default: return 'text-gray-600 bg-gray-100';
     }
   };
 
@@ -593,15 +662,15 @@ const AMCPoolManagement: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-off-white p-8">
+      <div className="min-h-screen bg-white text-black p-8">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-700 rounded w-1/4 mb-6"></div>
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-gray-800 rounded-lg p-6">
-                <div className="h-4 bg-gray-700 rounded w-3/4 mb-4"></div>
-                <div className="h-3 bg-gray-700 rounded w-1/2 mb-2"></div>
-                <div className="h-3 bg-gray-700 rounded w-2/3"></div>
+              <div key={i} className="bg-white rounded-lg p-6 border border-gray-200">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
               </div>
             ))}
           </div>
@@ -611,20 +680,20 @@ const AMCPoolManagement: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Navigation Header */}
         <div className="mb-6">
-          <nav className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
+          <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-4">
             <button
               onClick={() => navigate('/dashboard/admin')}
-              className="flex items-center gap-1 hover:text-gray-900 dark:text-gray-200 transition-colors"
+              className="flex items-center gap-1 hover:text-gray-900 transition-colors"
             >
               <Home className="w-4 h-4" />
               Admin Dashboard
             </button>
             <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-900 dark:text-white font-medium">AMC Pool Management</span>
+            <span className="text-gray-900 font-medium">AMC Pool Management</span>
           </nav>
           
           <div className="flex items-center gap-4">
@@ -643,17 +712,17 @@ const AMCPoolManagement: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
               AMC Pool Management
             </h1>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+            <p className="text-sm sm:text-base text-gray-600">
               Create and manage investment pools backed by RWA assets
             </p>
           </div>
           <div className="flex gap-2">
             <Button
               onClick={() => navigate('/dashboard/admin/create-pool')}
-              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+                    className="bg-black hover:bg-gray-800 text-white flex items-center gap-2"
             >
               <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
               Create Novax Pool
@@ -671,40 +740,40 @@ const AMCPoolManagement: React.FC = () => {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
+          <div className="bg-white rounded-lg p-4 sm:p-6 border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">Total Pools</p>
-                <p className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">{pools.length}</p>
+                <p className="text-gray-600 text-xs sm:text-sm">Total Pools</p>
+                <p className="text-xl sm:text-2xl font-bold text-black">{pools.length}</p>
               </div>
-              <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 dark:text-blue-400" />
+              <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 text-black" />
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
+          <div className="bg-white rounded-lg p-4 sm:p-6 border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">Active Pools</p>
-                <p className="text-xl sm:text-2xl font-bold text-primary-blue dark:text-primary-blue">{pools.filter(p => p.status === 'ACTIVE').length}</p>
+                <p className="text-gray-600 text-xs sm:text-sm">Active Pools</p>
+                <p className="text-xl sm:text-2xl font-bold text-black">{pools.filter(p => p.status === 'ACTIVE' || p.status === 'FUNDED').length}</p>
               </div>
-              <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-primary-blue dark:text-primary-blue" />
+              <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-black" />
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
+          <div className="bg-white rounded-lg p-4 sm:p-6 border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">Total Value</p>
-                <p className="text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400">${pools.reduce((sum, p) => sum + p.totalValue, 0).toLocaleString()}</p>
+                <p className="text-gray-600 text-xs sm:text-sm">Total Value</p>
+                <p className="text-xl sm:text-2xl font-bold text-black">${pools.reduce((sum, p) => sum + (p.totalInvested || p.totalValue || 0), 0).toLocaleString()}</p>
               </div>
-              <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 dark:text-purple-400" />
+              <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-black" />
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
+          <div className="bg-white rounded-lg p-4 sm:p-6 border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">Total Investors</p>
-                <p className="text-xl sm:text-2xl font-bold text-orange-600 dark:text-orange-400">{pools.reduce((sum, p) => sum + p.totalInvestors, 0)}</p>
+                <p className="text-gray-600 text-xs sm:text-sm">Total Investors</p>
+                <p className="text-xl sm:text-2xl font-bold text-black">{pools.reduce((sum, p) => sum + (p.totalInvestors || 0), 0)}</p>
               </div>
-              <Users className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600 dark:text-orange-400" />
+              <Users className="w-6 h-6 sm:w-8 sm:h-8 text-black" />
             </div>
           </div>
       </div>
@@ -712,51 +781,51 @@ const AMCPoolManagement: React.FC = () => {
         {/* Pools Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {pools.map((pool) => (
-            <div key={pool.poolId} className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-200">
+            <div key={pool.poolId} className="bg-white rounded-lg p-4 sm:p-6 border border-gray-200 hover:shadow-lg transition-all duration-200">
               {/* Pool Header */}
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4 gap-2">
                 <div>
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-1">{pool.name}</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{pool.name}</h3>
                   <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(pool.status)}`}>
                     {getStatusIcon(pool.status)}
                     {pool.status}
                   </div>
                 </div>
                 <div className="text-left sm:text-right">
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">APY</p>
-                  <p className="text-lg sm:text-xl font-bold text-primary-blue dark:text-primary-blue">{pool.expectedAPY}%</p>
+                  <p className="text-xs sm:text-sm text-gray-600">APY</p>
+                  <p className="text-lg sm:text-xl font-bold text-black">{pool.expectedAPY.toFixed(2)}%</p>
                 </div>
               </div>
 
               {/* Pool Details */}
               <div className="space-y-2 sm:space-y-3 mb-4">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Total Value</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">${pool.totalValue.toLocaleString()}</span>
+                  <span className="text-gray-600">Total Value</span>
+                  <span className="font-semibold text-gray-900">${(pool.totalValue || 0).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Invested</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">${pool.totalInvested.toLocaleString()}</span>
+                  <span className="text-gray-600">Invested</span>
+                  <span className="font-semibold text-gray-900">${(pool.totalInvested || 0).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Investors</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{pool.totalInvestors}</span>
+                  <span className="text-gray-600">Investors</span>
+                  <span className="font-semibold text-gray-900">{pool.totalInvestors || 0}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Min. Investment</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">${pool.minimumInvestment}</span>
+                  <span className="text-gray-600">Min. Investment</span>
+                  <span className="font-semibold text-gray-900">${(pool.minimumInvestment || 0).toLocaleString()}</span>
                 </div>
               </div>
 
               {/* Progress Bar */}
               <div className="mb-4">
                 <div className="flex justify-between text-xs sm:text-sm mb-1">
-                  <span className="text-gray-600 dark:text-gray-400">Funding Progress</span>
-                  <span className="text-gray-900 dark:text-white font-semibold">{Math.round((pool.totalInvested / pool.totalValue) * 100)}%</span>
+                  <span className="text-gray-600">Funding Progress</span>
+                  <span className="text-gray-900 font-semibold">{pool.totalValue > 0 ? Math.round((pool.totalInvested / pool.totalValue) * 100) : 0}%</span>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div 
-                    className="bg-blue-600 dark:bg-blue-400 h-2 rounded-full transition-all duration-300"
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-black h-2 rounded-full transition-all duration-300"
                     style={{ width: `${Math.min((pool.totalInvested / pool.totalValue) * 100, 100)}%` }}
                   ></div>
                 </div>
@@ -771,7 +840,7 @@ const AMCPoolManagement: React.FC = () => {
                     className={`flex-1 px-3 py-2 rounded text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
                       launchingPools.has(pool.poolId) || adminLoading || (!isAmcAdmin && !isSuperAdmin && !isPlatformAdmin)
                         ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                        : 'bg-black text-white hover:bg-gray-800'
                     }`}
                   >
                     {launchingPools.has(pool.poolId) ? (
@@ -950,11 +1019,11 @@ const AMCPoolManagement: React.FC = () => {
 
               {/* AI Recommendations Section */}
               {createForm.assets.length > 0 && (
-                <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100">AI Token Recommendations</h4>
-                      <p className="text-xs text-blue-700 dark:text-blue-300">
+                      <h4 className="text-sm font-medium text-gray-900">AI Token Recommendations</h4>
+                      <p className="text-xs text-gray-700">
                         Smart pricing based on your ${createForm.totalValue.toLocaleString()} pool with {createForm.assets.length} asset{createForm.assets.length > 1 ? 's' : ''}
                       </p>
                     </div>
@@ -969,7 +1038,7 @@ const AMCPoolManagement: React.FC = () => {
                           minimumInvestment: recommendations.recommendedMinimumInvestment
                         });
                       }}
-                      className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
+                      className="text-xs bg-black text-white px-3 py-1 rounded hover:bg-gray-800 transition-colors"
                     >
                       Apply Recommendations
                     </button>
@@ -982,7 +1051,7 @@ const AMCPoolManagement: React.FC = () => {
                   <div className="flex items-center gap-2 mb-2">
                     <label className="block text-sm font-medium">Token Supply</label>
                     {createForm.assets.length > 0 && (
-                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                      <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
                         AI Recommended
                       </span>
                     )}
@@ -1005,7 +1074,7 @@ const AMCPoolManagement: React.FC = () => {
                   <div className="flex items-center gap-2 mb-2">
                     <label className="block text-sm font-medium">Token Price ($)</label>
                     {createForm.assets.length > 0 && (
-                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                      <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
                         AI Recommended
                       </span>
                     )}
@@ -1031,7 +1100,7 @@ const AMCPoolManagement: React.FC = () => {
                   <div className="flex items-center gap-2 mb-2">
                     <label className="block text-sm font-medium">Min. Investment ($)</label>
                     {createForm.assets.length > 0 && (
-                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                      <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
                         AI Recommended
                       </span>
                     )}
@@ -1091,7 +1160,7 @@ const AMCPoolManagement: React.FC = () => {
                     className={`flex-1 px-4 py-2 rounded-lg font-semibold transition-colors text-sm sm:text-base ${
                       (!createForm.assets || createForm.assets.length === 0 || adminLoading || (!isAmcAdmin && !isSuperAdmin && !isPlatformAdmin))
                         ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                        : 'bg-black text-white hover:bg-gray-800'
                     }`}
                   >
                     {adminLoading 
@@ -1230,7 +1299,7 @@ const AMCPoolManagement: React.FC = () => {
                   <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4">Hedera Integration</h3>
                   <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
                     <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Hedera Token ID</p>
-                    <p className="font-mono text-blue-600 dark:text-blue-400 text-sm sm:text-base">{selectedPool.hederaTokenId}</p>
+                    <p className="font-mono text-black text-sm sm:text-base">{selectedPool.hederaTokenId}</p>
                   </div>
                 </div>
               )}

@@ -8,6 +8,7 @@ import Button from '../UI/Button';
 import { useToast } from '../../hooks/useToast';
 import { useWallet } from '../../contexts/PrivyWalletContext';
 import { stakingVaultService } from '../../services/stakingVaultService';
+import { novaxContractAddresses } from '../../config/contracts';
 
 interface TierConfig {
   id: number;
@@ -184,9 +185,25 @@ export const StakingVault: React.FC = () => {
 
     } catch (error: any) {
       console.error('Error staking:', error);
+      
+      // Provide more specific error messages
+      let errorMessage = 'Failed to stake. Please try again.';
+      
+      if (error.message?.includes('Below minimum stake')) {
+        errorMessage = `Amount is below the minimum stake of $${selectedTier.minStake.toLocaleString()} for ${selectedTier.name} tier.`;
+      } else if (error.message?.includes('Vault full') || error.message?.includes('waitlist')) {
+        errorMessage = 'The vault is currently full. Your stake will be added to the waitlist.';
+      } else if (error.message?.includes('allowance') || error.message?.includes('approve')) {
+        errorMessage = 'Please approve USDC spending and try again.';
+      } else if (error.message?.includes('insufficient') || error.message?.includes('balance')) {
+        errorMessage = 'Insufficient USDC balance. Please ensure you have enough USDC.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: 'Staking Failed',
-        description: error.message || 'Failed to stake. Please try again.',
+        description: errorMessage,
         variant: 'destructive'
       });
     } finally {
@@ -231,8 +248,13 @@ export const StakingVault: React.FC = () => {
     ? ((vaultStatus.deployed / vaultStatus.total) * 100).toFixed(1)
     : '0';
 
+  // Check if staking vault contract is deployed
+  const isVaultDeployed = novaxContractAddresses.STAKING_VAULT && 
+    novaxContractAddresses.STAKING_VAULT.trim() !== '' && 
+    novaxContractAddresses.STAKING_VAULT !== '0x0000000000000000000000000000000000000000';
+
   return (
-    <div className="min-h-screen bg-midnight-900 p-6">
+    <div className="min-h-screen bg-white p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
@@ -240,11 +262,38 @@ export const StakingVault: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-4xl font-bold text-off-white mb-2">Staking Vault</h1>
-          <p className="text-text-secondary">
+          <h1 className="text-4xl font-bold text-black mb-2">Staking Vault</h1>
+          <p className="text-gray-600">
             Stake USDC to earn yield from trade receivables. Auto-deployed to pools, yield distributed proportionally.
           </p>
         </motion.div>
+
+        {/* Contract Not Deployed Warning */}
+        {!isVaultDeployed && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <Card className="bg-yellow-50 border-yellow-200">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <AlertCircle className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-1" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-yellow-600 mb-2">
+                      Staking Vault Not Deployed
+                    </h3>
+                    <p className="text-gray-600">
+                      The Staking Vault contract has not been deployed yet. Please deploy the contract or set{' '}
+                      <code className="bg-gray-100 px-2 py-1 rounded text-yellow-700">VITE_STAKING_VAULT_ADDRESS</code>{' '}
+                      in your environment variables.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Vault Status Card */}
         {vaultStatus && (
@@ -253,35 +302,35 @@ export const StakingVault: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
           >
-            <Card className="bg-midnight-800/50 border-medium-gray/30">
+            <Card className="bg-white border-gray-200">
               <CardContent className="p-6">
-                <h2 className="text-2xl font-bold text-off-white mb-6">Vault Status</h2>
+                <h2 className="text-2xl font-bold text-black mb-6">Vault Status</h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   <div>
-                    <p className="text-sm text-text-secondary mb-1">Total Staked</p>
-                    <p className="text-2xl font-bold text-off-white">
+                    <p className="text-sm text-gray-600 mb-1">Total Staked</p>
+                    <p className="text-2xl font-bold text-black">
                       ${vaultStatus.total.toLocaleString()}
                     </p>
                   </div>
                   
                   <div>
-                    <p className="text-sm text-text-secondary mb-1">Deployed</p>
-                    <p className="text-2xl font-bold text-green-400">
+                    <p className="text-sm text-gray-600 mb-1">Deployed</p>
+                    <p className="text-2xl font-bold text-green-600">
                       ${vaultStatus.deployed.toLocaleString()}
                     </p>
                   </div>
                   
                   <div>
-                    <p className="text-sm text-text-secondary mb-1">Available</p>
-                    <p className="text-2xl font-bold text-blue-400">
+                    <p className="text-sm text-gray-600 mb-1">Available</p>
+                    <p className="text-2xl font-bold text-blue-600">
                       ${vaultStatus.available.toLocaleString()}
                     </p>
                   </div>
                   
                   <div>
-                    <p className="text-sm text-text-secondary mb-1">Utilization</p>
-                    <p className="text-2xl font-bold text-yellow-400">
+                    <p className="text-sm text-gray-600 mb-1">Utilization</p>
+                    <p className="text-2xl font-bold text-yellow-600">
                       {utilizationPercent}%
                     </p>
                   </div>
@@ -289,7 +338,7 @@ export const StakingVault: React.FC = () => {
 
                 {/* Utilization Bar */}
                 <div className="mt-6">
-                  <div className="h-3 bg-midnight-700 rounded-full overflow-hidden">
+                  <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
                     <motion.div
                       className="h-full bg-gradient-to-r from-green-400 to-blue-500"
                       initial={{ width: 0 }}
@@ -297,7 +346,7 @@ export const StakingVault: React.FC = () => {
                       transition={{ duration: 1 }}
                     />
                   </div>
-                  <p className="text-xs text-text-secondary mt-2">
+                  <p className="text-xs text-gray-600 mt-2">
                     {parseFloat(utilizationPercent) >= 70
                       ? '✅ Optimal utilization - Full APY'
                       : parseFloat(utilizationPercent) >= 50
@@ -314,9 +363,9 @@ export const StakingVault: React.FC = () => {
           {/* Left Column: Tier Selection & Staking Form */}
           <div className="lg:col-span-2 space-y-6">
             {/* Tier Selection */}
-            <Card className="bg-midnight-800/50 border-medium-gray/30">
+            <Card className="bg-white border-gray-200">
               <CardContent className="p-6">
-                <h2 className="text-2xl font-bold text-off-white mb-4">Select Tier</h2>
+                <h2 className="text-2xl font-bold text-black mb-4">Select Tier</h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {TIERS.map((tier) => (
@@ -327,7 +376,7 @@ export const StakingVault: React.FC = () => {
                       className={`p-6 rounded-lg cursor-pointer transition-all ${
                         selectedTier.id === tier.id
                           ? 'bg-gradient-to-br ' + tier.color + ' text-white'
-                          : 'bg-midnight-700/50 border border-medium-gray/30'
+                          : 'bg-gray-50 border border-gray-200'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-4">
@@ -354,30 +403,30 @@ export const StakingVault: React.FC = () => {
             </Card>
 
             {/* Staking Form */}
-            <Card className="bg-midnight-800/50 border-medium-gray/30">
+            <Card className="bg-white border-gray-200">
               <CardContent className="p-6">
-                <h2 className="text-2xl font-bold text-off-white mb-6">Stake to Vault</h2>
+                <h2 className="text-2xl font-bold text-black mb-6">Stake to Vault</h2>
                 
                 {/* Selected Tier Info */}
-                <div className="bg-midnight-700/50 p-4 rounded-lg mb-6">
+                <div className="bg-gray-50 p-4 rounded-lg mb-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <span className="text-3xl">{selectedTier.icon}</span>
                       <div>
-                        <h3 className="text-lg font-bold text-off-white">{selectedTier.name}</h3>
-                        <p className="text-sm text-text-secondary">{selectedTier.lockDays} days • {selectedTier.apy}% APY</p>
+                        <h3 className="text-lg font-bold text-black">{selectedTier.name}</h3>
+                        <p className="text-sm text-gray-600">{selectedTier.lockDays} days • {selectedTier.apy}% APY</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-green-400">{selectedTier.apy}%</p>
-                      <p className="text-xs text-text-secondary">APY</p>
+                      <p className="text-2xl font-bold text-green-600">{selectedTier.apy}%</p>
+                      <p className="text-xs text-gray-600">APY</p>
                     </div>
                   </div>
                   
                   <ul className="space-y-2">
                     {selectedTier.benefits.map((benefit, idx) => (
-                      <li key={idx} className="flex items-center gap-2 text-sm text-text-secondary">
-                        <CheckCircle className="w-4 h-4 text-green-400" />
+                      <li key={idx} className="flex items-center gap-2 text-sm text-gray-600">
+                        <CheckCircle className="w-4 h-4 text-green-600" />
                         {benefit}
                       </li>
                     ))}
@@ -386,7 +435,7 @@ export const StakingVault: React.FC = () => {
 
                 {/* Amount Input */}
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-off-white mb-2">
+                  <label className="block text-sm font-medium text-black mb-2">
                     Stake Amount (USDC)
                   </label>
                   <div className="relative">
@@ -396,23 +445,23 @@ export const StakingVault: React.FC = () => {
                       onChange={(e) => setStakeAmount(e.target.value)}
                       onBlur={checkCapacity}
                       placeholder={`Min: $${selectedTier.minStake.toLocaleString()}`}
-                      className="w-full px-4 py-3 bg-midnight-700 border border-medium-gray/30 rounded-lg text-off-white focus:ring-2 focus:ring-primary-blue focus:border-primary-blue"
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-black focus:ring-2 focus:ring-black focus:border-black"
                     />
-                    <DollarSign className="absolute right-3 top-3.5 w-5 h-5 text-text-secondary" />
+                    <DollarSign className="absolute right-3 top-3.5 w-5 h-5 text-gray-400" />
                   </div>
-                  <p className="text-xs text-text-secondary mt-1">
+                  <p className="text-xs text-gray-600 mt-1">
                     Minimum: ${selectedTier.minStake.toLocaleString()} USDC
                   </p>
                 </div>
 
                 {/* Auto-Compound Toggle */}
                 <div className="mb-6">
-                  <div className="flex items-center justify-between p-4 bg-midnight-700/50 rounded-lg">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                     <div className="flex items-center gap-3">
-                      <TrendingUp className="w-5 h-5 text-green-400" />
+                      <TrendingUp className="w-5 h-5 text-green-600" />
                       <div>
-                        <p className="font-medium text-off-white">Auto-Compound</p>
-                        <p className="text-xs text-text-secondary">
+                        <p className="font-medium text-black">Auto-Compound</p>
+                        <p className="text-xs text-gray-600">
                           Automatically restake yield for higher returns (+0.5-0.75% APY)
                         </p>
                       </div>
@@ -434,12 +483,12 @@ export const StakingVault: React.FC = () => {
 
                 {/* Capacity Warning */}
                 {canStake === false && (
-                  <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                  <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <div className="flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 text-yellow-400 mt-0.5" />
+                      <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
                       <div>
-                        <p className="font-medium text-yellow-400 mb-1">Vault Full</p>
-                        <p className="text-sm text-yellow-300/80">
+                        <p className="font-medium text-yellow-600 mb-1">Vault Full</p>
+                        <p className="text-sm text-yellow-700">
                           The vault is currently at capacity. You will be added to the waitlist and earn 5% APY while waiting.
                           {waitlistInfo && ` Current position: #${waitlistInfo.position + 1}`}
                         </p>
@@ -450,28 +499,28 @@ export const StakingVault: React.FC = () => {
 
                 {/* Projected Returns with Compounding Calculator */}
                 {stakeAmount && parseFloat(stakeAmount) >= selectedTier.minStake && (
-                  <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                    <h4 className="font-semibold text-blue-400 mb-3">Projected Returns</h4>
+                  <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h4 className="font-semibold text-blue-600 mb-3">Projected Returns</h4>
                     
                     {/* Lock Period Returns */}
                     <div className="grid grid-cols-2 gap-4 text-sm mb-4">
                       <div>
-                        <p className="text-text-secondary">Lock Period</p>
-                        <p className="font-bold text-off-white">{selectedTier.lockDays} days</p>
+                        <p className="text-gray-600">Lock Period</p>
+                        <p className="font-bold text-black">{selectedTier.lockDays} days</p>
                       </div>
                       <div>
-                        <p className="text-text-secondary">APY</p>
-                        <p className="font-bold text-green-400">{selectedTier.apy}%</p>
+                        <p className="text-gray-600">APY</p>
+                        <p className="font-bold text-green-600">{selectedTier.apy}%</p>
                       </div>
                       <div>
-                        <p className="text-text-secondary">Simple Interest Yield</p>
-                        <p className="font-bold text-off-white">
+                        <p className="text-gray-600">Simple Interest Yield</p>
+                        <p className="font-bold text-black">
                           ${((parseFloat(stakeAmount) * selectedTier.apy / 100) * (selectedTier.lockDays / 365)).toFixed(2)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-text-secondary">Total Return (Simple)</p>
-                        <p className="font-bold text-off-white">
+                        <p className="text-gray-600">Total Return (Simple)</p>
+                        <p className="font-bold text-black">
                           ${(parseFloat(stakeAmount) + (parseFloat(stakeAmount) * selectedTier.apy / 100) * (selectedTier.lockDays / 365)).toFixed(2)}
                         </p>
                       </div>
@@ -480,7 +529,7 @@ export const StakingVault: React.FC = () => {
                     {/* 1-Year Compounding Projection */}
                     {autoCompound && (
                       <div className="mt-4 pt-4 border-t border-blue-500/20">
-                        <h5 className="font-semibold text-green-400 mb-2 flex items-center gap-2">
+                        <h5 className="font-semibold text-green-600 mb-2 flex items-center gap-2">
                           <TrendingUp className="w-4 h-4" />
                           1-Year Compounding Projection
                         </h5>
@@ -500,33 +549,33 @@ export const StakingVault: React.FC = () => {
                           return (
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
-                                <span className="text-text-secondary">Initial Investment:</span>
-                                <span className="font-bold text-off-white">${principal.toFixed(2)}</span>
+                                <span className="text-gray-600">Initial Investment:</span>
+                                <span className="font-bold text-black">${principal.toFixed(2)}</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-text-secondary">Simple Interest (1 year):</span>
-                                <span className="text-off-white">${simpleYield.toFixed(2)}</span>
+                                <span className="text-gray-600">Simple Interest (1 year):</span>
+                                <span className="text-black">${simpleYield.toFixed(2)}</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-text-secondary">Compounded (monthly):</span>
-                                <span className="font-bold text-green-400">${compoundedYield.toFixed(2)}</span>
+                                <span className="text-gray-600">Compounded (monthly):</span>
+                                <span className="font-bold text-green-600">${compoundedYield.toFixed(2)}</span>
                               </div>
-                              <div className="flex justify-between pt-2 border-t border-blue-500/10">
-                                <span className="text-text-secondary">Extra from Compounding:</span>
-                                <span className="font-bold text-green-400">+${extraYield.toFixed(2)}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-text-secondary">Final Amount (1 year):</span>
-                                <span className="font-bold text-green-400">${compoundedFinal.toFixed(2)}</span>
+                              <div className="flex justify-between pt-2 border-t border-gray-200">
+                                <span className="text-gray-600">Extra from Compounding:</span>
+                                <span className="font-bold text-green-600">+${extraYield.toFixed(2)}</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-text-secondary">Effective APY:</span>
-                                <span className="font-bold text-green-400">{effectiveApy.toFixed(2)}%</span>
+                                <span className="text-gray-600">Final Amount (1 year):</span>
+                                <span className="font-bold text-green-600">${compoundedFinal.toFixed(2)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Effective APY:</span>
+                                <span className="font-bold text-green-600">{effectiveApy.toFixed(2)}%</span>
                               </div>
                             </div>
                           );
                         })()}
-                        <p className="text-xs text-blue-300/80 mt-3 flex items-center gap-2">
+                        <p className="text-xs text-blue-600 mt-3 flex items-center gap-2">
                           <Info className="w-4 h-4" />
                           Monthly compounding automatically reinvests yield for higher returns
                         </p>
@@ -539,7 +588,7 @@ export const StakingVault: React.FC = () => {
                 <Button
                   onClick={handleStake}
                   disabled={!isConnected || loading || !stakeAmount}
-                  className="w-full bg-gradient-to-r from-primary-blue to-primary-blue-light hover:opacity-90 text-midnight-900 font-semibold py-4 text-lg"
+                  className="w-full bg-black hover:bg-gray-800 text-white font-semibold py-4 text-lg"
                 >
                   {loading ? 'Staking...' : canStake === false ? 'Join Waitlist' : 'Stake Now'}
                   <ArrowRight className="w-5 h-5 ml-2" />
@@ -551,14 +600,14 @@ export const StakingVault: React.FC = () => {
           {/* Right Column: User Stakes */}
           <div className="space-y-6">
             {/* Your Stakes */}
-            <Card className="bg-midnight-800/50 border-medium-gray/30">
+            <Card className="bg-white border-gray-200">
               <CardContent className="p-6">
-                <h2 className="text-xl font-bold text-off-white mb-4">Your Stakes</h2>
+                <h2 className="text-xl font-bold text-black mb-4">Your Stakes</h2>
                 
                 {userStakes.length === 0 ? (
                   <div className="text-center py-8">
-                    <Wallet className="w-12 h-12 text-text-secondary mx-auto mb-3" />
-                    <p className="text-text-secondary">No active stakes</p>
+                    <Wallet className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-600">No active stakes</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -571,14 +620,14 @@ export const StakingVault: React.FC = () => {
                       return (
                         <div
                           key={idx}
-                          className="p-4 bg-midnight-700/50 border border-medium-gray/30 rounded-lg"
+                          className="p-4 bg-gray-50 border border-gray-200 rounded-lg"
                         >
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
                               <span className="text-2xl">{tier.icon}</span>
                               <div>
-                                <p className="font-semibold text-off-white">{tier.name}</p>
-                                <p className="text-xs text-text-secondary">{tier.apy}% APY</p>
+                                <p className="font-semibold text-black">{tier.name}</p>
+                                <p className="text-xs text-gray-600">{tier.apy}% APY</p>
                               </div>
                             </div>
                             {stake.autoCompound && (
@@ -590,12 +639,12 @@ export const StakingVault: React.FC = () => {
                           
                           <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                              <span className="text-text-secondary">Staked</span>
-                              <span className="text-off-white font-medium">${principal.toLocaleString()}</span>
+                              <span className="text-gray-600">Staked</span>
+                              <span className="text-black font-medium">${principal.toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-text-secondary">Unlock Date</span>
-                              <span className={isUnlocked ? 'text-green-400' : 'text-yellow-400'}>
+                              <span className="text-gray-600">Unlock Date</span>
+                              <span className={isUnlocked ? 'text-green-600' : 'text-yellow-600'}>
                                 {unlockDate.toLocaleDateString()}
                               </span>
                             </div>
@@ -613,7 +662,7 @@ export const StakingVault: React.FC = () => {
                           )}
                           
                           {!isUnlocked && (
-                            <div className="mt-3 text-xs text-text-secondary text-center">
+                            <div className="mt-3 text-xs text-gray-600 text-center">
                               <Lock className="w-4 h-4 inline mr-1" />
                               Locked for {Math.ceil((unlockDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))} more days
                             </div>
@@ -627,11 +676,11 @@ export const StakingVault: React.FC = () => {
             </Card>
 
             {/* How It Works */}
-            <Card className="bg-midnight-800/50 border-medium-gray/30">
+            <Card className="bg-white border-gray-200">
               <CardContent className="p-6">
-                <h2 className="text-xl font-bold text-off-white mb-4">How It Works</h2>
+                <h2 className="text-xl font-bold text-black mb-4">How It Works</h2>
                 
-                <div className="space-y-3 text-sm text-text-secondary">
+                <div className="space-y-3 text-sm text-gray-600">
                   <div className="flex items-start gap-2">
                     <div className="w-6 h-6 rounded-full bg-primary-blue flex items-center justify-center text-midnight-900 font-bold flex-shrink-0">
                       1

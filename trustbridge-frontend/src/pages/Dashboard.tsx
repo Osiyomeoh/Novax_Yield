@@ -28,6 +28,18 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<'exporter' | 'investor' | 'staker' | 'admin' | 'new'>('new');
 
+  // Debug logging
+  useEffect(() => {
+    console.log('Dashboard render state:', {
+      loading,
+      userRole,
+      isConnected,
+      hasAddress: !!address,
+      isAuthenticated,
+      hasUser: !!user
+    });
+  }, [loading, userRole, isConnected, address, isAuthenticated, user]);
+
   // Fetch real data from backend
   const { data: analyticsData, loading: analyticsLoading, error: analyticsError } = useMarketAnalytics();
 
@@ -42,6 +54,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     if (!address || !provider || !isConnected) {
       setLoading(false);
+      setUserRole('new'); // Ensure new user dashboard shows when wallet not connected
       return;
     }
 
@@ -54,10 +67,9 @@ const Dashboard: React.FC = () => {
         poolManagerService.initialize(signer, provider);
         stakingVaultService.initialize(signer, provider);
 
-        // Check if admin
+        // Redirect admins to admin dashboard instead of showing admin content here
         if (isAdmin) {
-          setUserRole('admin');
-          setLoading(false);
+          navigate('/dashboard/admin');
           return;
         }
 
@@ -184,8 +196,9 @@ const Dashboard: React.FC = () => {
     ];
   }, [analyticsData, analyticsLoading]);
 
-  // Show loading state
-  if (loading || analyticsLoading) {
+  // Show loading state only if we're actively loading user data
+  // Don't block rendering if analytics is loading - show dashboard with default stats
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 text-black p-8 sm:p-12 lg:p-16">
         <div className="max-w-6xl mx-auto flex items-center justify-center min-h-screen">
@@ -198,132 +211,28 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  // Show error state
-  if (analyticsError) {
-    return (
-      <div className="min-h-screen bg-gray-50 text-black p-8 sm:p-12 lg:p-16">
-        <div className="max-w-6xl mx-auto flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <AlertCircle className="w-6 h-6 text-gray-600 mx-auto mb-3" />
-            <p className="text-sm text-gray-600 mb-2">Failed to load dashboard data</p>
-            <p className="text-xs text-gray-500">{analyticsError}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Don't show error state for analytics - just use default stats
+  // Analytics endpoint may not exist, but dashboard should still work
+  // if (analyticsError) {
+  //   return (
+  //     <div className="min-h-screen bg-gray-50 text-black p-8 sm:p-12 lg:p-16">
+  //       <div className="max-w-6xl mx-auto flex items-center justify-center min-h-screen">
+  //         <div className="text-center">
+  //           <AlertCircle className="w-6 h-6 text-gray-600 mx-auto mb-3" />
+  //           <p className="text-sm text-gray-600 mb-2">Failed to load dashboard data</p>
+  //           <p className="text-xs text-gray-500">{analyticsError}</p>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
-  // Admin Dashboard
-  if (userRole === 'admin' || isAdmin) {
-    return (
-      <div className="min-h-screen bg-gray-50 text-black p-8 sm:p-12 lg:p-16">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-12">
-            <div className="flex items-center gap-3 mb-2">
-              <Crown className="w-8 h-8 text-purple-600" />
-              <h1 className="text-3xl font-medium">Admin Dashboard</h1>
-            </div>
-            <p className="text-gray-600">Manage receivables, pools, and yield distribution</p>
-          </div>
-
-          {/* Admin Hub CTA */}
-          <Card variant="default" className="mb-8 bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold mb-2">Admin Hub</h3>
-                  <p className="text-gray-600">
-                    Complete guide to manage receivables and create pools
-                  </p>
-                </div>
-                <Button
-                  onClick={() => navigate('/dashboard/admin-hub')}
-                  className="bg-purple-600 hover:bg-purple-700"
-                >
-                  Open Admin Hub
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <Card variant="default">
-              <CardHeader>
-                <CardTitle>Receivables Management</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600 mb-4">
-                  Review and approve trade receivables for pool creation
-                </p>
-                <Button 
-                  className="w-full"
-                  onClick={() => navigate('/dashboard/admin/receivables')}
-                >
-                  <FileText className="w-4 h-4 mr-2" />
-                  Review Receivables
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card variant="default">
-              <CardHeader>
-                <CardTitle>Create Pool</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600 mb-4">
-                  Create investment pool from verified receivable
-                </p>
-                <Button 
-                  className="w-full"
-                  onClick={() => navigate('/dashboard/admin/create-pool')}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Pool
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card variant="default">
-              <CardHeader>
-                <CardTitle>Pool Management</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600 mb-4">
-                  Manage pools, record payments, distribute yield
-                </p>
-                <Button 
-                  className="w-full"
-                  onClick={() => navigate('/dashboard/admin/amc-pools')}
-                >
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  Manage Pools
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Platform Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {stats.map((stat) => {
-              const Icon = stat.icon;
-              return (
-                <Card key={stat.title} variant="default">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Icon className="w-5 h-5 text-gray-600" />
-                      <p className="text-xs text-gray-600 uppercase tracking-wide">{stat.title}</p>
-                    </div>
-                    <p className="text-2xl font-medium text-black">{stat.value}</p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Redirect admins to admin dashboard instead of showing admin content here
+  useEffect(() => {
+    if (userRole === 'admin' || isAdmin) {
+      navigate('/dashboard/admin');
+    }
+  }, [userRole, isAdmin, navigate]);
 
   // Exporter Dashboard
   if (userRole === 'exporter') {

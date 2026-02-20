@@ -2,6 +2,7 @@ import { ethers } from 'ethers';
 import { novaxContractAddresses } from '../config/contracts';
 import NovaxStakingVaultABI from '../contracts/NovaxStakingVault.json';
 import VaultCapacityManagerABI from '../contracts/VaultCapacityManager.json';
+import MockUSDCABI from '../contracts/MockUSDC.json';
 
 export class StakingVaultService {
   private static instance: StakingVaultService;
@@ -26,7 +27,52 @@ export class StakingVaultService {
     if (!this.signer && !this.provider) {
       throw new Error('Service not initialized');
     }
-    return new ethers.Contract(address, abi, this.signer || this.provider!);
+    
+    // Validate contract address
+    if (!address || address.trim() === '' || address === '0x0000000000000000000000000000000000000000') {
+      throw new Error('Staking Vault contract address is not configured. Please deploy the contract or set VITE_STAKING_VAULT_ADDRESS in your environment variables.');
+    }
+    
+    // Extract ABI from JSON if needed (handles both direct array and { abi: [...] } formats)
+    const abiArray = Array.isArray(abi) ? abi : abi.abi || abi;
+    return new ethers.Contract(address, abiArray, this.signer || this.provider!);
+  }
+
+  /**
+   * Get gas options with proper buffering to prevent "max fee per gas less than block base fee" errors
+   */
+  private async getGasOptions(bufferPercentage: number = 20): Promise<ethers.TransactionRequest> {
+    if (!this.provider) {
+      console.warn('Provider not available for gas options, returning empty object.');
+      return {};
+    }
+    try {
+      const feeData = await this.provider.getFeeData();
+      let gasOptions: ethers.TransactionRequest = {};
+
+      if (feeData.maxFeePerGas && feeData.maxPriorityFeePerGas) {
+        const bufferedMaxFee = (feeData.maxFeePerGas * BigInt(100 + bufferPercentage)) / 100n;
+        const bufferedPriorityFee = (feeData.maxPriorityFeePerGas * BigInt(100 + bufferPercentage)) / 100n;
+        gasOptions = {
+          maxFeePerGas: bufferedMaxFee,
+          maxPriorityFeePerGas: bufferedPriorityFee,
+        };
+        console.log(`⛽ Using buffered EIP-1559 fees (${bufferPercentage}% buffer):`, {
+          maxFeePerGas: bufferedMaxFee.toString(),
+          maxPriorityFeePerGas: bufferedPriorityFee.toString(),
+        });
+      } else if (feeData.gasPrice) {
+        const bufferedGasPrice = (feeData.gasPrice * BigInt(100 + bufferPercentage)) / 100n;
+        gasOptions = { gasPrice: bufferedGasPrice };
+        console.log(`⛽ Using buffered legacy gas price (${bufferPercentage}% buffer):`, {
+          gasPrice: bufferedGasPrice.toString(),
+        });
+      }
+      return gasOptions;
+    } catch (error) {
+      console.warn('⚠️ Failed to fetch gas fee data, proceeding without explicit gas options:', error);
+      return {};
+    }
   }
 
   /**
@@ -41,12 +87,51 @@ export class StakingVaultService {
       throw new Error('Signer not available');
     }
 
+    // Check and approve USDC if needed
+    const usdc = this.getContract(novaxContractAddresses.USDC, MockUSDCABI);
+    const userAddress = await this.signer.getAddress();
+    const stakingVaultAddress = novaxContractAddresses.STAKING_VAULT;
+    
+    const allowance = await usdc.allowance(userAddress, stakingVaultAddress);
+    if (allowance < amount) {
+      console.log('📝 Approving USDC spending for staking vault...');
+      const gasOptions = await this.getGasOptions(30); // Use 30% buffer for safety
+      try {
+        const approveTx = await usdc.approve(stakingVaultAddress, ethers.MaxUint256, gasOptions);
+        await approveTx.wait();
+        console.log('✅ USDC approved');
+      } catch (txError: any) {
+        if (txError.message?.includes('max fee per gas') || txError.message?.includes('base fee')) {
+          console.warn('⚠️ Gas price issue detected, retrying with fresh fee data...');
+          const freshGasOptions = await this.getGasOptions(40); // Use 40% buffer on retry
+          const approveTx = await usdc.approve(stakingVaultAddress, ethers.MaxUint256, freshGasOptions);
+          await approveTx.wait();
+          console.log('✅ USDC approved (retry successful)');
+        } else {
+          throw txError;
+        }
+      }
+    }
+
     const vault = this.getContract(
-      novaxContractAddresses.STAKING_VAULT,
+      stakingVaultAddress,
       NovaxStakingVaultABI
     );
 
-    const tx = await vault.stake(amount, tier, autoCompound);
+    const gasOptions = await this.getGasOptions(30); // Use 30% buffer for safety
+    let tx;
+    try {
+      tx = await vault.stake(amount, tier, autoCompound, gasOptions);
+    } catch (txError: any) {
+      if (txError.message?.includes('max fee per gas') || txError.message?.includes('base fee')) {
+        console.warn('⚠️ Gas price issue detected, retrying with fresh fee data...');
+        const freshGasOptions = await this.getGasOptions(40); // Use 40% buffer on retry
+        tx = await vault.stake(amount, tier, autoCompound, freshGasOptions);
+      } else {
+        throw txError;
+      }
+    }
+    
     const receipt = await tx.wait();
 
     return { txHash: receipt.hash };
@@ -65,7 +150,20 @@ export class StakingVaultService {
       NovaxStakingVaultABI
     );
 
-    const tx = await vault.unstake(stakeIndex);
+    const gasOptions = await this.getGasOptions(30); // Use 30% buffer for safety
+    let tx;
+    try {
+      tx = await vault.unstake(stakeIndex, gasOptions);
+    } catch (txError: any) {
+      if (txError.message?.includes('max fee per gas') || txError.message?.includes('base fee')) {
+        console.warn('⚠️ Gas price issue detected, retrying with fresh fee data...');
+        const freshGasOptions = await this.getGasOptions(40); // Use 40% buffer on retry
+        tx = await vault.unstake(stakeIndex, freshGasOptions);
+      } else {
+        throw txError;
+      }
+    }
+    
     const receipt = await tx.wait();
 
     return { txHash: receipt.hash };

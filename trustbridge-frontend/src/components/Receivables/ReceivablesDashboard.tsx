@@ -359,7 +359,7 @@ const ReceivablesDashboard: React.FC = () => {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-blue-600 hover:text-blue-700"
-                                  title="View on Etherlink Explorer"
+                                  title="View on Arbiscan Explorer"
                                   onClick={(e) => e.stopPropagation()}
                                 >
                                   <ExternalLink className="w-4 h-4" />

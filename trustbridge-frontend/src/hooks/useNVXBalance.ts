@@ -3,24 +3,29 @@ import { useWallet } from '../contexts/WalletContext';
 import { novaxContractService } from '../services/novaxContractService';
 
 export const useNVXBalance = () => {
-  const { address, isConnected } = useWallet();
+  const { address, isConnected, provider, signer } = useWallet();
   const [balance, setBalance] = useState<number>(0);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (isConnected && address) {
+    if (isConnected && address && provider) {
       fetchBalance();
     } else {
       setBalance(0);
       setLoading(false);
     }
-  }, [isConnected, address]);
+  }, [isConnected, address, provider, signer]);
 
   const fetchBalance = async () => {
-    if (!address) return;
+    if (!address || !provider) return;
     
     try {
       setLoading(true);
+      
+      // Initialize service with provider (signer optional for read operations)
+      const currentSigner = signer || await provider.getSigner().catch(() => null);
+      novaxContractService.initialize(currentSigner || null, provider);
+      
       const balanceBigInt = await novaxContractService.getNVXBalance(address);
       // NVX token has 18 decimals
       const balanceNumber = Number(balanceBigInt) / 1e18;

@@ -258,8 +258,62 @@ const CreateReceivable: React.FC = () => {
       // Step 4: Convert amount to USDC (6 decimals)
       const amountInWei = ethers.parseUnits(formData.amountUSD, 6);
 
-      // Step 5: Convert due date to Unix timestamp
-      const dueDateTimestamp = Math.floor(new Date(formData.dueDate).getTime() / 1000);
+      // Step 5: Convert due date to Unix timestamp and validate it's in the future
+      // Parse the date string (format: YYYY-MM-DD) and set to end of day in UTC to avoid timezone issues
+      const dueDateStr = formData.dueDate; // Format: YYYY-MM-DD
+      const [year, month, day] = dueDateStr.split('-').map(Number);
+      
+      // Create date in UTC to avoid timezone issues, set to end of day (23:59:59)
+      const dueDateObj = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+      const dueDateTimestamp = Math.floor(dueDateObj.getTime() / 1000);
+      
+      // Get current timestamp (also in UTC)
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+      
+      // Contract requires: dueDate > block.timestamp
+      // The date should be at least 1 day in the future to be safe
+      const oneDayFromNow = currentTimestamp + (24 * 60 * 60); // 24 hours from now
+      
+      console.log('📅 Due date validation:', {
+        dueDateInput: formData.dueDate,
+        parsedDate: dueDateObj.toISOString(),
+        dueDateTimestamp,
+        currentTimestamp,
+        currentDate: new Date().toISOString(),
+        oneDayFromNow,
+        difference: dueDateTimestamp - currentTimestamp,
+        differenceDays: (dueDateTimestamp - currentTimestamp) / (24 * 60 * 60),
+        isValid: dueDateTimestamp > currentTimestamp,
+        meetsOneDayRequirement: dueDateTimestamp >= oneDayFromNow
+      });
+      
+      // Validate due date is in the future (contract requirement)
+      if (dueDateTimestamp <= currentTimestamp) {
+        throw new Error(`Due date must be in the future. Selected: ${dueDateObj.toLocaleDateString()}, Current: ${new Date().toLocaleDateString()}. Please select a date at least 1 day from today.`);
+      }
+      
+      // Warn if it's less than 1 day away, but allow it if it's still in the future
+      // The contract only requires dueDate > block.timestamp, so we'll allow it
+      if (dueDateTimestamp < oneDayFromNow) {
+        console.warn('⚠️ Due date is less than 24 hours away. This might fail if block time is slow.');
+      }
+      
+      // Additional validation: ensure amount is greater than 0
+      if (amountInWei <= 0n) {
+        throw new Error('Amount must be greater than 0. Please enter a valid amount.');
+      }
+      
+      // Validate metadata CID is not zero
+      if (metadataCIDBytes32 === ethers.ZeroHash || metadataCIDBytes32 === '0x0000000000000000000000000000000000000000000000000000000000000000') {
+        throw new Error('Metadata CID is required. Please ensure metadata was uploaded successfully.');
+      }
+      
+      console.log('✅ Pre-flight validation passed:', {
+        amountInWei: amountInWei.toString(),
+        dueDateTimestamp,
+        metadataCIDBytes32,
+        importerAddress
+      });
 
       // Step 6: Ensure signer is available before calling contract
       if (!signer && provider) {
@@ -337,10 +391,44 @@ const CreateReceivable: React.FC = () => {
       navigate('/dashboard/receivables');
     } catch (error: any) {
       console.error("Error creating receivable:", error);
+      
+      // Provide more helpful error messages
+      let errorMessage = error.message || error.reason || 'Unknown error';
+      
+      // Check for common contract revert reasons
+      if (errorMessage.includes('Due date must be in the future') || 
+          (errorMessage.includes('dueDate') && errorMessage.includes('future'))) {
+        errorMessage = 'Due date must be in the future. Please select a date that is at least 1 day from now.';
+      } else if (errorMessage.includes('Amount must be greater than 0') || 
+                 (errorMessage.includes('amountUSD') && errorMessage.includes('greater'))) {
+        errorMessage = 'Amount must be greater than 0. Please enter a valid amount.';
+      } else if (errorMessage.includes('Metadata CID required') || 
+                 (errorMessage.includes('metadataCID') && errorMessage.includes('required'))) {
+        errorMessage = 'Metadata upload failed. Please try again.';
+      } else if (errorMessage.includes('paused')) {
+        errorMessage = 'Contract is currently paused. Please contact support.';
+      } else if (errorMessage.includes('require(false)') || errorMessage.includes('execution reverted')) {
+        // Try to get more specific error from the transaction data
+        if (error.data?.data) {
+          try {
+            // Try to decode the revert reason if available
+            const factory = novaxContractService.getContract(
+              novaxContractAddresses.RECEIVABLE_FACTORY,
+              NovaxReceivableFactoryABI
+            );
+            // This might not work, but worth trying
+          } catch {}
+        }
+        errorMessage = 'Transaction failed validation. Common causes: 1) Due date must be in the future (check console for details), 2) Amount must be greater than 0, 3) Contract might be paused. Please check the console for detailed error information.';
+      } else if (errorMessage.includes('Internal JSON-RPC error') || errorMessage.includes('-32603')) {
+        errorMessage = 'MetaMask RPC error. Please try again, or switch to a different RPC endpoint. The transaction might still succeed - check your wallet for pending transactions.';
+      }
+      
       toast({
         title: 'Creation Failed',
-        description: `Failed to create receivable: ${error.message || error.reason}`,
-        variant: 'destructive'
+        description: errorMessage,
+        variant: 'destructive',
+        duration: 10000 // Show for 10 seconds so user can read it
       });
     } finally {
       setLoading(false);
@@ -584,9 +672,11 @@ const CreateReceivable: React.FC = () => {
                       onChange={handleInputChange}
                       required
                       className="w-full"
-                      min={new Date().toISOString().split('T')[0]}
+                      min={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
                     />
-                    <p className="text-xs text-gray-500 mt-1">When the invoice payment is due</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      When the invoice payment is due (must be at least 1 day in the future)
+                    </p>
                   </div>
                 </motion.div>
               )}

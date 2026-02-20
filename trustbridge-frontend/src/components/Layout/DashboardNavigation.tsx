@@ -118,7 +118,6 @@ const DashboardNavigation: React.FC = () => {
 
   // Main navigation - always visible
   const navItems = [
-    { id: 'home', label: 'Home', icon: Home, href: '/dashboard' },
     { id: 'marketplace', label: 'Marketplace', icon: TrendingUp, href: '/dashboard/marketplace' },
     { id: 'profile', label: 'Profile', icon: User, href: '/dashboard/profile' },
     { id: 'settings', label: 'Settings', icon: Settings, href: '/dashboard/settings' },
@@ -199,7 +198,7 @@ const DashboardNavigation: React.FC = () => {
             </div>
             <button
               onClick={toggleMobileSidebar}
-              className="p-2 rounded-lg bg-gray-800 dark:bg-gray-800 light:bg-gray-100 text-gray-400 dark:text-gray-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-black hover:bg-gray-700 dark:hover:bg-gray-700 light:hover:bg-gray-200 transition-colors"
+              className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:text-black hover:bg-gray-200 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -246,7 +245,7 @@ const DashboardNavigation: React.FC = () => {
                         isAdminSection || isHighlighted
                           ? hasActiveItem
                             ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg border border-purple-500'
-                            : 'bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 text-purple-700 dark:text-purple-300 hover:from-purple-100 hover:to-purple-200 dark:hover:from-purple-800/40 dark:hover:to-purple-700/40 border border-purple-200 dark:border-purple-700'
+                            : 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 hover:from-purple-100 hover:to-purple-200 border border-purple-200'
                           : hasActiveItem
                           ? 'bg-black text-white shadow-sm'
                           : 'text-gray-700 hover:text-black hover:bg-gray-100'
@@ -265,7 +264,7 @@ const DashboardNavigation: React.FC = () => {
                     </button>
                     {isOpen && (
                       <div className={`ml-4 space-y-1 mt-1 ${
-                        isAdminSection || isHighlighted ? 'border-l-2 border-purple-300 dark:border-purple-600 pl-3' : ''
+                        isAdminSection || isHighlighted ? 'border-l-2 border-purple-300 pl-3' : ''
                       }`}>
                         {section.items.map((item) => {
                           const ItemIcon = item.icon;
@@ -285,7 +284,7 @@ const DashboardNavigation: React.FC = () => {
                                     ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-md border border-purple-500'
                                     : 'bg-black text-white shadow-sm'
                                   : isAdminSection || isHighlighted
-                                  ? 'text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20'
+                                  ? 'text-purple-700 hover:bg-purple-50'
                                   : 'text-gray-700 hover:text-black hover:bg-gray-100'
                               }`}
                             >
@@ -295,7 +294,7 @@ const DashboardNavigation: React.FC = () => {
                                 <Shield className="w-3 h-3 text-yellow-400 ml-auto" />
                               )}
                               {isComingSoon && (
-                                <span className="ml-auto text-xs bg-gradient-to-r from-black/20 to-black/20 dark:from-white/20 dark:to-white/20 text-black dark:text-white px-2 py-0.5 rounded border border-black/30 dark:border-white/30">
+                                <span className="ml-auto text-xs bg-gray-100 text-black px-2 py-0.5 rounded border border-gray-300">
                                   Soon
                                 </span>
                               )}
@@ -313,13 +312,13 @@ const DashboardNavigation: React.FC = () => {
           {/* Mobile User Section */}
           <div className="mt-6 pt-4 border-t border-gray-700">
             <div className="space-y-2">
-              <div className="px-3 py-2 bg-gray-800 dark:bg-gray-800 light:bg-gray-100 rounded-lg">
-                <p className="text-xs text-gray-400 dark:text-gray-400 light:text-gray-600">Wallet</p>
-                <p className="text-sm font-mono text-white dark:text-white light:text-black">{formatAddress(address)}</p>
+              <div className="px-3 py-2 bg-gray-100 rounded-lg">
+                <p className="text-xs text-gray-600">Wallet</p>
+                <p className="text-sm font-mono text-black">{formatAddress(address)}</p>
               </div>
               <button
                 onClick={handleDisconnect}
-                className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm text-red-400 dark:text-red-400 light:text-red-600 hover:bg-red-400/10 dark:hover:bg-red-400/10 light:hover:bg-red-100 transition-colors"
+                className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm text-red-600 hover:bg-red-100 transition-colors"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Disconnect</span>
@@ -349,7 +348,7 @@ const DashboardNavigation: React.FC = () => {
           <div className="flex justify-end mb-4">
             <button
               onClick={toggleSidebar}
-              className="group relative p-2 rounded-lg bg-gray-800 dark:bg-gray-800 light:bg-gray-100 border border-gray-700 dark:border-gray-700 light:border-gray-300 text-gray-300 dark:text-gray-300 light:text-gray-700 hover:bg-gray-700 dark:hover:bg-gray-700 light:hover:bg-gray-200 hover:text-white dark:hover:text-white light:hover:text-black transition-all duration-200"
+              className="group relative p-2 rounded-lg bg-gray-100 border border-gray-300 text-gray-700 hover:bg-gray-200 hover:text-black transition-all duration-200"
               title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
               {isCollapsed ? (
@@ -394,7 +393,7 @@ const DashboardNavigation: React.FC = () => {
                   
                   {/* Enhanced tooltip for collapsed state - only show when not hovering */}
                   {isCollapsed && (
-                    <div className="absolute left-full ml-3 px-3 py-2 bg-gray-800 dark:bg-gray-800 light:bg-light-card backdrop-blur-sm border border-black/30 dark:border-white/30 rounded-lg text-sm text-off-white dark:text-off-white light:text-light-text whitespace-nowrap opacity-0 group-hover:opacity-0 transition-all duration-300 pointer-events-none z-[70] shadow-xl shadow-black/20 dark:shadow-white/20">
+                    <div className="absolute left-full ml-3 px-3 py-2 bg-white backdrop-blur-sm border border-gray-300 rounded-lg text-sm text-black whitespace-nowrap opacity-0 group-hover:opacity-0 transition-all duration-300 pointer-events-none z-[70] shadow-xl shadow-gray-200">
                       {item.label}
                     </div>
                   )}
@@ -421,7 +420,7 @@ const DashboardNavigation: React.FC = () => {
                           ${isAdminSection || isHighlighted
                             ? hasActiveItem 
                               ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg border border-purple-500' 
-                              : 'bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 text-purple-700 dark:text-purple-300 hover:from-purple-100 hover:to-purple-200 dark:hover:from-purple-800/40 dark:hover:to-purple-700/40 border border-purple-200 dark:border-purple-700'
+                              : 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 hover:from-purple-100 hover:to-purple-200 border border-purple-200'
                             : hasActiveItem 
                             ? 'bg-black text-white shadow-sm' 
                             : 'text-gray-600 hover:bg-gray-100 hover:text-black'
@@ -430,7 +429,7 @@ const DashboardNavigation: React.FC = () => {
                         <div className="flex items-center gap-2.5">
                           <Icon className={`w-4 h-4 transition-all duration-200 ${
                             isAdminSection || isHighlighted
-                              ? hasActiveItem ? 'text-white' : 'text-purple-600 dark:text-purple-400'
+                              ? hasActiveItem ? 'text-white' : 'text-purple-600'
                               : hasActiveItem ? 'text-white' : 'text-gray-600 group-hover:text-black'
                           }`} />
                           <span className="text-sm font-medium transition-all duration-200">{section.label}</span>
@@ -440,7 +439,7 @@ const DashboardNavigation: React.FC = () => {
                             </span>
                           )}
                           {isOpen && <div className={`w-1.5 h-1.5 rounded-full ${
-                            isAdminSection || isHighlighted ? 'bg-white' : 'bg-black dark:bg-black light:bg-white'
+                            isAdminSection || isHighlighted ? 'bg-white' : 'bg-black'
                           }`}></div>}
                         </div>
                         <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''} ${
@@ -453,7 +452,7 @@ const DashboardNavigation: React.FC = () => {
                       {/* Dropdown Items */}
                       {isOpen && (
                         <div className={`space-y-1 overflow-hidden transition-all duration-300 ease-in-out ${
-                          isAdminSection || isHighlighted ? 'ml-4 border-l-2 border-purple-300 dark:border-purple-600 pl-3' : 'ml-4'
+                          isAdminSection || isHighlighted ? 'ml-4 border-l-2 border-purple-300  pl-3' : 'ml-4'
                         }`}>
                           {section.items.map((item) => {
                             const ItemIcon = item.icon;
@@ -474,7 +473,7 @@ const DashboardNavigation: React.FC = () => {
                                       ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-md border border-purple-500'
                                       : 'bg-black text-white shadow-sm'
                                     : isAdminSection || isHighlighted
-                                    ? 'text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20'
+                                    ? 'text-purple-700  hover:bg-purple-50 '
                                     : 'text-gray-600 hover:bg-gray-100 hover:text-black'
                       }`}
                     >
@@ -484,7 +483,7 @@ const DashboardNavigation: React.FC = () => {
                                     : isActive 
                                     ? isAdminSection || isHighlighted ? 'text-white' : 'text-white'
                                     : isAdminSection || isHighlighted
-                                    ? 'text-purple-600 dark:text-purple-400'
+                                    ? 'text-purple-600'
                                     : 'text-gray-600 group-hover:text-black'
                                 }`} />
                       <span className="text-xs font-medium transition-all duration-200">{item.label}</span>
@@ -496,14 +495,14 @@ const DashboardNavigation: React.FC = () => {
                       
                       {/* Coming Soon indicator */}
                       {isComingSoon && (
-                        <span className="ml-auto text-xs bg-gray-700 dark:bg-gray-700 light:bg-gray-300 text-gray-300 dark:text-gray-300 light:text-gray-700 px-1.5 py-0.5 rounded border border-gray-600 dark:border-gray-600 light:border-gray-400 font-medium">
+                        <span className="ml-auto text-xs bg-gray-300 text-gray-700 px-1.5 py-0.5 rounded border border-gray-400 font-medium">
                           Soon
                         </span>
                       )}
                       
                       {/* Active indicator */}
                       {isActive && !isDisabled && !isComingSoon && (
-                        <div className="absolute right-2 w-1.5 h-1.5 bg-black dark:bg-black light:bg-white rounded-full"></div>
+                        <div className="absolute right-2 w-1.5 h-1.5 bg-black rounded-full"></div>
                       )}
                               </button>
                   );
@@ -519,39 +518,39 @@ const DashboardNavigation: React.FC = () => {
           </div>
 
           {/* User Profile / Wallet */}
-          <div className="mt-4 pt-4 border-t border-gray-800 dark:border-gray-800 light:border-gray-200">
+          <div className="mt-4 pt-4 border-t border-gray-200">
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
                 className={`w-full flex items-center gap-2.5 p-2.5 rounded-lg transition-all duration-200 group ${
                   isCollapsed ? 'justify-center group-hover:justify-start group-hover:gap-2.5' : ''
-                } bg-gray-800 dark:bg-gray-800 light:bg-gray-100 hover:bg-gray-700 dark:hover:bg-gray-700 light:hover:bg-gray-200 border border-gray-700 dark:border-gray-700 light:border-gray-300`}
+                } bg-gray-100 hover:bg-gray-200 border border-gray-300`}
               >
-                <div className="w-7 h-7 rounded-full bg-white dark:bg-white light:bg-black flex items-center justify-center">
-                  <span className="text-black dark:text-black light:text-white font-bold text-xs">
+                <div className="w-7 h-7 rounded-full bg-black flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">
                     {address ? 'U' : 'U'}
                   </span>
                   </div>
                 <div className={`transition-all duration-200 ${isCollapsed ? 'w-0 opacity-0 group-hover:w-auto group-hover:opacity-100 overflow-hidden' : 'w-auto opacity-100'}`}>
-                  <p className="text-xs font-semibold text-white dark:text-white light:text-black">
+                  <p className="text-xs font-semibold text-black">
                     {address ? 'Connected' : 'Not connected'}
                   </p>
                   {nvxLoading ? (
-                    <p className="text-xs text-gray-400 dark:text-gray-400 light:text-gray-600">
+                    <p className="text-xs text-gray-600">
                       Loading...
                     </p>
                   ) : (
-                    <p className="text-xs text-gray-400 dark:text-gray-400 light:text-gray-600">
+                    <p className="text-xs text-gray-600">
                       {nvxBalance ? `${nvxBalance.toFixed(2)} NVX` : '0 NVX'}
                     </p>
                   )}
                 </div>
-                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 dark:text-gray-400 light:text-gray-600 transition-transform duration-200 ${isUserDropdownOpen ? 'rotate-180' : ''} ${isCollapsed ? 'hidden group-hover:block' : ''}`} />
+                <ChevronDown className={`w-3.5 h-3.5 text-gray-600 transition-transform duration-200 ${isUserDropdownOpen ? 'rotate-180' : ''} ${isCollapsed ? 'hidden group-hover:block' : ''}`} />
               </button>
 
               {/* User Dropdown */}
               {isUserDropdownOpen && (
-                <div className="absolute bottom-full left-0 right-0 mb-2 bg-black dark:bg-black light:bg-white border border-gray-800 dark:border-gray-800 light:border-gray-200 rounded-lg shadow-xl overflow-hidden z-[70]">
+                <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden z-[70]">
                   <div className="p-2 space-y-1">
                     <button 
                       onClick={handleDisconnect}
