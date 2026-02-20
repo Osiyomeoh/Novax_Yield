@@ -503,7 +503,7 @@ const Documentation: React.FC = () => {
               <div className="bg-gray-50 border rounded-lg p-6 mb-6">
                 <h3 className="text-xl font-semibold mb-3">Base URL</h3>
                 <code className="text-sm bg-white px-3 py-2 rounded border block">
-                  {import.meta.env.VITE_API_URL || 'https://api.trustbridge.africa'}
+                  {import.meta.env.VITE_API_URL || 'https://novax-yield-4grx.onrender.com/api'}
                 </code>
               </div>
 
@@ -560,7 +560,7 @@ const Documentation: React.FC = () => {
                   For complete API documentation, visit our Swagger UI:
                 </p>
                 <a 
-                  href={`${import.meta.env.VITE_API_URL || 'https://api.trustbridge.africa'}/api-docs`}
+                  href="https://novax-yield-4grx.onrender.com/api-docs"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:underline inline-flex items-center gap-2"

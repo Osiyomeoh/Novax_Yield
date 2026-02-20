@@ -6,7 +6,7 @@ services:
     staticPublishPath: ./dist
     envVars:
       - key: VITE_API_URL
-        value: https://trustbridge-backend.onrender.com/api
+        value: https://novax-yield-4grx.onrender.com/api
       - key: VITE_HEDERA_NETWORK
         value: testnet
       - key: VITE_HEDERA_MIRROR_NODE_URL

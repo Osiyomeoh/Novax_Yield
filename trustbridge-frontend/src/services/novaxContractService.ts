@@ -72,9 +72,25 @@ export class NovaxContractService {
   /**
    * Initialize with signer and provider
    */
-  initialize(signer: ethers.Signer, provider: ethers.Provider) {
+  initialize(signer: ethers.Signer | null, provider: ethers.Provider) {
     this.signer = signer;
     this.provider = provider;
+  }
+
+  /**
+   * Refresh provider and signer from window.ethereum after network switch.
+   * Prevents "network changed" errors when wallet was on wrong chain (e.g. Etherlink 127823).
+   */
+  private async refreshProviderFromWallet(): Promise<void> {
+    if (typeof window === 'undefined' || !window.ethereum) return;
+    try {
+      const freshProvider = new ethers.BrowserProvider(window.ethereum as any);
+      this.provider = freshProvider;
+      this.signer = await freshProvider.getSigner();
+      console.log('✅ Refreshed provider/signer from wallet after network switch');
+    } catch (err) {
+      console.warn('Could not refresh provider from wallet:', err);
+    }
   }
 
   // Track pending network switch requests to avoid duplicates
@@ -168,6 +184,8 @@ export class NovaxContractService {
             chainId: currentChainId,
             normalized: normalizedCurrent
           });
+          // Refresh provider to avoid stale state (e.g. was on Etherlink before)
+          await this.refreshProviderFromWallet();
         } else {
           console.log('🔄 MetaMask is on wrong network, switching to Arbitrum Sepolia...', {
             current: currentChainId,
@@ -252,12 +270,15 @@ export class NovaxContractService {
           
           // Final verification after switch
           const finalChainId = await window.ethereum.request({ method: 'eth_chainId' });
-          const normalizedFinal = finalChainId.toLowerCase();
-          if (normalizedFinal === normalizedRequired || normalizedFinal === normalizedAlt) {
+          const normalizedFinal = String(finalChainId).toLowerCase();
+          if (normalizedFinal === normalizedRequired) {
             console.log('✅ Network switch verified - ready to proceed', {
               chainId: finalChainId,
               chainIdDecimal: this.ARBITRUM_CHAIN_ID_DECIMAL
             });
+            // CRITICAL: Refresh provider/signer to prevent "network changed" errors
+            // Old provider was tied to previous chain (e.g. Etherlink 127823)
+            await this.refreshProviderFromWallet();
           }
         }
       } catch (error: any) {
@@ -449,7 +470,8 @@ export class NovaxContractService {
     importer: string,
     amountUSD: bigint,
     dueDate: number,
-    metadataCID: string | Uint8Array
+    metadataCID: string | Uint8Array,
+    _internalRetryCount = 0
   ): Promise<{ receivableId: string; txHash: string }> {
     // For Privy embedded wallets, signer might be null but provider should be available
     if (!this.signer && !this.provider) {
@@ -773,6 +795,19 @@ export class NovaxContractService {
       }
     } catch (txError: any) {
       console.error('❌ Transaction call failed:', txError);
+      // Handle network change error (e.g. 127823 Etherlink => 421614 Arbitrum)
+      const isNetworkError = txError?.code === 'NETWORK_ERROR' ||
+        (txError?.message && (
+          txError.message.includes('network changed') ||
+          txError.message.includes('127823') ||
+          txError.message.includes('421614')
+        ));
+      if (isNetworkError && _internalRetryCount < 1 && typeof window !== 'undefined' && window.ethereum) {
+        console.warn('⚠️ Network change detected, refreshing provider and retrying...');
+        await this.refreshProviderFromWallet();
+        await this.ensureArbitrumNetwork();
+        return this.createReceivable(importer, amountUSD, dueDate, metadataCID, _internalRetryCount + 1);
+      }
       // If it's a MetaMask RPC error, the transaction might still be pending
       if (txError.code === -32603 || txError.message?.includes('Internal JSON-RPC error')) {
         console.warn('⚠️ MetaMask RPC error during transaction. The transaction might still be pending in your wallet.');
@@ -782,7 +817,9 @@ export class NovaxContractService {
       throw txError;
     }
 
-    const receipt = await waitForTransaction(tx, this.provider, 180);
+    // Use public RPC for receipt polling to avoid "network changed" errors from wallet provider
+    const receiptProvider = await this.getReliableProvider();
+    const receipt = await waitForTransaction(tx, receiptProvider, 180);
     if (!receipt) {
       throw new Error('Transaction receipt not available');
     }

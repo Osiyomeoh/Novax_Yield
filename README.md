@@ -832,7 +832,7 @@ Ethers.js + Hardhat
 - **USSD Guide**: Mobile banking tutorial
 
 ### **Developer Resources**
-- **API Docs**: [Swagger UI](https://trustbridge-backend.onrender.com/api-docs)
+- **API Docs**: [Swagger UI](https://novax-yield-4grx.onrender.com/api-docs)
 - **GitHub**: [Source Code](https://github.com/Osiyomeoh/TrustBridgeAfrica)
 - **Arbitrum Sepolia**: [Documentation](https://docs.arbitrum.io)
 - **Arbiscan**: [Explorer](https://sepolia.arbiscan.io)
