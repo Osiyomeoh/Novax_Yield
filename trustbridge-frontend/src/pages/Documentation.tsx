@@ -59,19 +59,19 @@ const Documentation: React.FC = () => {
           content: (
             <div className="space-y-6">
               <div>
-                <h2 className="text-3xl font-bold mb-4">Welcome to TrustBridge Africa</h2>
+                <h2 className="text-3xl font-bold mb-4">Welcome to Novax Yield</h2>
                 <p className="text-lg text-gray-600 mb-6">
                   Novax Yield is a global trading platform for real-world asset (RWA) tokenization and trade receivables financing built on Arbitrum Network. 
-                  We enable African asset owners to tokenize their assets, making them accessible to global investors 
+                  We enable asset owners across Asia and Africa to tokenize their assets and trade receivables, making them accessible to global investors 
                   through blockchain technology.
                 </p>
               </div>
 
               <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded">
-                <h3 className="text-xl font-semibold mb-3">What is TrustBridge?</h3>
+                <h3 className="text-xl font-semibold mb-3">What is Novax Yield?</h3>
                 <p className="text-gray-700 mb-4">
-                  TrustBridge is a decentralized platform that bridges real-world assets (RWAs) with blockchain technology. 
-                  We specialize in tokenizing African assets including agriculture, real estate, and infrastructure, 
+                  Novax Yield is a decentralized platform that bridges real-world assets (RWAs) and trade receivables with blockchain technology. 
+                  We specialize in tokenizing Asia and Africa assets including agriculture, real estate, infrastructure, and trade invoices, 
                   enabling fractional ownership and global investment access.
                 </p>
               </div>
@@ -80,11 +80,11 @@ const Documentation: React.FC = () => {
                 <div className="border rounded-lg p-6">
                   <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
                     <Users className="w-6 h-6 text-blue-600" />
-                    For Asset Owners
+                    For Exporters & Asset Owners
                   </h3>
                   <p className="text-gray-600 mb-4">
-                    Tokenize your real-world assets and unlock new funding opportunities. 
-                    Access global capital markets through blockchain technology.
+                    Tokenize your trade receivables and real-world assets. Get immediate liquidity for invoices 
+                    and unlock new funding opportunities through global capital markets.
                   </p>
                   <Link to="#asset-owners" className="text-blue-600 hover:underline">
                     Learn more →
@@ -93,11 +93,11 @@ const Documentation: React.FC = () => {
                 <div className="border rounded-lg p-6">
                   <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
                     <Wallet className="w-6 h-6 text-blue-600" />
-                    For Investors
+                    For Investors & Stakers
                   </h3>
                   <p className="text-gray-600 mb-4">
-                    Invest in diversified African assets through blockchain-powered pools. 
-                    Earn returns while supporting African economic development.
+                    Invest in diversified Asia and Africa assets or stake USDC for 8.5–12% APY. 
+                    Earn real yields from trade receivables and tokenized assets.
                   </p>
                   <Link to="#investors" className="text-blue-600 hover:underline">
                     Learn more →
@@ -118,7 +118,7 @@ const Documentation: React.FC = () => {
                 <div className="border-l-4 border-blue-500 pl-6">
                   <h3 className="text-xl font-semibold mb-3">Step 1: Install MetaMask</h3>
                   <p className="text-gray-600 mb-4">
-                    MetaMask is required to interact with TrustBridge. Download and install it from:
+                    MetaMask is required to interact with Novax Yield. Download and install it from:
                   </p>
                   <a 
                     href="https://metamask.io" 
@@ -157,7 +157,7 @@ const Documentation: React.FC = () => {
                 <div className="border-l-4 border-blue-500 pl-6">
                   <h3 className="text-xl font-semibold mb-3">Step 4: Connect Wallet</h3>
                   <p className="text-gray-600 mb-4">
-                    Connect your MetaMask wallet to TrustBridge and complete your profile.
+                    Connect your MetaMask wallet to Novax Yield and complete your profile.
                   </p>
                 </div>
 
@@ -193,6 +193,10 @@ const Documentation: React.FC = () => {
               <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded mb-6">
                 <h3 className="text-xl font-semibold mb-3">Supported Asset Types</h3>
                 <ul className="space-y-2 text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <span><strong>Trade Receivables:</strong> Invoices and unpaid trade invoices (primary focus)</span>
+                  </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                     <span><strong>Agriculture:</strong> Farms, crops, livestock, agricultural equipment</span>
@@ -234,14 +238,14 @@ const Documentation: React.FC = () => {
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold flex-shrink-0">2</div>
                     <div>
-                      <h4 className="text-xl font-semibold mb-2">Create Your Asset</h4>
+                      <h4 className="text-xl font-semibold mb-2">Create Your Asset or Receivable</h4>
                       <ul className="list-disc list-inside space-y-1 text-gray-600">
-                        <li>Navigate to "Create RWA Asset" in the dashboard</li>
-                        <li>Fill in asset details (name, type, location, value)</li>
-                        <li>Upload supporting documents and evidence</li>
-                        <li>Set your expected APY (Annual Percentage Yield)</li>
-                        <li>Set maximum investable percentage</li>
-                        <li>Review and submit for AMC approval</li>
+                        <li>For receivables: Navigate to "Create Receivable" and upload invoice details</li>
+                        <li>For RWA: Navigate to "Create RWA Asset" in the dashboard</li>
+                        <li>Fill in details (amount, due date, importer for receivables)</li>
+                        <li>Upload supporting documents to IPFS</li>
+                        <li>Submit for AMC verification</li>
+                        <li>AMC verifies and creates investment pool</li>
                       </ul>
                     </div>
                   </div>
@@ -298,11 +302,11 @@ const Documentation: React.FC = () => {
           title: 'How to Invest',
           content: (
             <div className="space-y-6">
-              <h2 className="text-3xl font-bold mb-6">Invest in African Assets</h2>
+              <h2 className="text-3xl font-bold mb-6">Invest in Asia & Africa Assets</h2>
               
               <p className="text-lg text-gray-600 mb-6">
-                Access diversified investment opportunities in African agriculture, real estate, and infrastructure 
-                through blockchain-powered pools.
+                Access diversified investment opportunities in Asia and Africa agriculture, real estate, trade receivables, and infrastructure 
+                through blockchain-powered pools and the staking vault.
               </p>
 
               <div className="bg-yellow-50 border-l-4 border-yellow-500 p-6 rounded mb-6">
@@ -319,10 +323,10 @@ const Documentation: React.FC = () => {
                 <div className="border rounded-lg p-6">
                   <h4 className="text-xl font-semibold mb-3">Step 1: Setup Your Account</h4>
                   <ul className="list-disc list-inside space-y-2 text-gray-600">
-                    <li>Connect MetaMask wallet to TrustBridge</li>
+                    <li>Connect MetaMask wallet to Novax Yield</li>
                     <li>Complete profile and KYC verification</li>
-                    <li>Ensure you have MNT for gas fees</li>
-                    <li>Get TRUST tokens for investments (via Exchange)</li>
+                    <li>Ensure you have ETH for gas fees on Arbitrum Sepolia</li>
+                    <li>Get test USDC for investments (via Get Test Tokens)</li>
                   </ul>
                 </div>
 
@@ -344,7 +348,7 @@ const Documentation: React.FC = () => {
                     <li>Select tranche type (Senior or Junior) if applicable</li>
                     <li>Enter investment amount (minimum investment applies)</li>
                     <li>Review transaction details and expected returns</li>
-                    <li>Approve TRUST token spending (if first time)</li>
+                    <li>Approve USDC spending (if first time)</li>
                     <li>Approve the investment transaction in MetaMask</li>
                     <li>Wait for transaction confirmation</li>
                     <li>Receive pool tokens on Arbitrum</li>
@@ -357,7 +361,7 @@ const Documentation: React.FC = () => {
                     <li>Monitor your portfolio in the dashboard</li>
                     <li>Track APY and cumulative returns</li>
                     <li>View real-time ROI calculations</li>
-                    <li>Receive dividends automatically as TRUST tokens</li>
+                    <li>Receive dividends automatically as USDC</li>
                     <li>View transaction history on Arbiscan Explorer</li>
                     <li>Redeem investments when pool matures</li>
                   </ul>
@@ -433,20 +437,20 @@ const Documentation: React.FC = () => {
                   </h4>
                   <div className="space-y-3">
                     <div>
-                      <h5 className="font-semibold mb-2">CoreAssetFactory</h5>
-                      <p className="text-sm text-gray-600">Creates and manages RWA assets as ERC-721 NFTs</p>
+                      <h5 className="font-semibold mb-2">NovaxReceivableFactory</h5>
+                      <p className="text-sm text-gray-600">Creates and verifies trade receivables on-chain</p>
                     </div>
                     <div>
-                      <h5 className="font-semibold mb-2">PoolManager</h5>
-                      <p className="text-sm text-gray-600">Manages investment pools and tranches</p>
+                      <h5 className="font-semibold mb-2">NovaxPoolManager</h5>
+                      <p className="text-sm text-gray-600">Manages investment pools and yield distribution</p>
                     </div>
                     <div>
-                      <h5 className="font-semibold mb-2">AMCManager</h5>
-                      <p className="text-sm text-gray-600">Handles asset approval and management</p>
+                      <h5 className="font-semibold mb-2">NovaxStakingVault</h5>
+                      <p className="text-sm text-gray-600">USDC staking vault with auto-deployment to pools</p>
                     </div>
                     <div>
-                      <h5 className="font-semibold mb-2">TrustToken</h5>
-                      <p className="text-sm text-gray-600">Platform utility token (ERC-20)</p>
+                      <h5 className="font-semibold mb-2">NVXToken</h5>
+                      <p className="text-sm text-gray-600">Platform utility and governance token (ERC-20)</p>
                     </div>
                   </div>
                 </div>
@@ -457,9 +461,9 @@ const Documentation: React.FC = () => {
                     Token Standards
                   </h4>
                   <ul className="list-disc list-inside space-y-2 text-gray-600">
-                    <li><strong>ERC-721:</strong> Unique tokens for individual RWA assets</li>
-                    <li><strong>ERC-20:</strong> Pool tokens, tranche tokens, and TRUST token</li>
+                    <li><strong>ERC-20:</strong> Pool tokens, NVX token, USDC for payments</li>
                     <li><strong>Metadata:</strong> Stored on IPFS (decentralized storage)</li>
+                    <li><strong>Receivables:</strong> Tracked on-chain with bytes32 IDs</li>
                   </ul>
                 </div>
               </div>
@@ -480,9 +484,9 @@ const Documentation: React.FC = () => {
                 <div className="border rounded-lg p-6">
                   <h4 className="text-xl font-semibold mb-3">Wallet Integration</h4>
                   <ul className="list-disc list-inside space-y-2 text-gray-600">
-                    <li><strong>MetaMask:</strong> Primary wallet for web interface</li>
-                    <li><strong>WalletConnect:</strong> Standard protocol for connections</li>
-                    <li><strong>Rainbow Kit:</strong> Wallet connection UI library</li>
+                    <li><strong>Privy:</strong> Wallet authentication (MetaMask + social login)</li>
+                    <li><strong>MetaMask:</strong> Primary external wallet</li>
+                    <li><strong>Embedded Wallets:</strong> For email/social login users</li>
                   </ul>
                 </div>
               </div>
@@ -497,7 +501,7 @@ const Documentation: React.FC = () => {
               <h2 className="text-3xl font-bold mb-6">API Reference</h2>
               
               <p className="text-lg text-gray-600 mb-6">
-                TrustBridge provides RESTful APIs for interacting with the platform programmatically.
+                Novax Yield provides RESTful APIs for interacting with the platform programmatically.
               </p>
 
               <div className="bg-gray-50 border rounded-lg p-6 mb-6">
@@ -574,8 +578,8 @@ const Documentation: React.FC = () => {
       ]
     },
     {
-      id: 'trust-token',
-      title: 'TRUST Token',
+      id: 'nvx-token',
+      title: 'NVX Token',
       icon: Coins,
       subsections: [
         {
@@ -583,20 +587,20 @@ const Documentation: React.FC = () => {
           title: 'Overview',
           content: (
             <div className="space-y-6">
-              <h2 className="text-3xl font-bold mb-6">TRUST Token Economy</h2>
+              <h2 className="text-3xl font-bold mb-6">NVX Token Economy</h2>
               
               <p className="text-lg text-gray-600 mb-6">
-                TRUST is the native platform token powering the TrustBridge ecosystem. Use it for fees, 
-                governance, staking, and investments.
+                NVX is the platform utility and governance token for Novax Yield. Use it for fee discounts, 
+                governance, staking rewards, and platform participation.
               </p>
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="border rounded-lg p-6">
-                  <h3 className="text-xl font-semibold mb-3">What is TRUST?</h3>
+                  <h3 className="text-xl font-semibold mb-3">What is NVX?</h3>
                   <ul className="space-y-2 text-gray-600">
                     <li className="flex items-start gap-2">
                       <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                      <span>Platform utility token on Arbitrum blockchain</span>
+                      <span>Platform utility token on Arbitrum Sepolia</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
@@ -604,32 +608,35 @@ const Documentation: React.FC = () => {
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                      <span>Used for platform fees and investments</span>
+                      <span>Pay platform fees with 30% discount</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                      <span>Governance and staking capabilities</span>
+                      <span>Governance and staking rewards</span>
                     </li>
                   </ul>
                 </div>
 
                 <div className="border rounded-lg p-6">
-                  <h3 className="text-xl font-semibold mb-3">How to Get TRUST</h3>
+                  <h3 className="text-xl font-semibold mb-3">Investments: USDC</h3>
+                  <p className="text-gray-600 mb-3">
+                    Novax Yield uses USDC for investments and staking (not NVX). Stake USDC in the vault for 8.5–12% APY.
+                  </p>
                   <div className="space-y-3">
                     <div>
-                      <h4 className="font-semibold mb-2">Exchange MNT for TRUST</h4>
+                      <h4 className="font-semibold mb-2">Get Test USDC</h4>
                       <ol className="list-decimal list-inside text-sm text-gray-600 space-y-1">
-                        <li>Visit "Exchange" in the sidebar</li>
-                        <li>Select "Swap MNT → TRUST"</li>
-                        <li>Enter amount and approve transaction</li>
+                        <li>Visit "Get Test Tokens" page</li>
+                        <li>Connect wallet to Arbitrum Sepolia</li>
+                        <li>Request test USDC from faucet</li>
                       </ol>
                     </div>
                     <div>
-                      <h4 className="font-semibold mb-2">Earn Through Participation</h4>
+                      <h4 className="font-semibold mb-2">Earn NVX</h4>
                       <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
-                        <li>Platform rewards</li>
-                        <li>Referral bonuses</li>
-                        <li>Early adopter programs</li>
+                        <li>Staking rewards</li>
+                        <li>Pool investments</li>
+                        <li>Platform participation</li>
                       </ul>
                     </div>
                   </div>
@@ -637,21 +644,21 @@ const Documentation: React.FC = () => {
               </div>
 
               <div className="border rounded-lg p-6 bg-blue-50">
-                <h3 className="text-xl font-semibold mb-3">Using TRUST Tokens</h3>
+                <h3 className="text-xl font-semibold mb-3">Using NVX & USDC</h3>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <h4 className="font-semibold mb-2">Platform Operations</h4>
                     <ul className="text-sm text-gray-700 space-y-1">
-                      <li>• Pay platform fees</li>
-                      <li>• Invest in AMC pools</li>
-                      <li>• Access premium features</li>
+                      <li>• Pay platform fees (NVX for 30% discount)</li>
+                      <li>• Invest in pools with USDC</li>
+                      <li>• Stake USDC for 8.5–12% APY</li>
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-2">Governance & Staking</h4>
+                    <h4 className="font-semibold mb-2">Governance</h4>
                     <ul className="text-sm text-gray-700 space-y-1">
-                      <li>• Vote on DAO proposals</li>
-                      <li>• Stake for rewards</li>
+                      <li>• Vote on DAO proposals (NVX)</li>
+                      <li>• Staking rewards (NVX)</li>
                       <li>• Participate in governance</li>
                     </ul>
                   </div>
@@ -699,11 +706,10 @@ const Documentation: React.FC = () => {
                 </div>
 
                 <div className="border rounded-lg p-6">
-                  <h3 className="text-xl font-semibold mb-3">Do I need crypto to use TrustBridge?</h3>
+                  <h3 className="text-xl font-semibold mb-3">Do I need crypto to use Novax Yield?</h3>
                   <p className="text-gray-600">
-                    Yes, you need XTZ (native token) for transaction fees. The platform may 
-                    sponsor gas fees for select transactions. For testnet, you can get free test tokens 
-                    from our faucet.
+                    Yes, you need ETH for transaction fees on Arbitrum Sepolia. For testnet, you can get free test ETH 
+                    from the Arbitrum Sepolia faucet and test USDC from our Get Test Tokens page.
                   </p>
                 </div>
 
@@ -772,7 +778,7 @@ const Documentation: React.FC = () => {
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-2">
             <Book className="w-6 h-6 text-blue-600" />
-            <h1 className="text-xl font-bold">Documentation</h1>
+            <h1 className="text-xl font-bold">Novax Yield Docs</h1>
           </div>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -796,7 +802,7 @@ const Documentation: React.FC = () => {
             <div className="mb-4">
               <div className="flex items-center gap-2 mb-4">
                 <Book className="w-6 h-6 text-blue-600" />
-                <h2 className="text-lg font-bold">Documentation</h2>
+                <h2 className="text-lg font-bold">Novax Yield Docs</h2>
               </div>
               
               {/* Search */}

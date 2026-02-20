@@ -727,8 +727,8 @@ const Landing: React.FC = () => {
                     </Link>
                   </li>
                   <li>
-                    <a href="https://hashscan.io/testnet" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-700 hover:text-blue-600 transition-colors font-medium">
-                      Block Explorer
+                    <a href="https://sepolia.arbiscan.io" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-700 hover:text-blue-600 transition-colors font-medium">
+                      Block Explorer (Arbiscan)
                     </a>
                   </li>
                   <li>
