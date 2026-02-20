@@ -292,7 +292,7 @@ const Landing: React.FC = () => {
                   title: 'Rice Farm - Vietnam',
                   location: 'Mekong Delta, Vietnam',
                   value: '$3.2M',
-                  image: '/images/1.jpg',
+                  image: '/images/1trs.jpeg',
                   type: 'Agriculture',
                   tokenized: true,
                   investors: 52
@@ -301,7 +301,7 @@ const Landing: React.FC = () => {
                   title: 'Manufacturing Facility - Thailand',
                   location: 'Bangkok Industrial Zone, Thailand',
                   value: '$6.5M',
-                  image: '/images/2.jpg',
+                  image: '/images/2trs.jpg',
                   type: 'Infrastructure',
                   tokenized: true,
                   investors: 94
@@ -310,7 +310,7 @@ const Landing: React.FC = () => {
                   title: 'Commercial Complex - Singapore',
                   location: 'Marina Bay, Singapore',
                   value: '$15.8M',
-                  image: '/images/3.jpg',
+                  image: '/images/3trs.webp',
                   type: 'Real Estate',
                   tokenized: true,
                   investors: 187
@@ -319,7 +319,7 @@ const Landing: React.FC = () => {
                   title: 'Trade Receivable Pool',
                   location: 'Asia & Africa',
                   value: '$9.4M',
-                  image: '/images/4.jpg',
+                  image: '/images/4trs.jpeg',
                   type: 'Trade Receivables',
                   tokenized: true,
                   investors: 142
@@ -440,7 +440,7 @@ const Landing: React.FC = () => {
                   role: 'Manufacturing Executive',
                   location: 'Shanghai, China',
                   story: 'Tokenized our manufacturing facility and connected with international investors across 30+ countries.',
-                  image: '/images/1.jpg',
+                  image: '/images/1trs.jpeg',
                   value: '$4.8M'
                 },
                 {
@@ -448,7 +448,7 @@ const Landing: React.FC = () => {
                   role: 'Real Estate Developer',
                   location: 'Mumbai, India',
                   story: 'Our commercial complex in Mumbai is now accessible to global investors, unlocking new capital for expansion.',
-                  image: '/images/2.jpg',
+                  image: '/images/2trs.jpg',
                   value: '$12.3M'
                 },
                 {
@@ -456,7 +456,7 @@ const Landing: React.FC = () => {
                   role: 'Agricultural Producer',
                   location: 'Osaka, Japan',
                   story: 'Tokenized our rice production facility and now have investors from Asia, Africa, and Europe supporting growth.',
-                  image: '/images/3.jpg',
+                  image: '/images/3trs.webp',
                   value: '$7.6M'
                 }
               ].map((person, index) => (
